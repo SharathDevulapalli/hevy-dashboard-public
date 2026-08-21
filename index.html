@@ -197,6 +197,17 @@
   .tl-exrow .name { font-weight: 700; font-size: 13.5px; color: var(--tlc-fg); }
   .tl-exrow .sets { color: var(--tlc-faint); font-size: 11.5px; margin-top: 2px; }
   .tl-exrow .best { flex: 0 0 auto; font-weight: 800; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; color: var(--tlc-fg); }
+
+  /* PDF export (see pdfExportBtn below): each tab printed on its own page, auto-scaled via
+     JS-set zoom (not transform - zoom affects layout size, so pagination respects the
+     shrunk height; transform alone wouldn't). This block only applies while body carries
+     .pdf-export-mode, which the export handler adds/removes around window.print(). */
+  @page { size: A4 landscape; margin: 10mm; }
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    body.pdf-export-mode .tabs, body.pdf-export-mode #tlSaveImgBtn { display: none !important; }
+    body.pdf-export-mode .tabpanel { display: block !important; break-after: page; }
+  }
 </style>
 
 <div class="wrap viz-root">
@@ -206,6 +217,7 @@
     <button class="tab-btn" data-tab="volumelog" type="button">Exercise Progress</button>
     <button class="tab-btn" data-tab="traininglog" type="button">Accountability</button>
     <button class="tab-btn" data-tab="reward" type="button">Rewards</button>
+    <button id="pdfExportBtn" type="button" style="margin-left:auto;appearance:none;background:var(--surface-1);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);cursor:pointer;font:inherit;font-size:13px;padding:7px 14px;align-self:center;">&darr; Download as PDF</button>
   </div>
 
   <div id="tab-overview" class="tabpanel">
@@ -359,7 +371,7 @@
   <div id="tab-reward" class="tabpanel" hidden>
     <header class="top">
       <h1>Rewards</h1>
-      <p class="sub" style="margin:0;">Rs 1,900/week banks toward a massage/spa fund whenever a completed week (Mon&ndash;Sun) hits &ge;4 training sessions (of which &ge;3 must be strength training &mdash; e.g. 2 boxing + 2 lifting days is 4 workouts but only 2 strength days, so it doesn't count) and an average of &ge;12,000 steps/day &mdash; caps at 2 weeks banked (Rs 3,800), plus a further Rs 3,800 bonus every 6 continuous weeks with no redemption. Logging a "session" personal expense redeems it: its actual amount is subtracted from the balance right there (price varies session to session, and more than one in a week is fine as long as it stays in budget) &mdash; spending past what's banked shows as a negative balance in weeks owed, not Rs.</p>
+      <p class="sub" style="margin:0;">Rs 1,900/week banks toward a massage/spa fund whenever a completed week (Mon&ndash;Sun) hits &ge;4 training sessions (of which &ge;3 must be strength training &mdash; e.g. 2 boxing + 2 lifting days is 4 workouts but only 2 strength days, so it doesn't count) and an average of &ge;12,000 steps/day &mdash; no cap, it keeps accumulating for as long as you keep hitting weeks and not redeeming, plus a further Rs 3,800 bonus every 6 continuous weeks with no redemption. Logging a "session" personal expense redeems it: its actual amount is subtracted from the balance right there (price varies session to session, and more than one in a week is fine as long as it stays in budget) &mdash; spending past what's banked shows as a negative balance in weeks owed, not Rs.</p>
     </header>
     <section style="margin-top:20px;">
       <div class="card" id="rewardBalanceCard"></div>
@@ -1144,19 +1156,18 @@ function expenseCalendarMonth(expensesData, year, month) {
 // (Mon-Sun) that hits >=4 logged training days (of which >=3 must be strength-training
 // days — a day with at least one non-cardio exercise; e.g. 2 boxing + 2 lifting days is
 // 4 workouts but only 2 strength days, so it doesn't qualify) AND an average of >=12,000
-// steps/day adds REWARD_WEEKLY_BUDGET to a running balance, capped at
-// REWARD_MAX_BANKED_WEEKS worth (earning past the cap while already banked to the max is
-// simply not added — it isn't queued for later). Every 6 continuous scored weeks with no
-// redemption at all earns a bonus of REWARD_MAX_BANKED_WEEKS worth on top (same cap
-// applies), then the streak resets. Logging a personal expense in the 'session' category
-// (the existing category already used for massage/spa spend) is the redemption event: its
-// actual logged `amount` (price varies session to session) is subtracted from the balance
-// right then — multiple sessions in a week are fine, each just subtracts its own cost. If
-// that pushes the balance below zero, it's a real deficit (spent ahead of what's banked)
-// rather than clamping at zero, since the caller displays a negative balance as weeks owed
-// instead of a Rs figure.
+// steps/day adds REWARD_WEEKLY_BUDGET to a running balance. No ceiling — it keeps
+// accumulating for as long as you keep hitting weeks and not redeeming. Every 6 continuous
+// scored weeks with no redemption at all earns a bonus of REWARD_BONUS_WEEKS_WORTH weeks'
+// budget on top, then the streak resets. Logging a personal expense in the 'session'
+// category (the existing category already used for massage/spa spend) is the redemption
+// event: its actual logged `amount` (price varies session to session) is subtracted from
+// the balance right then — multiple sessions in a week are fine, each just subtracts its
+// own cost. If that pushes the balance below zero, it's a real deficit (spent ahead of
+// what's banked) rather than clamping at zero, since the caller displays a negative
+// balance as weeks owed instead of a Rs figure.
 const REWARD_WEEKLY_BUDGET = 1900;
-const REWARD_MAX_BANKED_WEEKS = 2;
+const REWARD_BONUS_WEEKS_WORTH = 2; // the 6-week-clean bonus is worth this many weeks' budget
 const REWARD_BONUS_STREAK_WEEKS = 6;
 const REWARD_MIN_WORKOUTS = 4;
 const REWARD_MIN_STRENGTH_WORKOUTS = 3;
@@ -1173,11 +1184,7 @@ function isStrengthDay(workout, meta) {
 
 function rewardLedger(workouts, stepsData, expensesData, latestDate, meta) {
   meta = meta || {};
-  const cap = REWARD_WEEKLY_BUDGET * REWARD_MAX_BANKED_WEEKS;
-  const bonusAmount = REWARD_WEEKLY_BUDGET * REWARD_MAX_BANKED_WEEKS;
-  // Only raises balance toward cap, never lowers an already-higher balance — so a bonus
-  // landing right after a big earn can't accidentally erase the surplus.
-  const addCapped = (bal, amt) => (bal >= cap ? bal : Math.min(bal + amt, cap));
+  const bonusAmount = REWARD_WEEKLY_BUDGET * REWARD_BONUS_WEEKS_WORTH;
 
   // First fully-in-scope week: if REWARD_START_DATE isn't itself a Monday, the week it falls
   // in is only partially covered, so scoring starts the following Monday instead.
@@ -1241,14 +1248,14 @@ function rewardLedger(workouts, stepsData, expensesData, latestDate, meta) {
   const redemptionLog = [];
   for (const ev of events) {
     if (ev.type === 'week') {
-      if (ev.earned) balance = addCapped(balance, REWARD_WEEKLY_BUDGET);
+      if (ev.earned) balance += REWARD_WEEKLY_BUDGET;
       let bonusAwarded = null;
       if (redeemedWeeks.has(ev.week)) {
         // any redemption landing in this week already broke the streak when it was processed
       } else {
         cleanStreak++;
         if (cleanStreak >= REWARD_BONUS_STREAK_WEEKS) {
-          balance = addCapped(balance, bonusAmount);
+          balance += bonusAmount;
           bonusAwarded = bonusAmount;
           cleanStreak = 0;
         }
@@ -1262,7 +1269,7 @@ function rewardLedger(workouts, stepsData, expensesData, latestDate, meta) {
   }
 
   return {
-    balance, cap, weeklyBudget: REWARD_WEEKLY_BUDGET, bonusAmount, bonusStreakWeeks: REWARD_BONUS_STREAK_WEEKS,
+    balance, weeklyBudget: REWARD_WEEKLY_BUDGET, bonusAmount, bonusStreakWeeks: REWARD_BONUS_STREAK_WEEKS,
     cleanStreak, minWorkouts: REWARD_MIN_WORKOUTS, minStrengthWorkouts: REWARD_MIN_STRENGTH_WORKOUTS, minAvgSteps: REWARD_MIN_AVG_STEPS,
     weeklyRows, redemptions: redemptionLog,
   };
@@ -2032,13 +2039,15 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   const ledger = rewardLedger(WORKOUTS, STEPS, EXPENSES, rewardDate, EXMETA);
   const current = currentWeekRewardProgress(WORKOUTS, STEPS, rewardDate, EXMETA);
 
-  const pct = Math.max(0, Math.min(100, Math.round(ledger.balance / ledger.cap * 100)));
+  // No ceiling on the balance itself anymore — the bar instead tracks progress toward the
+  // next 6-clean-week bonus, the one thing left with a natural denominator.
+  const bonusPct = Math.max(0, Math.min(100, Math.round(ledger.cleanStreak / ledger.bonusStreakWeeks * 100)));
   document.getElementById('rewardBalanceCard').innerHTML = `
     <div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;">
       <div style="font-size:34px;font-weight:700;${ledger.balance < 0 ? 'color:var(--serious);' : ''}">${balanceStr(ledger.balance)}</div>
-      <div class="sub" style="margin:0;">current reward balance &mdash; caps at ${inr(ledger.cap)} (2 weeks banked) &mdash; +${inr(ledger.bonusAmount)} bonus every ${ledger.bonusStreakWeeks} clean weeks (${ledger.cleanStreak}/${ledger.bonusStreakWeeks} so far)</div>
+      <div class="sub" style="margin:0;">current reward balance, no cap &mdash; +${inr(ledger.bonusAmount)} bonus every ${ledger.bonusStreakWeeks} clean weeks (${ledger.cleanStreak}/${ledger.bonusStreakWeeks} so far)</div>
     </div>
-    <div class="tl-bar" style="margin-top:12px;"><span style="width:${pct}%;background:${ledger.balance < 0 ? 'var(--serious)' : 'var(--series-1)'};"></span></div>`;
+    <div class="tl-bar" style="margin-top:12px;"><span style="width:${bonusPct}%;background:var(--series-1);"></span></div>`;
 
   const workoutsOk = current.workoutCount >= current.minWorkouts;
   const strengthOk = current.strengthCount >= current.minStrengthWorkouts;
@@ -2316,6 +2325,38 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.classList.add('active');
     document.getElementById('tab-' + btn.dataset.tab).hidden = false;
   });
+});
+
+// ---------- PDF export: every tab on its own page, scaled to fit ----------
+document.getElementById('pdfExportBtn').addEventListener('click', () => {
+  const panels = [...document.querySelectorAll('.tabpanel')];
+  const wasHidden = panels.map(p => p.hidden);
+
+  // A4 landscape minus the @page margin, in css px (96px/in; 297x210mm page, 10mm margins).
+  const pageWidthPx = ((297 - 20) / 25.4) * 96;
+  const pageHeightPx = ((210 - 20) / 25.4) * 96;
+  const MIN_ZOOM = 0.35; // don't shrink small enough to become unreadable — very tall tabs
+                          // (e.g. Exercise Progress with a lot of history) may still spill
+                          // onto a second page past this floor, which is the honest tradeoff.
+
+  panels.forEach(p => { p.hidden = false; p.style.zoom = ''; });
+  document.body.classList.add('pdf-export-mode');
+
+  // Measure at natural size (zoom reset above) before scaling any of them down.
+  const zooms = panels.map(p => {
+    const scale = Math.min(1, pageWidthPx / p.scrollWidth, pageHeightPx / p.scrollHeight);
+    return Math.max(MIN_ZOOM, scale);
+  });
+  panels.forEach((p, i) => { p.style.zoom = zooms[i]; });
+
+  const cleanup = () => {
+    document.body.classList.remove('pdf-export-mode');
+    panels.forEach((p, i) => { p.style.zoom = ''; p.hidden = wasHidden[i]; });
+    window.removeEventListener('afterprint', cleanup);
+  };
+  window.addEventListener('afterprint', cleanup);
+
+  setTimeout(() => window.print(), 50); // let the zoom reflow land before the print snapshot
 });
 
 </script>
