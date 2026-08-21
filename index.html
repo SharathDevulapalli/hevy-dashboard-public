@@ -1,0 +1,2321 @@
+<title>Training Dashboard</title>
+<style>
+  :root, .viz-root {
+    color-scheme: light;
+    --surface-1: #fcfcfb;
+    --page: #f9f9f7;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --border: rgba(11,11,11,0.10);
+    --series-1: #2a78d6; /* blue - volume / primary series */
+    --series-2: #eb6834; /* orange - 1RM */
+    --series-3: #4a9c6d; /* green - tertiary series (e.g. fat in macro breakdown) */
+    --good: #0ca30c;
+    --warning: #fab219;
+    --serious: #ec835a;
+    --critical: #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --surface-1: #1a1a19;
+      --page: #0d0d0d;
+      --text-primary: #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted: #898781;
+      --grid: #2c2c2a;
+      --axis: #383835;
+      --border: rgba(255,255,255,0.10);
+      --series-1: #3987e5;
+      --series-2: #d95926;
+      --series-3: #5cb586;
+      --good: #0ca30c;
+      --warning: #fab219;
+      --serious: #ec835a;
+      --critical: #e66767;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-1: #1a1a19;
+    --page: #0d0d0d;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255,255,255,0.10);
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #5cb586;
+    --good: #0ca30c;
+    --warning: #fab219;
+    --serious: #ec835a;
+    --critical: #e66767;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 20px 80px; }
+  header.top { margin-bottom: 28px; }
+  header.top h1 { font-size: 22px; margin: 0 0 4px; }
+  header.top p { color: var(--text-secondary); margin: 0; }
+  .stat-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+  .stat-tile {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 16px; min-width: 130px; flex: 1;
+  }
+  .stat-tile .v { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .stat-tile .l { color: var(--text-muted); font-size: 12px; margin-top: 2px; }
+  section { margin-top: 32px; }
+  section h2 { font-size: 16px; margin: 0 0 4px; }
+  section .sub { color: var(--text-secondary); font-size: 12.5px; margin: 0 0 14px; }
+  .card {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+  svg text { fill: var(--text-muted); font-size: 10px; }
+  .axisline { stroke: var(--axis); stroke-width: 1; }
+  .gridline { stroke: var(--grid); stroke-width: 1; }
+  .band-good { fill: var(--good); opacity: 0.10; }
+  table.tv { border-collapse: collapse; width: 100%; font-size: 12.5px; margin-top: 8px; }
+  table.tv th, table.tv td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+  table.tv th { color: var(--text-muted); font-weight: 500; }
+  details.tableview { margin-top: 10px; }
+  details.tableview summary { cursor: pointer; color: var(--text-secondary); font-size: 12px; }
+  .macro-goal-row { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 6px; }
+  .macro-goal-row .label { width: 56px; flex: 0 0 auto; color: var(--text-secondary); }
+  .macro-goal-row .track { flex: 1 1 auto; height: 8px; border-radius: 4px; background: var(--grid); overflow: hidden; }
+  .macro-goal-row .fill { display: block; height: 100%; border-radius: 4px; }
+  .macro-goal-row .val { flex: 0 0 auto; width: 92px; text-align: right; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .badge {
+    display: inline-block; font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 20px;
+    letter-spacing: .02em;
+  }
+  .badge.plateau { background: color-mix(in srgb, var(--warning) 22%, transparent); color: var(--warning); }
+  .badge.progress { background: color-mix(in srgb, var(--good) 20%, transparent); color: var(--good); }
+  .badge.baseline { background: color-mix(in srgb, var(--text-muted) 22%, transparent); color: var(--text-muted); }
+  .badge.surplus { background: color-mix(in srgb, var(--critical) 20%, transparent); color: var(--critical); }
+  .day-section { margin-bottom: 26px; }
+  .day-section h3 { font-size: 15px; margin: 0 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--grid); }
+  .tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+  .tab-btn {
+    appearance: none; background: none; border: none; cursor: pointer; font: inherit;
+    font-size: 13.5px; font-weight: 600; color: var(--text-muted);
+    padding: 10px 14px; border-bottom: 2px solid transparent; margin-bottom: -1px;
+  }
+  .tab-btn:hover { color: var(--text-primary); }
+  .tab-btn.active { color: var(--text-primary); border-bottom-color: var(--series-1); }
+  .tabpanel[hidden] { display: none; }
+  .cal-nav { display: flex; align-items: center; gap: 10px; margin: 4px 0 14px; }
+  .cal-nav button {
+    appearance: none; background: var(--surface-1); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text-primary); cursor: pointer; font: inherit; font-size: 13px; padding: 4px 10px;
+  }
+  .cal-nav button:hover { border-color: var(--axis); }
+  .cal-nav .label { font-size: 14px; font-weight: 600; min-width: 130px; text-align: center; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .cal-dow { color: var(--text-muted); font-size: 11px; text-align: center; padding-bottom: 2px; }
+  .cal-cell {
+    border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; min-height: 56px;
+    background: var(--page);
+  }
+  .cal-cell.out { opacity: 0.35; }
+  .cal-cell .d { font-size: 11px; color: var(--text-muted); }
+  .cal-cell .amt { font-size: 12.5px; font-weight: 600; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .cat-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--text-secondary); }
+  .cat-legend .sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+  /* Accountability tab's daily card: deliberately its own fixed dark theme (not tied to the
+     page's light/dark toggle) since this is the piece meant to be screenshotted and posted —
+     it should look the same regardless of how the rest of the dashboard is set. */
+  .tl-wrap { max-width: 460px; margin: 0 auto; }
+  .tl-card {
+    --tlc-fg: #f4faf8; --tlc-muted: rgba(244,250,248,0.56); --tlc-faint: rgba(244,250,248,0.36);
+    --tlc-accent: #2fe6b8; --tlc-good: #2fe6b8; --tlc-bad: #ff8a65;
+    --tlc-line: rgba(255,255,255,0.09); --tlc-panel: rgba(255,255,255,0.045); --tlc-panel-b: rgba(255,255,255,0.09);
+    position: relative; overflow: hidden; color: var(--tlc-fg);
+    background:
+      radial-gradient(120% 90% at 12% -10%, rgba(47,230,184,0.16) 0%, rgba(47,230,184,0) 55%),
+      linear-gradient(165deg, #0c211c 0%, #081714 45%, #05100d 100%);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 22px;
+    padding: 26px 24px 22px;
+    box-shadow: 0 24px 60px -24px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .tl-eyebrow { text-align: center; font-size: 10.5px; font-weight: 600; letter-spacing: .38em; color: var(--tlc-faint); text-transform: uppercase; }
+  .tl-eyebrow-rule { width: 40px; height: 2px; margin: 8px auto 22px; border-radius: 2px; background: linear-gradient(90deg, transparent, var(--tlc-accent), transparent); opacity: .8; }
+  .tl-head { display: flex; align-items: center; gap: 18px; position: relative; z-index: 1; }
+  .tl-daybadge {
+    width: 78px; height: 94px; flex: 0 0 auto;
+    background: linear-gradient(165deg, rgba(47,230,184,0.16), rgba(47,230,184,0.02));
+    border: 1px solid rgba(47,230,184,0.35);
+    box-shadow: 0 0 26px -8px rgba(47,230,184,0.45);
+    clip-path: polygon(0 0, 100% 0, 100% 62%, 50% 100%, 0 62%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .tl-daybadge .n { font-size: 32px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; color: var(--tlc-fg); }
+  .tl-daybadge .streak { font-size: 10.5px; font-weight: 600; color: var(--tlc-accent); margin-top: 6px; letter-spacing: .02em; }
+  .tl-focus { color: var(--tlc-faint); font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+  .tl-title { font-size: 22px; font-weight: 800; margin: 3px 0 10px; letter-spacing: -.01em; }
+  .tl-chip {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700;
+    letter-spacing: .04em; padding: 4px 11px; border-radius: 20px; background: var(--tlc-panel);
+    border: 1px solid var(--tlc-panel-b); color: var(--tlc-muted); margin: 0 6px 6px 0;
+  }
+  .tl-chip .ck { color: var(--tlc-accent); }
+  .tl-statgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px; position: relative; z-index: 1; }
+  .tl-stat { background: var(--tlc-panel); border: 1px solid var(--tlc-panel-b); border-radius: 14px; padding: 13px 14px; }
+  .tl-stat .icon { font-size: 12px; margin-right: 5px; opacity: .85; }
+  .tl-stat .v { font-size: 19px; font-weight: 800; color: var(--tlc-fg); font-variant-numeric: tabular-nums; }
+  .tl-stat .v .unit { font-size: 11px; font-weight: 500; color: var(--tlc-faint); }
+  .tl-stat .l { font-size: 9.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--tlc-faint); margin-top: 5px; }
+  .tl-stat .trend { font-size: 10.5px; font-weight: 600; margin-top: 5px; }
+  .tl-bar { height: 4px; border-radius: 2px; background: var(--grid); margin-top: 6px; overflow: hidden; }
+  .tl-bar > span { display: block; height: 100%; }
+  .tl-card .tl-bar { background: rgba(255,255,255,0.1); }
+  .tl-exlist { margin-top: 20px; border-top: 1px solid var(--tlc-line); position: relative; z-index: 1; }
+  .tl-exrow { display: flex; align-items: flex-start; gap: 11px; padding: 12px 2px; border-bottom: 1px solid var(--tlc-line); }
+  .tl-exrow .dot {
+    width: 21px; height: 21px; border-radius: 50%; flex: 0 0 auto; margin-top: 1px;
+    display: flex; align-items: center; justify-content: center; font-size: 11px;
+  }
+  .tl-exrow .dot.primary { background: rgba(47,230,184,0.18); color: var(--tlc-accent); }
+  .tl-exrow .dot.secondary { background: rgba(255,255,255,0.07); color: var(--tlc-faint); }
+  .tl-exrow .body { flex: 1 1 auto; min-width: 0; }
+  .tl-exrow .name { font-weight: 700; font-size: 13.5px; color: var(--tlc-fg); }
+  .tl-exrow .sets { color: var(--tlc-faint); font-size: 11.5px; margin-top: 2px; }
+  .tl-exrow .best { flex: 0 0 auto; font-weight: 800; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; color: var(--tlc-fg); }
+</style>
+
+<div class="wrap viz-root">
+  <div class="tabs" role="tablist">
+    <button class="tab-btn active" data-tab="overview" type="button">Overview</button>
+    <button class="tab-btn" data-tab="nutrition" type="button">Nutrition</button>
+    <button class="tab-btn" data-tab="volumelog" type="button">Exercise Progress</button>
+    <button class="tab-btn" data-tab="traininglog" type="button">Accountability</button>
+    <button class="tab-btn" data-tab="reward" type="button">Rewards</button>
+  </div>
+
+  <div id="tab-overview" class="tabpanel">
+  <header class="top">
+    <h1>Training Dashboard</h1>
+    <p id="dateRangeLabel">—</p>
+    <div class="stat-row" id="statRow"></div>
+    <p class="sub" style="margin:16px 0 0;">This week</p>
+    <div class="stat-row" id="statRowWeek"></div>
+  </header>
+
+  <section>
+    <h2>Weekly training volume</h2>
+    <p class="sub">Total load (kg × reps, all exercises) per calendar week, full history. The flat stretch is the Jan–May gap in training.</p>
+    <div class="card"><div id="weeklyVolumeChart"></div>
+      <details class="tableview"><summary>Table view</summary><div id="weeklyVolumeTable"></div></details>
+    </div>
+  </section>
+
+  <section>
+    <h2>Strength Training Trend</h2>
+    <p class="sub">Every session logged in the most recent training week, compared exercise-by-exercise against the last prior occurrence of that same workout. Hypertrophy = higher total volume (weight × reps) than last time, or higher total reps for bodyweight movements (marked "bw"); same or lower is flagged as no net hypertrophy for that exercise. Cardio-only sessions (Rowing Machine, Boxing, etc.) don't appear here at all — see Cardio Trend below.</p>
+    <div id="weeklySnapshot"></div>
+  </section>
+
+  <section>
+    <h2>Cardio Trend</h2>
+    <p class="sub">Not counted toward strength volume or muscle-group set targets — tracked and scored separately.</p>
+    <div class="grid-2">
+      <div>
+        <h3 style="font-size:14px;margin:0 0 8px;">Rowing Machine</h3>
+        <p class="sub">Duration and distance logged per session. Progress = faster pace (min/km) vs. the prior session, regardless of duration.</p>
+        <div class="card">
+          <div id="rowingSummary" style="margin-bottom:12px;"></div>
+          <div id="rowingChart"></div>
+          <table class="tv" style="margin-top:12px;">
+            <thead><tr><th>Date</th><th>Duration</th><th>Distance</th><th>Pace (min/km)</th><th>Verdict</th></tr></thead>
+            <tbody id="rowingTable"></tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:14px;margin:0 0 8px;">Boxing</h3>
+        <p class="sub">Always a fixed-length session, so duration isn't a progress signal here &mdash; the logged note (drill/variation for the day) is.</p>
+        <div class="card">
+          <div id="boxingSummary" style="margin-bottom:12px;"></div>
+          <div id="boxingChart"></div>
+          <table class="tv" style="margin-top:12px;">
+            <thead><tr><th>Date</th><th>Duration</th><th>Notes</th></tr></thead>
+            <tbody id="boxingTable"></tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:14px;margin:0 0 8px;">Steps Count</h3>
+        <p class="sub">Daily steps vs. daily goal. Progress = higher goal-hit rate this week vs. last week.</p>
+        <div class="card">
+          <div id="stepsSummary" style="margin-bottom:12px;"></div>
+          <div id="stepsChart"></div>
+          <details class="tableview"><summary>Table view</summary>
+            <table class="tv">
+              <thead><tr><th>Date</th><th>Steps</th><th>Goal</th><th>Verdict</th></tr></thead>
+              <tbody id="stepsTable"></tbody>
+            </table>
+          </details>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:14px;margin:0 0 8px;">Resting Heart Rate</h3>
+        <p class="sub">Daily resting HR from Garmin. Progress = lower avg resting HR this week vs. last week (fitness improving).</p>
+        <div class="card">
+          <div id="hrSummary" style="margin-bottom:12px;"></div>
+          <div id="hrChart"></div>
+          <details class="tableview"><summary>Table view</summary>
+            <table class="tv">
+              <thead><tr><th>Date</th><th>Resting</th><th>Min</th><th>Max</th><th>Verdict</th></tr></thead>
+              <tbody id="hrTable"></tbody>
+            </table>
+          </details>
+        </div>
+      </div>
+    </div>
+  </section>
+  </div>
+
+  <div id="tab-nutrition" class="tabpanel" hidden>
+    <header class="top">
+      <h1>Nutrition</h1>
+      <p class="sub" style="margin:0;">Daily calorie/macro log from MyFitnessPal. Not counted toward strength or cardio scoring — tracked separately.</p>
+    </header>
+    <section style="margin-top:20px;">
+      <div class="grid-2">
+        <div>
+          <h3 style="font-size:14px;margin:0 0 8px;">Calories</h3>
+          <p class="sub">Deficit trend (calories &minus; goal). Below the zero line = deficit (green), above = surplus (red), within 5% of goal = maintenance. This is the key metric &mdash; not total calories.</p>
+          <div class="card">
+            <div id="caloriesSummary" style="margin-bottom:12px;"></div>
+            <div id="caloriesChart"></div>
+            <details class="tableview"><summary>Table view</summary>
+              <table class="tv">
+                <thead><tr><th>Date</th><th>Calories</th><th>Goal</th><th>Deficit</th><th>Verdict</th></tr></thead>
+                <tbody id="caloriesTable"></tbody>
+              </table>
+            </details>
+          </div>
+        </div>
+        <div>
+          <h3 style="font-size:14px;margin:0 0 8px;">Macros</h3>
+          <p class="sub">Latest day's protein / carbs / fat vs. MyFitnessPal goal. Daily grams (stacked) below &mdash; red segment/bar means carbs or fat exceeded that day's goal.</p>
+          <div class="card">
+            <div id="macrosSummary" style="margin-bottom:12px;"></div>
+            <div id="macrosGoalBars" style="margin-bottom:14px;"></div>
+            <div id="macrosChart"></div>
+            <details class="tableview"><summary>Table view</summary>
+              <table class="tv">
+                <thead><tr><th>Date</th><th>Protein</th><th>Carbs</th><th>Fat</th></tr></thead>
+                <tbody id="macrosTable"></tbody>
+              </table>
+            </details>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="tab-volumelog" class="tabpanel" hidden>
+    <header class="top">
+      <h1>Exercise Progress</h1>
+      <p id="volRangeLabel">—</p>
+      <div class="stat-row" id="volStatRow"></div>
+    </header>
+    <section>
+      <p class="sub">Volume = weight &times; reps summed per session (total reps for bodyweight exercises, marked "bw" &mdash; always logged at 0 load). Each cell averages across sessions in that window, so a low-N average can swing on a single session; check the N columns before reading much into a small move. Cardio is tracked separately and excluded. Grouped by primary muscle, upper body to lower body; within each group, sorted by largest gain to largest drop.</p>
+      <div id="volumeLogTables"></div>
+    </section>
+  </div>
+
+  <div id="tab-traininglog" class="tabpanel" hidden>
+    <header class="top">
+      <h1>Accountability</h1>
+      <p class="sub" style="margin:0;">The same daily card you used to ask for in chat &mdash; today's focus, session breakdown, steps, sleep, and 7-day weight/body-fat trend, computed straight from the synced data plus the sleep/weight/body-fat popup.</p>
+    </header>
+    <section style="margin-top:20px;">
+      <div id="trainingLogCard"></div>
+      <div class="tl-wrap" style="margin-top:12px;text-align:center;">
+        <button id="tlSaveImgBtn" type="button" style="appearance:none;background:var(--surface-1);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);cursor:pointer;font:inherit;font-size:13px;padding:8px 16px;">&darr; Save as image</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="tab-reward" class="tabpanel" hidden>
+    <header class="top">
+      <h1>Rewards</h1>
+      <p class="sub" style="margin:0;">Rs 1,900/week banks toward a massage/spa fund whenever a completed week (Mon&ndash;Sun) hits &ge;4 training sessions (of which &ge;3 must be strength training &mdash; e.g. 2 boxing + 2 lifting days is 4 workouts but only 2 strength days, so it doesn't count) and an average of &ge;12,000 steps/day &mdash; caps at 2 weeks banked (Rs 3,800), plus a further Rs 3,800 bonus every 6 continuous weeks with no redemption. Logging a "session" personal expense redeems it: its actual amount is subtracted from the balance right there (price varies session to session, and more than one in a week is fine as long as it stays in budget) &mdash; spending past what's banked shows as a negative balance in weeks owed, not Rs.</p>
+    </header>
+    <section style="margin-top:20px;">
+      <div class="card" id="rewardBalanceCard"></div>
+    </section>
+    <section>
+      <h2>Weekly ledger</h2>
+      <p class="sub">Each completed week checked against the target; the current in-progress week is shown separately below and isn't scored until it's over.</p>
+      <div class="card">
+        <div id="rewardCurrentWeek" style="margin-bottom:14px;"></div>
+        <table class="tv">
+          <thead><tr><th>Week of</th><th>Workouts</th><th>Avg steps</th><th>Target</th><th>Balance after</th></tr></thead>
+          <tbody id="rewardWeeklyTable"></tbody>
+        </table>
+        <details class="tableview" id="rewardRedemptionsDetails">
+          <summary>Redemption history</summary>
+          <div id="rewardRedemptions"></div>
+        </details>
+      </div>
+    </section>
+  </div>
+
+</div>
+
+<script>
+const WORKOUTS = [
+{"d": "2026-08-20", "t": "Back & Biceps", "ex": [{"i": "55E6546F", "s": [[20, 15], [30, 15], [30, 15]]}, {"i": "F1E57334", "s": [[30, 15], [30, 15], [30, 15]], "n": "Eaxh side"}, {"i": "BC3492DA", "s": [[40, 15], [40, 15], [50, 10]], "n": "Two hands together"}, {"i": "D2387AB1", "s": [[25, 15], [30, 15], [30, 8], [25, 8]]}, {"i": "0393F233", "s": [[45, 15], [50, 15], [55, 15]], "n": "Using cable machine"}, {"i": "ADA8623C", "s": [[20, 15], [20, 15], [25, 15]]}, {"i": "8BAB2735", "s": [[10, 15], [10, 15], [15, 15]]}, {"i": "C01F58D1", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "FAB6EB2F", "s": [[15, 15], [15, 15], [20, 12]], "n": "Each side"}, {"i": "0222DB42", "s": [[0, 0]], "c": {"min": 12, "km": 2.41}}]},
+{"d": "2026-08-19", "t": "Boxing", "ex": [{"i": "023947AB", "s": [[0, 0]], "c": {"min": 10, "km": 0.0}, "n": "Warmup"}, {"i": "A0D8FA1B", "s": [[0, 0]], "c": {"min": 40, "km": 0.0}, "n": "Jab- 4 way movement"}, {"i": "023947AB", "s": [[0, 0]], "c": {"min": 10, "km": 0.0}, "n": "Cool down"}]},
+{"d": "2026-08-18", "t": "Quads & Triceps", "ex": [{"i": "CC35A01F", "s": [[80, 20], [120, 15], [160, 15], [200, 15], [240, 15]]}, {"i": "75A4F6C4", "s": [[20, 24], [25, 24], [30, 24]], "n": "3 mini sets withh a breather in between"}, {"i": "C7973E0E", "s": [[150, 15], [200, 15], [250, 20]]}, {"i": "6E6EE645", "s": [[10, 20], [10, 30], [10, 30]], "n": "Bag - 10 each leg and 15 each leg"}, {"i": "CDC472B1", "s": [[20, 15], [20, 15], [25, 10]], "n": "3 variations together"}, {"i": "93A552C6", "s": [[20, 15], [20, 15], [25, 10]]}, {"i": "B5EFBF9C", "s": [[20, 15], [20, 15], [25, 10]]}, {"i": "6127A3AD", "s": [[10, 15], [15, 15], [20, 15]], "n": "Both sides together"}, {"i": "0222DB42", "s": [[0, 0]], "c": {"min": 12, "km": 2.63}}]},
+{"d": "2026-08-17", "t": "Chest & Shoulders", "ex": [{"i": "07B38369", "s": [[25, 30], [30, 24], [30, 24]], "n": "In 3 mini sets with 2-3 breaths"}, {"i": "18487FA7", "s": [[20, 30], [15, 30], [20, 30], [20, 24]], "n": "First with dumbbell, others with plate"}, {"i": "651F844C", "s": [[15, 20], [18, 20], [21, 20]]}, {"i": "67280085", "s": [[40, 15], [50, 15], [60, 15]]}, {"i": "E5988A0A", "s": [[10, 10], [10, 10], [10, 10]], "n": "All 5 together"}, {"i": "878CD1D0", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "422B08F1", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "8293E554", "s": [[10, 20], [10, 20], [10, 20]], "n": "10 together 10 separate"}]},
+{"d": "2026-08-15", "t": "Biceps & Triceps", "ex": [{"i": "94B7239B", "s": [[20, 20], [20, 20], [25, 15]], "n": "10 full. 10 half & full"}, {"i": "7E3BC8B6", "s": [[10, 15], [10, 30], [10, 30]]}, {"i": "21310F5F", "s": [[15, 15], [20, 15], [25, 15], [30, 15]]}, {"i": "1E9A6B8E", "s": [[5, 20], [5, 20], [7.5, 20]], "n": "Empty bar close and wide grip"}, {"i": "875F585F", "s": [[15, 20], [15, 20], [15, 20]], "n": "Incline"}, {"i": "01A35BF9", "s": [[15, 21], [15, 21], [15, 21]], "n": "7 lower half, 7 upper half, 7 full"}, {"i": "6127A3AD", "s": [[10, 20], [10, 20], [15, 15]], "n": "Each side"}, {"i": "0222DB42", "s": [[0, 0]], "c": {"min": 12, "km": 2.56}}]},
+{"d": "2026-08-14", "t": "Hamstrings & Calves", "ex": [{"i": "8BEBFED6", "s": [[40, 15], [45, 15], [50, 10]]}, {"i": "F4B4C6EE", "s": [[35, 15], [40, 15], [45, 10]]}, {"i": "B8127AD1", "s": [[15, 15], [20, 15], [25, 15]]}, {"i": "05293BCA", "s": [[50, 12], [60, 12], [60, 12]]}, {"i": "72CFFAD5", "s": [[50, 10], [60, 12], [60, 10]], "n": "Alternate with Lying curl and Sumo squat"}, {"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 15], [200, 20], [250, 20]]}, {"i": "91237BDD", "s": [[100, 15], [100, 15], [100, 15]]}, {"i": "0222DB42", "s": [[0, 0]], "c": {"min": 12, "km": 2.47}}]},
+{"d": "2026-08-13", "t": "Back & Biceps", "ex": [{"i": "55E6546F", "s": [[20, 20], [20, 20], [30, 10], [30, 10]]}, {"i": "6A6C31A5", "s": [[35, 15], [40, 10], [40, 7], [30, 7], [25, 7]]}, {"i": "0393F233", "s": [[30, 15], [35, 10], [35, 10], [20, 10]]}, {"i": "D2387AB1", "s": [[25, 20], [35, 15], [35, 15], [30, 10]]}, {"i": "BC3492DA", "s": [[25, 10], [30, 10], [30, 10]], "n": "Single hand - 10 each side"}, {"i": "4F942934", "s": [[10, 30], [15, 20], [15, 20]], "n": "15 close grip, 15 wide"}, {"i": "C01F58D1", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "8BAB2735", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "724CDE60", "s": [[10, 15], [10, 15], [10, 15]], "n": "Each side - double concentration"}, {"i": "0222DB42", "s": [[0, 0]], "c": {"min": 12, "km": 2.4}}]},
+{"d": "2026-08-11", "t": "Quads", "ex": [{"i": "0EB695C9", "s": [[52, 15], [73, 20], [86, 20], [100, 20], [100, 15]]}, {"i": "A733CC5B", "s": [[10, 0], [10, 0], [10, 0]], "c": {"min": 0, "km": 0.04}}, {"i": "75A4F6C4", "s": [[25, 15], [32, 15], [32, 15]], "n": "Along with walking lunges"}, {"i": "05293BCA", "s": [[15, 20], [20, 20], [20, 15]]}]},
+{"d": "2026-08-10", "t": "Chest & Shoulders", "ex": [{"i": "3601968B", "s": [[25, 15], [30, 15], [35, 15]]}, {"i": "07B38369", "s": [[20, 15], [25, 15], [30, 15]]}, {"i": "D3E2AB55", "s": [[20, 15], [25, 15], [30, 10], [15, 10]]}, {"i": "651F844C", "s": [[30, 20], [40, 20], [50, 10], [30, 10]], "n": "Struggled with 50"}, {"i": "422B08F1", "s": [[10, 15], [15, 15]]}, {"i": "7B8D84E8", "s": [[10, 20], [10, 20], [10, 20]], "n": "Alternate with front raise"}, {"i": "BD86EFD5", "s": [[10, 10], [10, 10], [10, 10]], "n": "Alternate with overhead"}, {"i": "E5988A0A", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "392887AA", "s": [[0, 15], [0, 10], [0, 15]]}]},
+{"d": "2026-08-09", "t": "Boxing", "ex": [{"i": "023947AB", "s": [[0, 0]], "c": {"min": 10, "km": 0.0}, "n": "Warmup"}, {"i": "A0D8FA1B", "s": [[0, 0]], "c": {"min": 40, "km": 0.0}, "n": "Jab - Front and Back"}, {"i": "023947AB", "s": [[0, 0]], "c": {"min": 10, "km": 0.0}, "n": "Cool Down"}]},
+{"d": "2026-08-08", "t": "Boxing", "ex": [{"i": "023947AB", "s": [[0, 0]], "c": {"min": 10, "km": 0.0}, "n": "Warmup"}, {"i": "A0D8FA1B", "s": [[0, 0]], "c": {"min": 40, "km": 0.0}, "n": "Foot Movement"}, {"i": "023947AB", "s": [[0, 0]], "c": {"min": 10, "km": 0.0}, "n": "Cool Down"}]},
+{"d": "2026-08-07", "t": "Hamstrings & Calves", "ex": [{"i": "8BEBFED6", "s": [[40, 15], [45, 15], [45, 15]]}, {"i": "F4B4C6EE", "s": [[35, 15], [40, 15], [40, 15]]}, {"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 20], [200, 20], [250, 20]]}, {"i": "91237BDD", "s": [[50, 20], [50, 20], [100, 15]]}, {"i": "6120CAAB", "s": [[40, 10], [80, 10], [80, 10], [80, 10]]}, {"i": "B8127AD1", "s": [[20, 15], [20, 15], [25, 10]]}, {"i": "72CFFAD5", "s": [[40, 10], [60, 10], [70, 5], [70, 10]]}, {"i": "0222DB42", "s": [[0, 0]], "c": {"min": 10, "km": 1.8}}]},
+{"d": "2026-08-06", "t": "Back & Biceps", "ex": [{"i": "55E6546F", "s": [[10, 10], [10, 10], [20, 10], [20, 10]]}, {"i": "FE389074", "s": [[10, 10], [10, 10], [20, 10], [20, 10]]}, {"i": "0B841777", "s": [[10, 10], [10, 10], [20, 10], [20, 10]]}, {"i": "6A6C31A5", "s": [[35, 15], [35, 10], [40, 10]]}, {"i": "0393F233", "s": [[30, 10], [35, 10], [35, 10]]}, {"i": "F1E57334", "s": [[30, 10], [30, 10], [30, 10]]}, {"i": "01A35BF9", "s": [[10, 20], [10, 20], [15, 16]]}, {"i": "7E3BC8B6", "s": [[10, 30], [10, 30], [10, 30]]}, {"i": "1E9A6B8E", "s": [[5, 20], [5, 20], [5, 20]]}, {"i": "724CDE60", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "0222DB42", "s": [[0, 0]], "c": {"min": 12, "km": 2.26}}]},
+{"d": "2026-08-04", "t": "Quads & Triceps", "ex": [{"i": "DDCC3821", "s": [[20, 15], [20, 15], [30, 15], [40, 10]]}, {"i": "C7973E0E", "s": [[150, 20], [200, 20], [250, 20]]}, {"i": "B537D09F", "s": [[10, 20], [10, 20], [15, 20]]}, {"i": "75A4F6C4", "s": [[25, 20], [35, 20], [45, 20]]}, {"i": "94B7239B", "s": [[20, 15], [20, 15], [20, 15], [20, 10], [20, 10], [20, 10]]}, {"i": "4B4BF8C2", "s": [[45, 10], [45, 10], [45, 10]]}, {"i": "3765684D", "s": [[30, 10], [35, 10], [35, 10]]}, {"i": "6127A3AD", "s": [[10, 10], [10, 10]]}, {"i": "0222DB42", "s": [[0, 0]], "c": {"min": 10, "km": 1.96}}]},
+{"d": "2026-08-03", "t": "Chest & Shoulders", "ex": [{"i": "392887AA", "s": [[0, 15], [0, 10], [0, 10]]}, {"i": "50DFDFAB", "s": [[25, 1], [35, 15], [45, 6], [25, 10]]}, {"i": "D3E2AB55", "s": [[15, 20], [20, 15], [25, 10]]}, {"i": "651F844C", "s": [[15, 20], [21, 15], [24, 15]]}, {"i": "DA0F0470", "s": [[10, 18], [15, 15], [15, 12]]}, {"i": "878CD1D0", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "E5988A0A", "s": [[10, 15], [10, 15]]}, {"i": "422B08F1", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "BD86EFD5", "s": [[15, 10], [10, 10], [10, 10]]}, {"i": "19A38071", "s": [[15, 20], [15, 20], [15, 20]]}, {"i": "0222DB42", "s": [[0, 0]], "c": {"min": 10, "km": 2.12}}]},
+{"d": "2026-07-31", "t": "Hamstrings & Triceps", "ex": [{"i": "8BEBFED6", "s": [[40, 15], [40, 15], [45, 15]]}, {"i": "F4B4C6EE", "s": [[30, 10], [30, 15], [35, 15]]}, {"i": "05293BCA", "s": [[40, 20], [50, 20], [50, 20]]}, {"i": "B8127AD1", "s": [[20, 15], [20, 15], [25, 10], [15, 5]]}, {"i": "72CFFAD5", "s": [[45, 10], [60, 10], [70, 10]]}, {"i": "3765684D", "s": [[25, 15], [30, 15], [35, 15]]}, {"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 15], [200, 15], [250, 15]]}, {"i": "94B7239B", "s": [[20, 12], [25, 10], [25, 2]]}, {"i": "B5EFBF9C", "s": [[20, 12], [20, 10], [20, 12]]}, {"i": "4B4BF8C2", "s": [[30, 10], [40, 10], [40, 10]]}, {"i": "0222DB42", "s": [[0, 0]], "c": {"min": 10, "km": 1.9}}]},
+{"d": "2026-07-30", "t": "Back & Biceps", "ex": [{"i": "6A6C31A5", "s": [[30, 15], [35, 12], [40, 10]]}, {"i": "0393F233", "s": [[30, 15], [35, 12], [40, 10]]}, {"i": "D2387AB1", "s": [[25, 20], [30, 20], [30, 20]]}, {"i": "914F3A96", "s": [[25, 20], [25, 20], [25, 20]]}, {"i": "37FCC2BB", "s": [[10, 30], [10, 30], [10, 30]]}, {"i": "01A35BF9", "s": [[15, 10], [15, 10], [15, 10]]}, {"i": "7E3BC8B6", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "724CDE60", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "0222DB42", "s": [[0, 0]], "c": {"min": 10, "km": 1.8}}]},
+{"d": "2026-07-28", "t": "Quads", "ex": [{"i": "CC35A01F", "s": [[80, 20], [120, 20], [160, 15]]}, {"i": "C7973E0E", "s": [[150, 20], [200, 20], [200, 20]]}, {"i": "32HKJ34K", "s": [[0, 16], [0, 16], [0, 16]]}, {"i": "75A4F6C4", "s": [[20, 20], [25, 20], [30, 20]]}, {"i": "06745E58", "s": [[0, 10], [0, 10], [0, 10], [0, 10]]}, {"i": "0222DB42", "s": [[0, 0]]}]},
+{"d": "2026-07-27", "t": "Chest & Shoulders", "ex": [{"i": "392887AA", "s": [[0, 15], [0, 15], [0, 15]]}, {"i": "DA0F0470", "s": [[10, 10], [10, 10], [10, 10], [10, 10]]}, {"i": "50DFDFAB", "s": [[5, 15], [5, 15], [10, 10]]}, {"i": "BE89C631", "s": [[20, 10], [20, 10], [20, 10]]}, {"i": "651F844C", "s": [[12, 30], [15, 30], [15, 30]]}, {"i": "073032BB", "s": [[10, 22], [10, 22], [10, 24]]}, {"i": "BD86EFD5", "s": [[10, 12], [10, 12], [10, 12]]}, {"i": "422B08F1", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "E5988A0A", "s": [[10, 15], [10, 15], [10, 15]]}]},
+{"d": "2026-07-25", "t": "Shoulders at Home", "ex": [{"i": "6AC96645", "s": [[5, 15], [5, 12], [5, 12]]}, {"i": "878CD1D0", "s": [[5, 10], [5, 10], [5, 10]]}, {"i": "422B08F1", "s": [[5, 12], [5, 12], [5, 12]]}, {"i": "E8D86EE8", "s": [[0, 15], [0, 15], [0, 15]]}]},
+{"d": "2026-07-24", "t": "Back & Biceps", "ex": [{"i": "4E5257DE", "s": [[35, 10], [35, 15], [45, 5], [35, 5], [25, 5]]}, {"i": "0393F233", "s": [[30, 15], [35, 10], [45, 10], [25, 10]]}, {"i": "BC3492DA", "s": [[20, 10], [25, 10], [25, 10]]}, {"i": "F1E57334", "s": [[35, 10]]}, {"i": "D2387AB1", "s": [[25, 20], [30, 20], [30, 20]]}, {"i": "37FCC2BB", "s": [[10, 20], [10, 20], [15, 10], [10, 20]]}, {"i": "7E3BC8B6", "s": [[10, 20], [10, 20], [15, 10], [10, 20]]}, {"i": "724CDE60", "s": [[10, 20], [10, 30], [10, 30]]}, {"i": "01A35BF9", "s": [[15, 15], [15, 15], [15, 15]]}]},
+{"d": "2026-07-22", "t": "Quads & Triceps", "ex": [{"i": "9694DA61", "s": [[0, 75], [0, 75], [0, 75]]}, {"i": "5E1A7777", "s": [[0, 20], [0, 20], [0, 20]]}, {"i": "75A4F6C4", "s": [[20, 15], [25, 15], [35, 15]]}, {"i": "05293BCA", "s": [[15, 10], [20, 14], [25, 12]]}, {"i": "94B7239B", "s": [[20, 20], [20, 20], [25, 15]]}, {"i": "5122E7D9", "s": [[35, 15], [40, 10], [45, 10]]}, {"i": "3765684D", "s": [[35, 10], [35, 10], [45, 10]]}]},
+{"d": "2026-07-21", "t": "Back & Biceps", "ex": [{"i": "6A6C31A5", "s": [[35, 15], [40, 10], [45, 10]]}, {"i": "0393F233", "s": [[30, 15], [35, 10], [35, 10]]}, {"i": "08A2974E", "s": [[20, 10], [20, 10], [20, 10]]}, {"i": "F1E57334", "s": [[35, 10], [35, 10], [40, 10]]}, {"i": "37FCC2BB", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "7E3BC8B6", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "A5AC6449", "s": [[5, 20], [5, 20], [5, 20]]}, {"i": "724CDE60", "s": [[10, 10], [10, 10], [10, 10]]}]},
+{"d": "2026-07-20", "t": "Chest & Shoulders", "ex": [{"i": "79D0BB3A", "s": [[10, 15], [20, 10], [20, 10], [20, 10]]}, {"i": "07B38369", "s": [[25, 12], [25, 15], [30, 10], [30, 8], [25, 8], [15, 8]]}, {"i": "651F844C", "s": [[12, 20], [18, 15], [21, 10]]}, {"i": "67280085", "s": [[35, 15], [40, 15], [45, 15]]}, {"i": "059E835D", "s": [[5, 10], [5, 10], [5, 10]]}, {"i": "E5988A0A", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "422B08F1", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "19A38071", "s": [[20, 20], [20, 20], [20, 20]]}]},
+{"d": "2026-07-17", "t": "Hamstrings & Calves", "ex": [{"i": "F4B4C6EE", "s": [[30, 5], [30, 10], [35, 10]]}, {"i": "8BEBFED6", "s": [[30, 15], [40, 15], [45, 15]]}, {"i": "05293BCA", "s": [[40, 20], [50, 20], [50, 20]]}, {"i": "72CFFAD5", "s": [[40, 10], [50, 10], [50, 10]]}, {"i": "91237BDD", "s": [[50, 15], [100, 15], [100, 15]]}, {"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 10], [200, 10], [200, 10]]}, {"i": "B8127AD1", "s": [[20, 10], [20, 10], [20, 10]]}]},
+{"d": "2026-07-16", "t": "3. Back and Biceps", "ex": [{"i": "0393F233", "s": [[30, 15], [35, 15], [40, 10]]}, {"i": "6A6C31A5", "s": [[30, 15], [40, 10], [45, 8], [35, 5]]}, {"i": "08A2974E", "s": [[25, 15], [35, 10], [40, 10]]}, {"i": "D2387AB1", "s": [[20, 15], [25, 20], [25, 20]]}, {"i": "01A35BF9", "s": [[15, 20], [15, 20], [15, 20]]}, {"i": "7E3BC8B6", "s": [[10, 15], [10, 15], [15, 10]]}, {"i": "37FCC2BB", "s": [[10, 15], [10, 15], [15, 10]]}, {"i": "1E9A6B8E", "s": [[5, 20], [5, 20], [5, 20]]}]},
+{"d": "2026-07-14", "t": "2. Legs & Triceps", "ex": [{"i": "CC35A01F", "s": [[80, 15], [120, 15], [160, 10]]}, {"i": "C7973E0E", "s": [[150, 10], [200, 10], [200, 10]]}, {"i": "5E1A7777", "s": [[0, 20], [0, 20], [0, 20]]}, {"i": "75A4F6C4", "s": [[20, 15], [25, 15], [30, 15]]}, {"i": "93A552C6", "s": [[25, 15], [25, 15], [25, 15]]}, {"i": "4B4BF8C2", "s": [[40, 10], [40, 10], [40, 10]]}, {"i": "94B7239B", "s": [[20, 15], [25, 15], [30, 10], [30, 10]]}, {"i": "B5EFBF9C", "s": [[20, 15], [20, 15], [25, 10]]}, {"i": "6127A3AD", "s": [[10, 10], [10, 10], [10, 10]]}]},
+{"d": "2026-07-13", "t": "1. Chest and Shoulders", "ex": [{"i": "3A6FA3D1", "s": [[10, 10], [15, 10], [15, 10]]}, {"i": "12017185", "s": [[15, 15], [20, 15], [25, 10]]}, {"i": "07B38369", "s": [[20, 10], [25, 5], [25, 5]]}, {"i": "651F844C", "s": [[12, 15], [15, 15], [18, 8], [12, 10]]}, {"i": "DA0F0470", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "E5988A0A", "s": [[10, 15], [10, 15], [15, 10]]}, {"i": "6AC96645", "s": [[10, 15], [10, 15], [15, 10]]}, {"i": "422B08F1", "s": [[10, 15], [10, 15], [15, 10]]}, {"i": "8293E554", "s": [[10, 15], [10, 15], [15, 10]]}]},
+{"d": "2026-05-06", "t": "Back And Biceps", "ex": [{"i": "6A6C31A5", "s": [[30, 20], [40, 10], [45, 10], [45, 8]]}, {"i": "0393F233", "s": [[30, 10], [35, 10], [35, 8]]}, {"i": "4E5257DE", "s": [[30, 15], [35, 10], [35, 10]]}, {"i": "55E6546F", "s": [[10, 15], [20, 10], [30, 10]]}, {"i": "37FCC2BB", "s": [[10, 15], [10, 15], [15, 18]]}, {"i": "7E3BC8B6", "s": [[10, 15], [10, 15], [15, 10]]}, {"i": "01A35BF9", "s": [[15, 21], [15, 21], [15, 21]]}]},
+{"d": "2026-04-26", "t": "Ab Roller", "ex": [{"i": "99D5F10E", "s": [[0, 20], [0, 20], [0, 20], [0, 20], [0, 20]]}]},
+{"d": "2026-04-24", "t": "Back", "ex": [{"i": "6A6C31A5", "s": [[35, 15], [40, 10], [45, 10]]}, {"i": "4E5257DE", "s": [[35, 10], [35, 10], [40, 10]]}, {"i": "08A2974E", "s": [[25, 15], [35, 10], [45, 10]]}, {"i": "AA1EB7D8", "s": [[25, 10], [35, 10], [35, 10]]}, {"i": "01A35BF9", "s": [[15, 24], [15, 24], [15, 24]]}]},
+{"d": "2026-04-22", "t": "Legs", "ex": [{"i": "6E6EE645", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "3D0C7C75", "s": [[40, 10], [45, 10], [50, 10]]}, {"i": "75A4F6C4", "s": [[30, 20], [40, 15], [45, 10]]}, {"i": "C7973E0E", "s": [[150, 10], [200, 10], [250, 10]]}]},
+{"d": "2026-04-13", "t": "13. Back and Biceps", "ex": [{"i": "6A6C31A5", "s": [[30, 20], [35, 15], [40, 10]]}, {"i": "0393F233", "s": [[30, 10], [35, 10], [40, 10]]}, {"i": "BC3492DA", "s": [[25, 10], [30, 10], [35, 10]]}, {"i": "08A2974E", "s": [[25, 15], [35, 10], [45, 7], [45, 7]]}, {"i": "37FCC2BB", "s": [[15, 10], [15, 10], [15, 10]]}, {"i": "7E3BC8B6", "s": [[15, 10], [15, 10], [15, 10]]}, {"i": "01A35BF9", "s": [[15, 15], [15, 15], [15, 15]]}, {"i": "1E9A6B8E", "s": [[10, 20], [10, 20], [10, 20]]}]},
+{"d": "2026-04-08", "t": "08. Legs", "ex": [{"i": "CC35A01F", "s": [[120, 20], [160, 15], [200, 10]]}, {"i": "C7973E0E", "s": [[150, 20], [200, 15], [250, 10]]}, {"i": "4C6721B9", "s": [[10, 20], [10, 20], [10, 20]]}]},
+{"d": "2026-04-07", "t": "05. Chest and Shoulders", "ex": [{"i": "651F844C", "s": [[15, 20], [18, 20], [21, 10], [15, 10]]}, {"i": "67280085", "s": [[45, 15], [50, 15], [60, 10]]}, {"i": "422B08F1", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "8293E554", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "A69FF221", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "07B38369", "s": [[20, 15], [25, 10], [25, 10]]}, {"i": "BE89C631", "s": [[20, 10], [25, 10], [25, 10]]}, {"i": "7AB9A362", "s": [[15, 10], [15, 10], [15, 10]]}]},
+{"d": "2026-04-03", "t": "04. Hamstrings and Calves", "ex": [{"i": "B8127AD1", "s": [[15, 15], [20, 15], [5, 15]]}, {"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 20], [200, 20], [250, 20]]}, {"i": "72CFFAD5", "s": [[40, 10], [50, 10], [60, 10], [70, 10]]}, {"i": "30E293E3", "s": [[40, 15], [80, 15], [120, 15]]}, {"i": "06745E58", "s": [[0, 10], [0, 10], [0, 10], [0, 10], [0, 10]]}]},
+{"d": "2026-04-02", "t": "03. Shoulder and Arms", "ex": [{"i": "A69FF221", "s": [[10, 10], [15, 10], [20, 10]]}, {"i": "878CD1D0", "s": [[10, 10], [15, 10], [20, 10]]}, {"i": "422B08F1", "s": [[10, 10], [15, 10], [20, 10]]}, {"i": "E5988A0A", "s": [[10, 10], [15, 10], [20, 10]]}, {"i": "DBB91A3C", "s": [[10, 10], [15, 10], [15, 10]]}, {"i": "CD6DC8E5", "s": [[0, 15], [0, 15], [0, 15]]}, {"i": "B5EFBF9C", "s": [[15, 15], [20, 15], [25, 15]]}, {"i": "CDC472B1", "s": [[15, 10], [20, 10], [25, 10]]}, {"i": "93A552C6", "s": [[15, 10], [20, 10], [25, 10]]}, {"i": "36E8F14E", "s": [[15, 15], [15, 15], [15, 15]]}, {"i": "4F942934", "s": [[10, 20], [15, 20], [15, 20]]}, {"i": "8BAB2735", "s": [[10, 20], [10, 20], [10, 20]]}]},
+{"d": "2026-04-01", "t": "02. Chest", "ex": [{"i": "50DFDFAB", "s": [[10, 50]]}, {"i": "651F844C", "s": [[15, 20], [18, 15], [21, 15]]}, {"i": "DA0F0470", "s": [[10, 21], [10, 21], [10, 21]]}, {"i": "07B38369", "s": [[25, 10], [25, 10], [25, 10]]}, {"i": "BE89C631", "s": [[25, 10], [25, 10], [25, 10]]}, {"i": "67280085", "s": [[50, 10], [60, 10], [60, 10]]}]},
+{"d": "2026-03-31", "t": "01. Legs and Triceps", "ex": [{"i": "CC35A01F", "s": [[120, 15], [160, 15], [200, 15]]}, {"i": "C7973E0E", "s": [[150, 20], [200, 15], [250, 10], [200, 10], [150, 10], [100, 10], [50, 10]]}, {"i": "4C6721B9", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "75A4F6C4", "s": [[20, 15], [25, 15], [30, 15]]}, {"i": "94B7239B", "s": [[20, 15], [25, 15], [30, 15]]}, {"i": "B5EFBF9C", "s": [[20, 10], [20, 10], [20, 10]]}, {"i": "875F585F", "s": [[15, 10], [15, 10], [15, 10]]}, {"i": "35B51B87", "s": [[15, 10], [15, 10], [15, 10]]}, {"i": "6127A3AD", "s": [[10, 20], [10, 20], [10, 20]]}]},
+{"d": "2026-01-23", "t": "Back and Biceps", "ex": [{"i": "6A6C31A5", "s": [[30, 15], [37.5, 15], [45, 10]]}, {"i": "0393F233", "s": [[30, 15], [37.5, 10]]}, {"i": "7E3BC8B6", "s": [[10, 20], [10, 20], [15, 20]]}, {"i": "01A35BF9", "s": [[10, 24], [10, 24], [15, 20]]}, {"i": "55E6546F", "s": [[20, 15], [20, 15], [20, 15]]}, {"i": "D2387AB1", "s": [[25, 15], [30, 15], [30, 15]]}, {"i": "1E9A6B8E", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "37FCC2BB", "s": [[10, 20], [10, 20], [10, 20]]}]},
+{"d": "2026-01-22", "t": "Chest and Triceps", "ex": [{"i": "651F844C", "s": [[18, 30], [21, 10], [24, 10], [18, 20]]}, {"i": "67280085", "s": [[35, 15], [50, 15], [60, 10]]}, {"i": "50DFDFAB", "s": [[10, 15], [20, 10], [15, 10]]}, {"i": "DA0F0470", "s": [[10, 15], [15, 10], [15, 10]]}, {"i": "875F585F", "s": [[15, 15], [15, 15], [15, 15]]}, {"i": "35B51B87", "s": [[15, 15], [15, 15], [15, 15]]}, {"i": "552AB030", "s": [[15, 10], [15, 10], [15, 10]]}, {"i": "CDC472B1", "s": [[20, 15], [25, 15], [25, 15]]}, {"i": "3765684D", "s": [[30, 10], [40, 10], [40, 10]]}]},
+{"d": "2026-01-13", "t": "Chest and shoulders", "ex": [{"i": "651F844C", "s": [[18, 15], [21, 15], [24, 10]]}, {"i": "67280085", "s": [[35, 15], [40, 15], [45, 10]]}, {"i": "422B08F1", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "8293E554", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "DA0F0470", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "E5988A0A", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "07B38369", "s": [[25, 15], [30, 15], [35, 10]]}, {"i": "059E835D", "s": [[5, 10], [5, 10], [5, 10]]}]},
+{"d": "2026-01-09", "t": "Hamstrings and Calves", "ex": [{"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 10], [150, 10], [200, 10], [250, 10]]}, {"i": "B8127AD1", "s": [[20, 15], [25, 15], [30, 10]]}, {"i": "72CFFAD5", "s": [[35, 10], [50, 10], [60, 10]]}, {"i": "3D1CDC75", "s": [[80, 15], [120, 15], [160, 15]]}, {"i": "06745E58", "s": [[0, 10], [0, 10], [0, 10], [0, 10], [0, 10]]}]},
+{"d": "2026-01-08", "t": "Back and Biceps", "ex": [{"i": "6A6C31A5", "s": [[30, 15], [37.5, 15], [45, 10]]}, {"i": "0393F233", "s": [[25, 15], [30, 15], [37.5, 10]]}, {"i": "19A38071", "s": [[20, 20], [25, 20], [30, 20]]}, {"i": "7E3BC8B6", "s": [[10, 10], [10, 10], [15, 10]]}, {"i": "01A35BF9", "s": [[15, 20], [15, 20], [15, 20]]}, {"i": "08A2974E", "s": [[20, 15], [25, 15], [30, 12]]}, {"i": "D2387AB1", "s": [[25, 15], [30, 15], [35, 10]]}, {"i": "37FCC2BB", "s": [[15, 20], [15, 20], [15, 20]]}]},
+{"d": "2026-01-06", "t": "Quads and Triceps", "ex": [{"i": "C7973E0E", "s": [[200, 15], [250, 15], [300, 10]]}, {"i": "75A4F6C4", "s": [[15, 20], [30, 20], [40, 15]]}, {"i": "5E1A7777", "s": [[0, 20], [0, 20], [0, 20]]}, {"i": "CC35A01F", "s": [[80, 15], [120, 15], [160, 15]]}, {"i": "CDC472B1", "s": [[20, 10], [25, 10], [30, 10]]}, {"i": "93A552C6", "s": [[20, 10], [25, 10], [30, 10]]}, {"i": "875F585F", "s": [[15, 15], [15, 15], [25, 10]]}, {"i": "35B51B87", "s": [[15, 15], [15, 15], [25, 10]]}]},
+{"d": "2026-01-05", "t": "Chest and Shoulders", "ex": [{"i": "651F844C", "s": [[18, 15], [21, 15], [24, 10], [21, 10]]}, {"i": "67280085", "s": [[35, 15], [50, 15], [60, 10]]}, {"i": "422B08F1", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "79D0BB3A", "s": [[25, 15], [35, 10], [45, 10]]}, {"i": "A69FF221", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "07B38369", "s": [[25, 15], [30, 15], [35, 10], [20, 10]]}, {"i": "878CD1D0", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "E5988A0A", "s": [[10, 10], [10, 10], [10, 10]]}]},
+{"d": "2026-01-02", "t": "Hamstrings and Calves", "ex": [{"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 10], [200, 10], [250, 10]]}, {"i": "B8127AD1", "s": [[20, 15], [20, 10], [20, 10], [25, 10]]}, {"i": "72CFFAD5", "s": [[40, 10], [50, 10], [60, 10]]}, {"i": "3D1CDC75", "s": [[80, 10], [120, 10], [160, 10]]}, {"i": "6120CAAB", "s": [[0, 10], [0, 10], [0, 10], [0, 10], [0, 10]]}, {"i": "0EB695C9", "s": [[150, 10], [200, 10], [250, 10]]}]},
+{"d": "2025-12-20", "t": "Hamstrings and Calves", "ex": [{"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 15], [200, 15], [250, 15]]}, {"i": "B8127AD1", "s": [[15, 15], [20, 15], [25, 15]]}, {"i": "72CFFAD5", "s": [[35, 15], [45, 15], [50, 15]]}, {"i": "3D1CDC75", "s": [[40, 15], [80, 15], [120, 10]]}, {"i": "B05C2C29", "s": [[40, 15], [80, 15], [128, 15]]}, {"i": "05293BCA", "s": [[50, 10], [70, 10], [80, 10]]}]},
+{"d": "2025-12-19", "t": "Back and Biceps", "ex": [{"i": "6A6C31A5", "s": [[25, 15], [37.5, 15], [37.5, 15]]}, {"i": "0393F233", "s": [[25, 15], [30, 15], [37.5, 15]]}, {"i": "08A2974E", "s": [[15, 15], [20, 15], [25, 15]]}, {"i": "D2387AB1", "s": [[20, 15], [25, 15], [30, 15]]}, {"i": "7E3BC8B6", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "01A35BF9", "s": [[15, 20], [15, 20], [15, 20]]}, {"i": "37FCC2BB", "s": [[10, 20], [10, 20], [10, 20]]}]},
+{"d": "2025-12-15", "t": "Chest and Shoulders", "ex": [{"i": "651F844C", "s": [[25, 20], [30, 20], [35, 15]]}, {"i": "67280085", "s": [[35, 15], [45, 15], [50, 15]]}, {"i": "422B08F1", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "8293E554", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "79D0BB3A", "s": [[20, 20], [30, 20], [40, 10]]}, {"i": "50DFDFAB", "s": [[10, 20], [20, 20], [30, 10]]}, {"i": "A69FF221", "s": [[20, 20], [20, 20], [20, 20]]}, {"i": "B582299E", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "19A38071", "s": [[20, 20], [30, 20], [30, 20]]}]},
+{"d": "2025-12-13", "t": "Hamstrings and Calves", "ex": [{"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 20], [200, 15], [250, 15]]}, {"i": "B8127AD1", "s": [[20, 15], [20, 15], [28, 15]]}, {"i": "91237BDD", "s": [[50, 20], [100, 15], [150, 15]]}, {"i": "72CFFAD5", "s": [[35, 15], [35, 15], [35, 15]]}, {"i": "3D1CDC75", "s": [[40, 15], [80, 15], [120, 15]]}, {"i": "05293BCA", "s": [[60, 15], [60, 15], [80, 15]]}, {"i": "F4B4C6EE", "s": [[35, 15], [35, 15], [35, 15]]}]},
+{"d": "2025-12-12", "t": "Back and Biceps", "ex": [{"i": "6A6C31A5", "s": [[25, 15], [30, 15], [37.5, 10]]}, {"i": "0393F233", "s": [[25, 15], [30, 15], [37.5, 10]]}, {"i": "8BAB2735", "s": [[10, 20], [10, 20], [15, 20]]}, {"i": "7E3BC8B6", "s": [[10, 20], [10, 20], [15, 20]]}, {"i": "BC3492DA", "s": [[20, 10], [30, 10], [30, 10]]}, {"i": "D2387AB1", "s": [[20, 10], [25, 10], [30, 10]]}, {"i": "234897AB", "s": [[20, 30], [25, 30], [25, 30]]}]},
+{"d": "2025-12-09", "t": "Quads and Triceps", "ex": [{"i": "C7973E0E", "s": [[200, 15], [250, 15], [300, 10]]}, {"i": "75A4F6C4", "s": [[30, 15], [30, 15], [30, 15]]}, {"i": "5E1A7777", "s": [[0, 20], [0, 20], [0, 20]]}, {"i": "CC35A01F", "s": [[120, 15], [160, 15], [200, 15]]}, {"i": "B5EFBF9C", "s": [[20, 10], [20, 10], [25, 10]]}, {"i": "CDC472B1", "s": [[20, 15], [25, 15], [25, 15]]}, {"i": "93A552C6", "s": [[20, 15], [25, 15], [30, 15]]}, {"i": "94B7239B", "s": [[20, 15], [25, 15], [25, 15]]}]},
+{"d": "2025-12-08", "t": "Chest and Shoulders", "ex": [{"i": "3601968B", "s": [[25, 20], [30, 15], [35, 15]]}, {"i": "651F844C", "s": [[25, 20], [30, 15], [35, 15]]}, {"i": "67280085", "s": [[40, 15], [50, 15], [60, 15]]}, {"i": "24706DCD", "s": [[10, 15], [15, 15], [20, 15]]}, {"i": "422B08F1", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "7B8D84E8", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "8293E554", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "BE640BA0", "s": [[10, 10], [10, 10], [10, 10]]}]},
+{"d": "2025-12-04", "t": "Hamstrings and Calves", "ex": [{"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 15], [200, 15], [250, 15]]}, {"i": "B8127AD1", "s": [[20, 15], [20, 15], [20, 15]]}, {"i": "91237BDD", "s": [[50, 15], [100, 15], [150, 15]]}, {"i": "72CFFAD5", "s": [[50, 15], [60, 15], [70, 10]]}, {"i": "3D1CDC75", "s": [[120, 10], [80, 10], [120, 10]]}, {"i": "6622E5A0", "s": [[120, 10], [80, 10], [120, 10]]}]},
+{"d": "2025-12-03", "t": "Back and Biceps", "ex": [{"i": "6A6C31A5", "s": [[30, 15], [37.5, 15], [45, 15]]}, {"i": "0393F233", "s": [[25, 20], [30, 20], [37.5, 20]]}, {"i": "F1E57334", "s": [[30, 10], [35, 10], [40, 10]]}, {"i": "A8814C06", "s": [[20, 15], [25, 15], [30, 15]]}, {"i": "19A38071", "s": [[20, 20], [30, 20], [30, 20]]}, {"i": "8BAB2735", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "7E3BC8B6", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "01A35BF9", "s": [[10, 20], [10, 20], [15, 16]]}, {"i": "1E9A6B8E", "s": [[5, 20], [5, 20], [5, 20]]}]},
+{"d": "2025-12-02", "t": "Quads and Triceps", "ex": [{"i": "C7973E0E", "s": [[200, 20], [250, 15], [300, 10]]}, {"i": "75A4F6C4", "s": [[30, 20], [35, 20], [35, 20]]}, {"i": "5E1A7777", "s": [[0, 20], [0, 20], [0, 20]]}, {"i": "3D0C7C75", "s": [[40, 15], [50, 10], [68, 10]]}, {"i": "6127A3AD", "s": [[10, 30], [10, 30]]}, {"i": "CDC472B1", "s": [[20, 20], [25, 20], [30, 20]]}, {"i": "93A552C6", "s": [[20, 20], [25, 20], [30, 20]]}, {"i": "0222DB42", "s": [[0, 0]]}]},
+{"d": "2025-12-01", "t": "Chest and Shoulders", "ex": [{"i": "50DFDFAB", "s": [[20, 20], [30, 15], [40, 15], [40, 15]]}, {"i": "651F844C", "s": [[25, 20], [30, 15], [35, 15]]}, {"i": "67280085", "s": [[35, 15], [35, 15], [50, 10], [60, 10]]}, {"i": "07B38369", "s": [[20, 20], [25, 20], [25, 20]]}, {"i": "8293E554", "s": [[10, 10], [10, 12], [10, 12]]}, {"i": "422B08F1", "s": [[10, 10], [10, 12], [10, 12]]}, {"i": "6AC96645", "s": [[10, 12], [10, 12], [10, 12]]}, {"i": "E5988A0A", "s": [[10, 10], [10, 12], [10, 12]]}]},
+{"d": "2025-11-28", "t": "Hamstrings and Calves", "ex": [{"i": "F4B4C6EE", "s": [[30, 10], [35, 10], [40, 10]]}, {"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 20], [200, 20], [250, 20]]}, {"i": "8BEBFED6", "s": [[40, 10], [45, 10], [50, 10]]}, {"i": "5F4E6DD3", "s": [[25, 15], [35, 10], [45, 10]]}, {"i": "B8127AD1", "s": [[20, 15], [20, 15], [20, 15]]}, {"i": "E05C2C38", "s": [[40, 20], [60, 20], [60, 20]]}, {"i": "05293BCA", "s": [[40, 20], [60, 14], [70, 14], [70, 14]]}]},
+{"d": "2025-11-27", "t": "Back and Biceps", "ex": [{"i": "6A6C31A5", "s": [[30, 15], [37.5, 15], [45, 10]]}, {"i": "0393F233", "s": [[30, 15], [37.5, 15], [45, 10]]}, {"i": "D2387AB1", "s": [[20, 15], [25, 15], [30, 15]]}, {"i": "08A2974E", "s": [[25, 15], [30, 15], [35, 10]]}, {"i": "37FCC2BB", "s": [[10, 40], [10, 40], [10, 40]]}, {"i": "7E3BC8B6", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "ADA8623C", "s": [[20, 15], [25, 10], [25, 10]]}, {"i": "36E8F14E", "s": [[20, 15], [25, 10], [25, 10]]}]},
+{"d": "2025-11-26", "t": "Chest", "ex": [{"i": "E644F828", "s": [[25, 20], [35, 20], [35, 20]]}, {"i": "651F844C", "s": [[15, 20], [20, 20], [25, 10]]}, {"i": "3601968B", "s": [[30, 18], [35, 15], [35, 15]]}, {"i": "BE89C631", "s": [[15, 15], [20, 15], [25, 15]]}, {"i": "07B38369", "s": [[15, 15], [20, 15], [25, 10]]}, {"i": "67280085", "s": [[35, 20], [40, 15], [45, 10]]}]},
+{"d": "2025-11-25", "t": "Quads and Calves", "ex": [{"i": "C7973E0E", "s": [[200, 15], [250, 15], [300, 10]]}, {"i": "75A4F6C4", "s": [[30, 30], [35, 30], [35, 25]]}, {"i": "5E1A7777", "s": [[0, 20], [0, 20], [0, 20]]}, {"i": "CC35A01F", "s": [[120, 20], [160, 20], [200, 20]]}, {"i": "E05C2C38", "s": [[40, 20], [80, 20], [120, 20]]}]},
+{"d": "2025-11-21", "t": "Hamstrings and Calves", "ex": [{"i": "F4B4C6EE", "s": [[30, 10]]}, {"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 20], [200, 20], [250, 20]]}, {"i": "8BEBFED6", "s": [[30, 10]]}, {"i": "5F4E6DD3", "s": [[40, 15], [50, 15], [50, 15]]}, {"i": "B8127AD1", "s": [[20, 15], [20, 15], [20, 15]]}, {"i": "E05C2C38", "s": [[40, 20], [40, 20], [40, 20]]}]},
+{"d": "2025-11-20", "t": "Back and Biceps", "ex": [{"i": "6A6C31A5", "s": [[30, 15], [37.5, 15], [37.5, 15]]}, {"i": "0393F233", "s": [[30, 15], [37.5, 12], [37.5, 12]]}, {"i": "AA1EB7D8", "s": [[20, 10], [35, 10], [45, 10]]}, {"i": "D2387AB1", "s": [[25, 15], [30, 15], [35, 15]]}, {"i": "9F48F858", "s": [[20, 30], [25, 30], [30, 20]]}, {"i": "8BAB2735", "s": [[10, 20], [10, 20], [15, 20]]}, {"i": "7E3BC8B6", "s": [[10, 20], [10, 20], [15, 20]]}, {"i": "724CDE60", "s": [[10, 20], [10, 20], [15, 15]]}]},
+{"d": "2025-11-19", "t": "Quads and Triceps", "ex": [{"i": "75A4F6C4", "s": [[25, 20], [30, 20], [40, 20]]}, {"i": "5E1A7777", "s": [[0, 20], [0, 20], [0, 20]]}, {"i": "CC35A01F", "s": [[130, 20], [160, 20], [200, 20]]}, {"i": "3FD83744", "s": [[50, 20], [75, 20], [100, 10]]}, {"i": "B5EFBF9C", "s": [[15, 10], [20, 10], [20, 10]]}, {"i": "CDC472B1", "s": [[20, 15], [25, 15], [30, 15]]}, {"i": "93A552C6", "s": [[20, 10], [25, 10], [30, 10]]}, {"i": "3765684D", "s": [[25, 15], [30, 15], [35, 15]]}]},
+{"d": "2025-11-18", "t": "Chest and Shoulders", "ex": [{"i": "3601968B", "s": [[10, 20], [15, 10], [15, 10]]}, {"i": "651F844C", "s": [[15, 20], [20, 20], [25, 10], [25, 10]]}, {"i": "12017185", "s": [[20, 15], [30, 10], [35, 10]]}, {"i": "E644F828", "s": [[15, 15], [20, 15], [25, 15]]}, {"i": "422B08F1", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "6AC96645", "s": [[10, 25], [10, 25], [10, 25]]}, {"i": "E5988A0A", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "19A38071", "s": [[20, 20], [30, 20], [40, 20]]}]},
+{"d": "2025-11-14", "t": "Hamstrings and Calves", "ex": [{"i": "F4B4C6EE", "s": [[30, 10], [35, 10], [40, 10]]}, {"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 10], [200, 10], [250, 10]]}, {"i": "8BEBFED6", "s": [[40, 10], [45, 10], [50, 10]]}, {"i": "B8127AD1", "s": [[20, 15], [20, 15], [20, 15]]}, {"i": "E05C2C38", "s": [[40, 21], [40, 21], [40, 21]]}, {"i": "2B4B7310", "s": [[25, 10], [25, 10], [35, 10]]}, {"i": "2A48E443", "s": [[25, 30], [25, 30], [25, 30]]}]},
+{"d": "2025-11-13", "t": "Back and Biceps", "ex": [{"i": "6A6C31A5", "s": [[30, 15], [30, 15], [37.5, 10]]}, {"i": "0393F233", "s": [[30, 15], [37.5, 10], [37.5, 10]]}, {"i": "55E6546F", "s": [[15, 15], [25, 15], [30, 15]]}, {"i": "4E5257DE", "s": [[30, 15], [37.5, 10], [37.5, 10]]}, {"i": "D2387AB1", "s": [[25, 15], [30, 15], [35, 15]]}, {"i": "724CDE60", "s": [[10, 20], [10, 20], [10, 15]]}, {"i": "8BAB2735", "s": [[10, 20], [10, 20], [15, 20]]}, {"i": "7E3BC8B6", "s": [[10, 20], [10, 20], [15, 20]]}, {"i": "2348AB72", "s": [[10, 20], [10, 20], [10, 20]]}]},
+{"d": "2025-11-11", "t": "Quads and Triceps", "ex": [{"i": "C7973E0E", "s": [[150, 20], [200, 15], [250, 15]]}, {"i": "75A4F6C4", "s": [[20, 20], [25, 20], [30, 20]]}, {"i": "5E1A7777", "s": [[0, 20], [0, 20], [0, 20]]}, {"i": "CC35A01F", "s": [[130, 20], [160, 15], [200, 15]]}, {"i": "6127A3AD", "s": [[10, 30], [10, 30]]}, {"i": "B5EFBF9C", "s": [[15, 10], [20, 10], [20, 10]]}, {"i": "CDC472B1", "s": [[20, 10], [25, 10], [30, 10]]}, {"i": "93A552C6", "s": [[20, 10], [25, 10], [30, 10]]}, {"i": "94B7239B", "s": [[20, 20], [25, 15], [30, 10]]}]},
+{"d": "2025-11-10", "t": "Chest and Shoulders", "ex": [{"i": "50DFDFAB", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "DA0F0470", "s": [[10, 24], [10, 21], [10, 21]]}, {"i": "9DCE2D64", "s": [[15, 10], [15, 10], [15, 10]]}, {"i": "651F844C", "s": [[15, 15], [20, 15], [20, 15]]}, {"i": "7EB3F7C3", "s": [[10, 20], [15, 20], [15, 20]]}, {"i": "293483AD", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "8293E554", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "422B08F1", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "E5988A0A", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "073032BB", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "6AC96645", "s": [[10, 10], [10, 10], [10, 10]]}]},
+{"d": "2025-10-14", "t": "Legs/Triceps", "ex": [{"i": "C7973E0E", "s": [[150, 20], [200, 20], [250, 20]]}, {"i": "75A4F6C4", "s": [[20, 20], [24, 20], [32, 20]]}, {"i": "CC35A01F", "s": [[120, 20], [160, 20], [200, 15]]}, {"i": "FFDA283B", "s": [[20, 10], [20, 10], [20, 10]]}, {"i": "B5EFBF9C", "s": [[15, 15], [20, 15], [25, 15]]}, {"i": "6127A3AD", "s": [[10, 15], [10, 15], [10, 10]]}, {"i": "CDC472B1", "s": [[20, 10], [25, 10], [30, 10]]}]},
+{"d": "2025-10-13", "t": "Back and Biceps", "ex": [{"i": "6A6C31A5", "s": [[30, 15], [37.5, 15], [45, 10]]}, {"i": "0393F233", "s": [[25, 15], [30, 15], [37.5, 10]]}, {"i": "08A2974E", "s": [[15, 15], [30, 15], [40, 10]]}, {"i": "D2387AB1", "s": [[20, 20], [25, 15], [30, 15]]}, {"i": "1E9A6B8E", "s": [[5, 20], [7.5, 20], [7.5, 20]]}, {"i": "8BAB2735", "s": [[10, 10], [10, 12], [10, 12]]}, {"i": "7E3BC8B6", "s": [[10, 10], [10, 12], [10, 12]]}, {"i": "2348AB72", "s": [[10, 20], [15, 20], [15, 20]]}, {"i": "DDB29047", "s": [[5, 15], [7.5, 15], [7.5, 10]]}, {"i": "112FC6B7", "s": [[5, 15], [7.5, 15], [7.5, 10]]}]},
+{"d": "2025-10-10", "t": "Hamstrings", "ex": [{"i": "DDCC3821", "s": [[40, 15], [40, 15], [60, 10], [80, 10]]}, {"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 20], [200, 20], [250, 15]]}, {"i": "B8127AD1", "s": [[20, 20], [20, 20], [20, 20]]}, {"i": "F4B4C6EE", "s": [[45, 10], [50, 10], [55, 10]]}, {"i": "8BEBFED6", "s": [[35, 10], [40, 10], [45, 10]]}, {"i": "72CFFAD5", "s": [[40, 20], [70, 20], [70, 20]]}]},
+{"d": "2025-10-08", "t": "Chest and Shoulders", "ex": [{"i": "07B38369", "s": [[20, 15], [25, 15], [30, 10]]}, {"i": "BE89C631", "s": [[20, 15], [10, 15], [15, 15]]}, {"i": "79D0BB3A", "s": [[10, 20], [20, 15], [20, 15], [20, 15]]}, {"i": "651F844C", "s": [[20, 20], [25, 20], [30, 20]]}, {"i": "67280085", "s": [[40, 15], [50, 15], [60, 15]]}, {"i": "8293E554", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "422B08F1", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "6AC96645", "s": [[10, 15], [10, 15], [10, 15], [10, 15], [10, 15], [10, 15]]}, {"i": "073032BB", "s": [[10, 15], [10, 15], [10, 15]]}]},
+{"d": "2025-10-07", "t": "Legs and Triceps", "ex": [{"i": "75A4F6C4", "s": [[30, 20], [35, 20], [40, 20]]}, {"i": "5E1A7777", "s": [[0, 20], [0, 20], [0, 20]]}, {"i": "C7973E0E", "s": [[150, 20], [200, 20], [250, 20]]}, {"i": "CC35A01F", "s": [[120, 15], [160, 15], [200, 15]]}, {"i": "94B7239B", "s": [[15, 20], [20, 20], [25, 20]]}, {"i": "CD6DC8E5", "s": [[0, 10], [0, 10], [0, 10]]}, {"i": "6127A3AD", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "93A552C6", "s": [[15, 20], [20, 20], [25, 20]]}]},
+{"d": "2025-10-06", "t": "Back and Biceps", "ex": [{"i": "6A6C31A5", "s": [[30, 15], [37.5, 10], [45, 10]]}, {"i": "0393F233", "s": [[20, 15], [30, 10], [37.5, 10]]}, {"i": "08A2974E", "s": [[15, 15], [20, 15], [25, 15]]}, {"i": "4E5257DE", "s": [[30, 15], [37.5, 15], [45, 10]]}, {"i": "A8814C06", "s": [[20, 15], [25, 15], [30, 10]]}, {"i": "1E9A6B8E", "s": [[5, 20], [7.5, 20], [7.5, 20]]}, {"i": "01A35BF9", "s": [[15, 15], [10, 30], [10, 30], [10, 30]]}, {"i": "7E3BC8B6", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "8BAB2735", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "37FCC2BB", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "9202CC23", "s": [[10, 15], [15, 15], [15, 15]]}]},
+{"d": "2025-10-03", "t": "Quads and Hamstrings", "ex": [{"i": "CC35A01F", "s": [[120, 20], [160, 20], [200, 20]]}, {"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[100, 20], [150, 20], [200, 20]]}, {"i": "75A4F6C4", "s": [[20, 20], [25, 20], [30, 20]]}, {"i": "72CFFAD5", "s": [[40, 20], [60, 20], [60, 20]]}, {"i": "B8127AD1", "s": [[15, 20], [20, 20], [20, 20]]}]},
+{"d": "2025-10-01", "t": "Shoulders/Triceps", "ex": [{"i": "E5988A0A", "s": [[10, 15], [10, 15], [15, 10]]}, {"i": "422B08F1", "s": [[10, 15], [10, 15], [15, 10]]}, {"i": "8293E554", "s": [[10, 15], [10, 15], [15, 10]]}, {"i": "19A38071", "s": [[10, 20], [15, 20], [20, 20]]}, {"i": "94B7239B", "s": [[15, 20], [20, 20], [25, 20]]}, {"i": "CD6DC8E5", "s": [[0, 10], [0, 10], [0, 10]]}, {"i": "3765684D", "s": [[30, 15], [35, 15], [40, 10]]}, {"i": "6127A3AD", "s": [[10, 15], [10, 15], [15, 15]]}]},
+{"d": "2025-09-27", "t": "Hamstrings", "ex": [{"i": "8BEBFED6", "s": [[35, 15], [40, 15], [45, 15]]}, {"i": "F4B4C6EE", "s": [[40, 15], [45, 15], [50, 15]]}, {"i": "CC35A01F", "s": [[150, 15], [160, 15], [200, 15]]}, {"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 20], [200, 20], [250, 28]]}, {"i": "B8127AD1", "s": [[15, 20], [20, 20], [20, 20]]}, {"i": "72CFFAD5", "s": [[40, 20], [60, 20], [70, 10]]}, {"i": "06745E58", "s": [[0, 10], [0, 10], [0, 10], [0, 10], [0, 10]]}]},
+{"d": "2025-09-26", "t": "Biceps/Triceps", "ex": [{"i": "2F8D3067", "s": [[10, 15], [15, 15], [25, 10], [15, 15], [25, 15], [35, 15]]}, {"i": "37FCC2BB", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "A5AC6449", "s": [[15, 20], [15, 20], [15, 20]]}, {"i": "7E3BC8B6", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "94B7239B", "s": [[20, 20], [25, 20], [30, 20]]}, {"i": "93A552C6", "s": [[20, 20], [25, 20], [30, 20]]}, {"i": "8347DFD1", "s": [[10, 20], [10, 20]]}, {"i": "3765684D", "s": [[30, 15], [40, 15], [40, 15]]}]},
+{"d": "2025-09-24", "t": "Afternoon workout", "ex": [{"i": "50DFDFAB", "s": [[10, 10], [15, 10], [15, 10]]}, {"i": "DA0F0470", "s": [[10, 20], [20, 15], [20, 15]]}]},
+{"d": "2025-09-23", "t": "Back Biceps", "ex": [{"i": "6A6C31A5", "s": [[30, 15], [35, 15], [40, 10]]}, {"i": "0393F233", "s": [[25, 10], [30, 10], [30, 10]]}, {"i": "08A2974E", "s": [[20, 15], [25, 15], [30, 15]]}, {"i": "BC3492DA", "s": [[25, 15], [35, 10], [35, 10], [20, 10]]}, {"i": "D2387AB1", "s": [[25, 15], [30, 15], [35, 15]]}, {"i": "ADA8623C", "s": [[25, 30], [30, 30], [35, 30]]}, {"i": "7E3BC8B6", "s": [[10, 30], [10, 30], [15, 20]]}, {"i": "37FCC2BB", "s": [[10, 30], [15, 20], [15, 20]]}, {"i": "724CDE60", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "0E4523F4", "s": [[10, 15], [10, 15], [10, 15]]}]},
+{"d": "2025-09-22", "t": "Legs", "ex": [{"i": "5E1A7777", "s": [[0, 24], [0, 24], [0, 24]]}, {"i": "CC35A01F", "s": [[120, 15], [160, 15], [200, 15]]}, {"i": "75A4F6C4", "s": [[20, 20], [30, 20], [40, 20]]}, {"i": "C7973E0E", "s": [[150, 15], [200, 15], [250, 15]]}, {"i": "DCF3B31B", "s": [[0, 15], [0, 15], [0, 15]]}, {"i": "09C9F635", "s": [[0, 10], [0, 10], [0, 10]]}]},
+{"d": "2025-09-20", "t": "Biceps, Triceps, Forearms", "ex": [{"i": "ADA8623C", "s": [[20, 20], [20, 20], [25, 20]]}, {"i": "94B7239B", "s": [[20, 20], [20, 20], [25, 20]]}, {"i": "3765684D", "s": [[30, 16], [35, 16], [40, 16]]}, {"i": "7E3BC8B6", "s": [[10, 20], [15, 20], [15, 20]]}, {"i": "724CDE60", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "1006DF48", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "0E4523F4", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "B31EB524", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "6127A3AD", "s": [[10, 10], [10, 10], [10, 10]]}]},
+{"d": "2025-09-19", "t": "Legs", "ex": [{"i": "8BEBFED6", "s": [[45, 15]]}, {"i": "F4B4C6EE", "s": [[35, 15]]}, {"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 20], [200, 20], [250, 20]]}, {"i": "CC35A01F", "s": [[120, 15], [160, 15], [200, 10]]}, {"i": "72CFFAD5", "s": [[30, 10], [45, 18], [60, 10]]}]},
+{"d": "2025-09-18", "t": "Chest and Shoulders", "ex": [{"i": "F72FA239", "s": [[15, 10], [25, 10], [25, 10]]}, {"i": "07B38369", "s": [[15, 10], [25, 10], [25, 10]]}, {"i": "7EB3F7C3", "s": [[10, 25], [20, 15], [30, 15], [30, 15]]}, {"i": "651F844C", "s": [[15, 20], [20, 15], [25, 15]]}, {"i": "79D0BB3A", "s": [[25, 20], [35, 15], [35, 15]]}, {"i": "8293E554", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "E5988A0A", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "422B08F1", "s": [[10, 10], [10, 10], [10, 10], [10, 10], [10, 10], [10, 10]]}, {"i": "878CD1D0", "s": [[10, 10], [10, 10], [10, 10]]}]},
+{"d": "2025-09-17", "t": "Back", "ex": [{"i": "2EE45F81", "s": [[30, 15], [37.5, 15], [45, 10]]}, {"i": "0393F233", "s": [[30, 10], [37.5, 10], [37.5, 10]]}, {"i": "BC3492DA", "s": [[25, 15], [30, 10], [30, 10]]}, {"i": "55E6546F", "s": [[10, 15], [20, 15], [30, 10]]}]},
+{"d": "2025-08-04", "t": "#1", "ex": [{"i": "50DFDFAB", "s": [[10, 12], [10, 12], [15, 12]]}, {"i": "E9E4089F", "s": [[30, 10], [30, 10], [30, 10]]}, {"i": "651F844C", "s": [[15, 20], [20, 15], [20, 15]]}, {"i": "3601968B", "s": [[10, 15], [15, 15], [15, 15]]}, {"i": "67280085", "s": [[30, 15], [40, 15], [60, 15]]}, {"i": "878CD1D0", "s": [[10, 15], [15, 15], [15, 15]]}, {"i": "E5988A0A", "s": [[5, 20], [10, 15], [10, 15]]}, {"i": "422B08F1", "s": [[5, 20], [10, 10], [10, 10]]}, {"i": "8293E554", "s": [[10, 10], [15, 10], [15, 10]]}]},
+{"d": "2025-07-29", "t": "Back", "ex": [{"i": "729237D1", "s": [[30, 12], [30, 12], [30, 12]]}, {"i": "6A6C31A5", "s": [[25, 15], [30, 15], [35, 15]]}, {"i": "0393F233", "s": [[20, 15], [25, 15], [25, 15]]}, {"i": "55E6546F", "s": [[18, 15], [10, 15], [10, 15]]}, {"i": "BC3492DA", "s": [[35, 20], [35, 20], [35, 20]]}, {"i": "D2387AB1", "s": [[20, 15], [25, 15], [25, 15]]}, {"i": "D7D7FCCE", "s": [[20, 15], [25, 15], [20, 15]]}]},
+{"d": "2025-07-28", "t": "Welcome Back", "ex": [{"i": "729237D1", "s": [[30, 12], [30, 12], [30, 12]]}, {"i": "C7973E0E", "s": [[100, 15], [150, 15], [200, 10]]}, {"i": "75A4F6C4", "s": [[20, 20], [25, 21], [25, 21]]}, {"i": "5E1A7777", "s": [[0, 24], [0, 24], [0, 24]]}, {"i": "A127DA73", "s": [[35, 15], [40, 15], [58, 15]]}, {"i": "01A35BF9", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "37FCC2BB", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "7E3BC8B6", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "1E9A6B8E", "s": [[5, 14], [5, 14], [5, 14]]}, {"i": "724CDE60", "s": [[10, 20], [10, 20], [10, 20]]}]},
+{"d": "2025-05-28", "t": "Chest/Shoulders/Triceps", "ex": [{"i": "E9E4089F", "s": [[30, 15], [30, 15], [30, 15]]}, {"i": "39C99849", "s": [[0, 15], [0, 15], [0, 15]]}, {"i": "50DFDFAB", "s": [[5, 20], [5, 20], [10, 20]]}, {"i": "07B38369", "s": [[20, 20], [20, 20], [25, 15]]}, {"i": "12017185", "s": [[10, 15], [10, 15], [15, 15]]}, {"i": "651F844C", "s": [[15, 15], [15, 15], [20, 15], [10, 10]]}, {"i": "E5988A0A", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "422B08F1", "s": [[5, 10], [5, 10], [5, 10]]}, {"i": "8293E554", "s": [[5, 10], [5, 10], [5, 10]]}, {"i": "BD86EFD5", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "93A552C6", "s": [[15, 15], [20, 15], [25, 15]]}, {"i": "94B7239B", "s": [[15, 15], [20, 15], [25, 15]]}, {"i": "3765684D", "s": [[15, 10], [20, 10], [25, 10]]}, {"i": "21310F5F", "s": [[15, 10], [20, 10], [25, 10]]}]},
+{"d": "2025-05-27", "t": "Back/Biceps", "ex": [{"i": "D23C609B", "s": [[15, 12], [15, 12], [15, 12]]}, {"i": "55E6546F", "s": [[10, 15], [20, 15], [30, 15]]}, {"i": "7AB9A362", "s": [[10, 15], [20, 15], [30, 15]]}, {"i": "6A6C31A5", "s": [[20, 15], [25, 15], [30, 15]]}, {"i": "0393F233", "s": [[20, 15], [25, 15], [30, 15]]}, {"i": "F1E57334", "s": [[25, 15], [30, 15], [30, 15]]}, {"i": "01A35BF9", "s": [[15, 15], [15, 15], [15, 15], [15, 10]]}, {"i": "37FCC2BB", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "7E3BC8B6", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "1E9A6B8E", "s": [[5, 20], [5, 20], [5, 20]]}]},
+{"d": "2025-05-26", "t": "Quads/Hamstrings", "ex": [{"i": "CC35A01F", "s": [[80, 20], [130, 15], [130, 15]]}, {"i": "75A4F6C4", "s": [[16, 21], [20, 21], [24, 21]]}, {"i": "C7973E0E", "s": [[150, 10], [150, 10], [200, 10]]}, {"i": "B537D09F", "s": [[8, 20], [8, 20], [8, 20]]}, {"i": "5F4E6DD3", "s": [[20, 20], [35, 15], [35, 15]]}, {"i": "A127DA73", "s": [[20, 10], [20, 10], [20, 10]]}, {"i": "B8127AD1", "s": [[15, 10], [15, 10], [20, 10], [10, 10]]}]},
+{"d": "2025-05-24", "t": "Hamstrings/Triceps", "ex": [{"i": "062AB91A", "s": [[5, 20], [10, 15], [15, 15]]}, {"i": "F4B4C6EE", "s": [[25, 20], [30, 15], [35, 15]]}, {"i": "8BEBFED6", "s": [[40, 15], [45, 15], [50, 10]]}, {"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[50, 35], [100, 30], [150, 20]]}, {"i": "CC35A01F", "s": [[40, 20], [80, 20], [80, 20]]}, {"i": "5F4E6DD3", "s": [[20, 20], [35, 20], [40, 10]]}, {"i": "B8127AD1", "s": [[15, 15], [15, 15], [20, 15]]}]},
+{"d": "2025-05-23", "t": "Chest/Shoulders", "ex": [{"i": "E9E4089F", "s": [[30, 15], [30, 15], [30, 15]]}, {"i": "39C99849", "s": [[0, 15], [0, 15], [0, 15]]}, {"i": "79D0BB3A", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "D3E2AB55", "s": [[15, 15], [20, 15], [25, 15]]}, {"i": "07B38369", "s": [[10, 20], [15, 15], [20, 15]]}, {"i": "651F844C", "s": [[15, 20], [20, 20], [25, 20]]}, {"i": "D8281C62", "s": [[15, 15], [20, 15], [25, 15]]}, {"i": "422B08F1", "s": [[5, 20], [10, 20], [10, 20]]}, {"i": "8293E554", "s": [[5, 20], [10, 20], [10, 20]]}, {"i": "059E835D", "s": [[5, 10], [5, 10], [5, 10]]}]},
+{"d": "2025-05-22", "t": "Back/Biceps", "ex": [{"i": "473CF5B8", "s": [[0.7, 15], [40, 15], [2, 15]]}, {"i": "AA1EB7D8", "s": [[15, 15], [20, 15], [8, 15]]}, {"i": "01A35BF9", "s": [[20, 45], [20, 45], [30, 30]]}, {"i": "8BAB2735", "s": [[10, 20], [10, 20], [15, 15]]}, {"i": "6A6C31A5", "s": [[25, 20], [30, 15], [35, 15]]}, {"i": "08A2974E", "s": [[10, 15], [10, 15], [15, 15]]}, {"i": "7E3BC8B6", "s": [[10, 15], [10, 15], [15, 15]]}]},
+{"d": "2025-05-20", "t": "Legs", "ex": [{"i": "CC35A01F", "s": [[80, 15], [120, 15], [160, 15]]}, {"i": "C7973E0E", "s": [[150, 15], [200, 12], [250, 10], [150, 10]]}, {"i": "B5D3A742", "s": [[20, 10], [25, 10], [25, 10]]}, {"i": "75A4F6C4", "s": [[12, 15], [16, 15], [20, 15]]}]},
+{"d": "2025-05-17", "t": "Hamstrings", "ex": [{"i": "F4B4C6EE", "s": [[30, 15], [35, 15], [40, 15]]}, {"i": "8BEBFED6", "s": [[40, 15], [45, 15], [50, 15]]}, {"i": "05293BCA", "s": [[40, 20], [40, 20], [45, 16]]}, {"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[50, 25], [100, 25], [150, 20], [200, 15]]}, {"i": "72CFFAD5", "s": [[25, 20], [30, 20], [40, 20]]}, {"i": "B8127AD1", "s": [[15, 15], [15, 15], [15, 15]]}]},
+{"d": "2025-05-14", "t": "Back/Biceps", "ex": [{"i": "6A6C31A5", "s": [[20, 20], [30, 15], [35, 12]]}, {"i": "2B4B7310", "s": [[10, 20], [20, 15], [30, 10], [30, 10]]}, {"i": "0393F233", "s": [[25, 15], [30, 15], [35, 10], [20, 10]]}, {"i": "D2387AB1", "s": [[20, 15], [25, 15], [25, 15]]}, {"i": "D7D7FCCE", "s": [[20, 15], [20, 15], [20, 15]]}, {"i": "01A35BF9", "s": [[20, 15], [30, 15], [30, 12], [20, 15], [30, 15], [30, 12]]}, {"i": "37FCC2BB", "s": [[10, 15], [10, 15], [10, 12]]}, {"i": "7E3BC8B6", "s": [[10, 15], [10, 15], [10, 12]]}, {"i": "724CDE60", "s": [[10, 15], [10, 15], [10, 15]]}]},
+{"d": "2025-05-13", "t": "Legs", "ex": [{"i": "C7973E0E", "s": [[100, 15], [150, 15], [250, 10], [200, 10]]}, {"i": "CC35A01F", "s": [[80, 15], [120, 10], [160, 10]]}, {"i": "9694DA61", "s": [[0, 60], [0, 60], [0, 60]]}, {"i": "B537D09F", "s": [[20, 20], [25, 20], [25, 20]]}, {"i": "75A4F6C4", "s": [[16, 20], [24, 20], [28, 20]]}]},
+{"d": "2025-05-12", "t": "Chest/Shoulders", "ex": [{"i": "0FBF7195", "s": [[20, 20], [20, 20], [30, 16], [40, 10]]}, {"i": "12017185", "s": [[10, 15], [15, 15], [20, 15]]}, {"i": "07B38369", "s": [[15, 15], [20, 15], [25, 15]]}, {"i": "651F844C", "s": [[12, 20], [15, 20], [15, 20]]}, {"i": "BE89C631", "s": [[10, 10], [20, 10], [20, 10]]}, {"i": "E5988A0A", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "422B08F1", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "8293E554", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "9930DF71", "s": [[15, 10], [20, 10], [25, 10]]}, {"i": "286C1D0B", "s": [[10, 10], [10, 10], [15, 10]]}, {"i": "059E835D", "s": [[5, 10], [5, 10], [5, 10]]}]},
+{"d": "2025-05-03", "t": "Hamstrings/Shoulders", "ex": [{"i": "F4B4C6EE", "s": [[20, 15], [30, 25], [35, 15], [20, 10]]}, {"i": "8BEBFED6", "s": [[35, 15], [45, 15], [55, 10], [35, 10]]}, {"i": "2A48E443", "s": [[35, 15], [45, 15], [55, 15]]}, {"i": "4180C405", "s": [[100, 20], [150, 20], [150, 20]]}, {"i": "CC35A01F", "s": [[40, 10], [80, 10], [120, 10]]}, {"i": "878CD1D0", "s": [[10, 15], [15, 15], [20, 10], [10, 10]]}, {"i": "F21D5693", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "422B08F1", "s": [[10, 15], [10, 15], [15, 8], [10, 15]]}, {"i": "8293E554", "s": [[5, 15], [10, 15], [10, 15]]}]},
+{"d": "2025-05-02", "t": "Chest + Triceps", "ex": [{"i": "79D0BB3A", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "07B38369", "s": [[15, 15], [20, 15], [25, 15]]}, {"i": "651F844C", "s": [[6, 20], [6, 20], [9, 20]]}, {"i": "293483AD", "s": [[3, 15], [6, 15], [9, 15]]}, {"i": "67280085", "s": [[20, 15], [25, 15], [30, 15]]}, {"i": "93A552C6", "s": [[15, 20], [20, 20], [20, 20]]}, {"i": "94B7239B", "s": [[15, 20], [20, 20], [20, 20]]}, {"i": "875F585F", "s": [[20, 10], [30, 10], [30, 10]]}, {"i": "74103F24", "s": [[20, 10], [30, 10], [30, 10]]}]},
+{"d": "2025-04-30", "t": "Legs/Abs", "ex": [{"i": "C7973E0E", "s": [[100, 10], [150, 10], [150, 10]]}, {"i": "CC35A01F", "s": [[80, 15], [120, 15], [160, 15]]}, {"i": "5E1A7777", "s": [[0, 20], [0, 30], [0, 30]]}, {"i": "75A4F6C4", "s": [[16, 20], [24, 20], [28, 20]]}, {"i": "32B0B590", "s": [[0, 10], [0, 10], [0, 10]]}, {"i": "09C9F635", "s": [[0, 10], [0, 10], [0, 10]]}]},
+{"d": "2025-04-29", "t": "Back/Biceps", "ex": [{"i": "0B841777", "s": [[10, 10], [10, 10], [20, 10]]}, {"i": "0393F233", "s": [[20, 15], [25, 15], [30, 15]]}, {"i": "6A6C31A5", "s": [[20, 15], [25, 15], [30, 15]]}, {"i": "059E835D", "s": [[10, 15], [20, 15], [30, 10]]}, {"i": "55E6546F", "s": [[10, 10], [10, 10], [20, 10]]}, {"i": "2B4B7310", "s": [[10, 10], [10, 10], [20, 10]]}, {"i": "37FCC2BB", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "7E3BC8B6", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "01A35BF9", "s": [[30, 15], [30, 15], [30, 15]]}, {"i": "8BAB2735", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "1E9A6B8E", "s": [[10, 10], [10, 10], [10, 10]]}]},
+{"d": "2025-04-26", "t": "Cardio at BM", "ex": [{"i": "243710DE", "s": [[0, 0]]}, {"i": "D8F7F851", "s": [[0, 0]]}, {"i": "B537D09F", "s": [[7.5, 10], [7.5, 10]]}, {"i": "DCF3B31B", "s": [[0, 15], [0, 15], [0, 15]]}]},
+{"d": "2025-04-25", "t": "Calves/Forearms/Abs", "ex": [{"i": "062AB91A", "s": [[10, 15], [10, 15], [15, 15]]}, {"i": "B05C2C29", "s": [[40, 15], [40, 15], [40, 15]]}, {"i": "09C9F635", "s": [[0, 10], [0, 10], [0, 10]]}, {"i": "23A48484", "s": [[25, 15], [30, 15], [30, 15]]}, {"i": "9202CC23", "s": [[15, 15], [15, 15], [15, 15]]}, {"i": "DDB29047", "s": [[15, 15], [15, 15], [15, 15]]}]},
+{"d": "2025-04-24", "t": "Legs/Triceps", "ex": [{"i": "C7973E0E", "s": [[50, 10], [100, 15], [150, 15], [200, 15]]}, {"i": "75A4F6C4", "s": [[12, 30], [16, 30], [28, 30]]}, {"i": "5E1A7777", "s": [[0, 20], [0, 20], [0, 20]]}, {"i": "3D0C7C75", "s": [[30, 20], [30, 20], [30, 20]]}, {"i": "21310F5F", "s": [[15, 10], [10, 10], [10, 10]]}, {"i": "94B7239B", "s": [[20, 20], [20, 20], [20, 20]]}, {"i": "4B4BF8C2", "s": [[20, 10], [25, 10], [30, 10]]}]},
+{"d": "2025-04-23", "t": "Back/Biceps", "ex": [{"i": "D23C609B", "s": [[15, 15], [15, 15], [15, 15]]}, {"i": "6A6C31A5", "s": [[26, 20], [32.5, 15], [39, 10]]}, {"i": "0393F233", "s": [[25, 15], [25, 15], [30, 15]]}, {"i": "08A2974E", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "D2387AB1", "s": [[20, 15], [20, 15], [20, 15]]}]},
+{"d": "2025-04-22", "t": "Chest Shoulders", "ex": [{"i": "78683336", "s": [[20, 10], [25, 10], [30, 10]]}, {"i": "50DFDFAB", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "DA0F0470", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "651F844C", "s": [[6, 20], [6, 20], [7.5, 50]]}, {"i": "422B08F1", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "E5988A0A", "s": [[5, 20], [10, 10], [10, 10]]}, {"i": "8293E554", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "9930DF71", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "059E835D", "s": [[10, 10], [10, 10], [10, 10]]}]},
+{"d": "2025-04-21", "t": "Hamstrings", "ex": [{"i": "8BEBFED6", "s": [[25, 15], [35, 15], [50, 15]]}, {"i": "F4B4C6EE", "s": [[25, 15], [30, 15], [35, 15]]}, {"i": "B8127AD1", "s": [[10, 15], [15, 15], [20, 15]]}, {"i": "5F4E6DD3", "s": [[25, 20], [30, 20], [30, 20]]}, {"i": "0EB695C9", "s": [[50, 20], [100, 20], [150, 20]]}]},
+{"d": "2025-04-17", "t": "Chest Shoulders", "ex": [{"i": "79D0BB3A", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "3601968B", "s": [[10, 10], [15, 10], [15, 10]]}, {"i": "12017185", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "07B38369", "s": [[15, 15], [15, 15], [15, 15]]}, {"i": "059E835D", "s": [[10, 10], [10, 10], [0, 10]]}, {"i": "422B08F1", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "8293E554", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "7AB9A362", "s": [[20, 15], [20, 15], [20, 15]]}]},
+{"d": "2025-04-16", "t": "Back", "ex": [{"i": "32C4D4A2", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "37FCC2BB", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "D23C609B", "s": [[0, 15], [0, 15], [0, 15]]}, {"i": "01A35BF9", "s": [[20, 30], [20, 30], [20, 30]]}, {"i": "6A6C31A5", "s": [[26, 15], [32.5, 15], [39, 10]]}, {"i": "4E5257DE", "s": [[26, 15], [32.5, 15], [39, 10]]}, {"i": "BE289E45", "s": [[20, 15], [30, 15], [30, 15]]}]},
+{"d": "2025-04-15", "t": "Evening workout", "ex": [{"i": "CC35A01F", "s": [[40, 15], [80, 15], [80, 15]]}, {"i": "3FD83744", "s": [[25, 20], [50, 20], [50, 20]]}, {"i": "75A4F6C4", "s": [[12, 20], [16, 20], [20, 20]]}, {"i": "5E1A7777", "s": [[0, 20], [0, 20], [0, 20]]}, {"i": "BC10A922", "s": [[0, 20], [0, 10], [0, 10]]}]},
+{"d": "2025-04-10", "t": "Hamstrings", "ex": [{"i": "91237BDD", "s": [[50, 25], [50, 25], [50, 25]]}, {"i": "B8127AD1", "s": [[15, 15], [20, 15], [25, 15]]}, {"i": "C7973E0E", "s": [[100, 20], [150, 20], [200, 20]]}, {"i": "5F4E6DD3", "s": [[30, 20], [30, 20], [30, 20]]}, {"i": "8BEBFED6", "s": [[30, 15], [45, 15], [50, 15]]}, {"i": "F4B4C6EE", "s": [[20, 20], [30, 15], [40, 15]]}, {"i": "B05C2C29", "s": [[20, 15], [20, 15], [40, 15]]}, {"i": "D8F7F851", "s": [[0, 0]]}]},
+{"d": "2025-04-09", "t": "chest and shoulders", "ex": [{"i": "12017185", "s": [[10, 10], [20, 10], [20, 10]]}, {"i": "3601968B", "s": [[10, 20], [20, 14], [20, 14]]}, {"i": "BE89C631", "s": [[10, 10], [20, 10], [20, 10]]}, {"i": "DA0F0470", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "651F844C", "s": [[6, 15], [6, 15], [7.5, 15]]}, {"i": "E9E4089F", "s": [[30, 12], [30, 12], [30, 12]]}, {"i": "E5988A0A", "s": [[5, 20], [10, 20], [10, 20]]}, {"i": "878CD1D0", "s": [[15, 15], [15, 15], [20, 15]]}, {"i": "7AB9A362", "s": [[30, 15], [30, 15], [30, 15]]}, {"i": "422B08F1", "s": [[5, 20], [5, 20], [10, 20]]}, {"i": "8293E554", "s": [[5, 10], [5, 10], [10, 10]]}, {"i": "243710DE", "s": [[0, 0]]}]},
+{"d": "2025-04-08", "t": "Legs", "ex": [{"i": "C7973E0E", "s": [[150, 15], [150, 20], [200, 14]]}, {"i": "CC35A01F", "s": [[80, 15], [120, 15], [160, 15]]}, {"i": "75A4F6C4", "s": [[12, 20], [16, 16], [20, 16]]}, {"i": "5CC07A1F", "s": [[0, 20], [0, 20], [0, 20]]}]},
+{"d": "2025-04-07", "t": "Back and Biceps", "ex": [{"i": "1B2B1E7C", "s": [[0, 15], [0, 15], [0, 15]]}, {"i": "D2387AB1", "s": [[20, 15], [25, 15], [30, 15]]}, {"i": "C3BCABB3", "s": [[20, 15], [25, 15], [30, 15]]}, {"i": "6A6C31A5", "s": [[26, 15], [32.5, 15], [39, 10]]}, {"i": "4E5257DE", "s": [[26, 12], [32.5, 12], [39, 10]]}, {"i": "0393F233", "s": [[15, 15], [30, 10], [20, 10], [15, 10]]}, {"i": "01A35BF9", "s": [[20, 20], [20, 20], [20, 20]]}, {"i": "37FCC2BB", "s": [[10, 15], [10, 15], [10, 20]]}, {"i": "7E3BC8B6", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "32C4D4A2", "s": [[10, 10], [10, 10], [10, 20]]}, {"i": "FAB6EB2F", "s": [[10, 15], [10, 15], [10, 15]]}]},
+{"d": "2025-04-05", "t": "Hamstrings and Abs", "ex": [{"i": "8BEBFED6", "s": [[20, 15], [25, 20], [30, 15], [40, 15]]}, {"i": "D8F7F851", "s": [[0, 0]]}, {"i": "F4B4C6EE", "s": [[20, 15], [30, 15], [40, 10], [20, 10]]}, {"i": "05293BCA", "s": [[20, 10], [20, 10], [30, 15]]}, {"i": "91237BDD", "s": [[100, 20], [150, 20], [200, 15]]}, {"i": "72CFFAD5", "s": [[30, 20], [30, 20], [30, 20]]}, {"i": "B8127AD1", "s": [[10, 15], [15, 15], [20, 15]]}, {"i": "DCF3B31B", "s": [[0, 15], [0, 15], [0, 15]]}, {"i": "09C9F635", "s": [[0, 10], [0, 10], [0, 10]]}, {"i": "eaa467da-a149-4f55-99a2-3f1387778198", "s": [[0, 15], [0, 15], [0, 15]]}]},
+{"d": "2025-04-04", "t": "Back and Biceps", "ex": [{"i": "D23C609B", "s": [[10, 12], [10, 12]]}, {"i": "6A6C31A5", "s": [[26, 20], [32.5, 15], [39, 12]]}, {"i": "4E5257DE", "s": [[26, 15], [32.5, 15], [32.5, 15]]}, {"i": "0393F233", "s": [[20, 15], [25, 15], [25, 15]]}, {"i": "AA1EB7D8", "s": [[15, 15], [20, 15], [20, 15]]}, {"i": "08A2974E", "s": [[5, 15], [5, 15], [10, 15]]}, {"i": "37FCC2BB", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "01A35BF9", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "7E3BC8B6", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "FAB6EB2F", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "8BAB2735", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "724CDE60", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "1E9A6B8E", "s": [[0, 14], [0, 14], [0, 14]]}]},
+{"d": "2025-04-03", "t": "Chest and Shoulders", "ex": [{"i": "50DFDFAB", "s": [[0, 15], [0, 15], [5, 10], [5, 10]]}, {"i": "D3E2AB55", "s": [[10, 15], [10, 15], [15, 10]]}, {"i": "07B38369", "s": [[10, 15], [10, 15], [15, 10]]}, {"i": "BE89C631", "s": [[10, 15], [10, 15], [15, 10]]}, {"i": "DA0F0470", "s": [[5, 10], [5, 10], [5, 10]]}, {"i": "651F844C", "s": [[4.5, 15], [4.5, 15], [6, 15]]}, {"i": "422B08F1", "s": [[5, 15], [5, 15], [5, 15]]}, {"i": "8293E554", "s": [[5, 15], [5, 15], [5, 15]]}, {"i": "E5988A0A", "s": [[5, 15], [5, 15], [5, 15]]}, {"i": "059E835D", "s": [[0, 15], [0, 15], [0, 15]]}]},
+{"d": "2025-04-02", "t": "Legs", "ex": [{"i": "062AB91A", "s": [[10, 15], [10, 15], [15, 15]]}, {"i": "CC35A01F", "s": [[80, 15], [120, 15], [160, 15]]}, {"i": "5E1A7777", "s": [[0, 20], [0, 20], [0, 20]]}, {"i": "75A4F6C4", "s": [[15, 20], [20, 20], [25, 20]]}, {"i": "C7973E0E", "s": [[100, 20], [150, 20], [200, 10]]}]}
+];
+const EXMETA = {
+"A733CC5B":{"name":"Walking Lunge (Dumbbell)","primary":"quadriceps"},
+"12017185":{"name":"Chest Fly (Dumbbell)","primary":"chest"},
+"67280085":{"name":"Pullover (Dumbbell)","primary":"lats"},
+"78683336":{"name":"Chest Fly (Machine)","primary":"chest"},
+"914F3A96":{"name":"Chest Supported Incline Row (Dumbbell)","primary":"upper_back"},
+"32HKJ34K":{"name":"Walking Lunge","primary":"quadriceps","bodyweight":true},
+"7E3BC8B6":{"name":"Hammer Curl (Dumbbell)","primary":"biceps"},
+"422B08F1":{"name":"Lateral Raise (Dumbbell)","primary":"shoulders"},
+"6A6C31A5":{"name":"Lat Pulldown (Cable)","primary":"lats"},
+"651F844C":{"name":"Cable Fly Crossovers","primary":"chest"},
+"0393F233":{"name":"Seated Cable Row - V Grip (Cable)","primary":"upper_back"},
+"75A4F6C4":{"name":"Leg Extension (Machine)","primary":"quadriceps"},
+"CC35A01F":{"name":"Squat (Machine)","primary":"quadriceps"},
+"C7973E0E":{"name":"Leg Press (Machine)","primary":"quadriceps"},
+"37FCC2BB":{"name":"Bicep Curl (Dumbbell)","primary":"biceps"},
+"8293E554":{"name":"Front Raise (Dumbbell)","primary":"shoulders"},
+"B8127AD1":{"name":"Lying Leg Curl (Machine)","primary":"hamstrings"},
+"01A35BF9":{"name":"EZ Bar Biceps Curl","primary":"biceps"},
+"E5988A0A":{"name":"Rear Delt Reverse Fly (Dumbbell)","primary":"shoulders"},
+"07B38369":{"name":"Incline Bench Press (Dumbbell)","primary":"chest"},
+"48f5c3f5-c628-486f-8b21-5857033c580f":{"name":"Vertical Leg press","primary":"hamstrings"},
+"5E1A7777":{"name":"Lunge","primary":"quadriceps","bodyweight":true},
+"D2387AB1":{"name":"Straight Arm Lat Pulldown (Cable)","primary":"lats"},
+"F4B4C6EE":{"name":"Hip Abduction (Machine)","primary":"abductors"},
+"8BEBFED6":{"name":"Hip Adduction (Machine)","primary":"adductors"},
+"72CFFAD5":{"name":"Romanian Deadlift (Dumbbell)","primary":"hamstrings"},
+"08A2974E":{"name":"T Bar Row","primary":"upper_back"},
+"94B7239B":{"name":"Triceps Rope Pushdown","primary":"triceps"},
+"93A552C6":{"name":"Triceps Pushdown","primary":"triceps"},
+"50DFDFAB":{"name":"Incline Bench Press (Barbell)","primary":"chest"},
+"DA0F0470":{"name":"Decline Bench Press (Barbell)","primary":"chest"},
+"1E9A6B8E":{"name":"Preacher Curl (Machine)","primary":"biceps"},
+"8BAB2735":{"name":"Seated Incline Curl (Dumbbell)","primary":"biceps"},
+"C01F58D1":{"name":"Seated Incline Hammer Curl (Dumbbell)","primary":"biceps"},
+"724CDE60":{"name":"Concentration Curl","primary":"biceps"},
+"79D0BB3A":{"name":"Bench Press (Barbell)","primary":"chest"},
+"BE89C631":{"name":"Hex Press (Dumbbell)","primary":"chest"},
+"4E5257DE":{"name":"Lat Pulldown - Close Grip (Cable)","primary":"lats"},
+"059E835D":{"name":"Shoulder Press (Machine Plates)","primary":"shoulders"},
+"6127A3AD":{"name":"Triceps Kickback (Dumbbell)","primary":"triceps"},
+"CDC472B1":{"name":"Triceps Pressdown","primary":"triceps"},
+"55E6546F":{"name":"Bent Over Row (Barbell)","primary":"upper_back"},
+"B5EFBF9C":{"name":"Overhead Triceps Extension (Cable)","primary":"triceps"},
+"878CD1D0":{"name":"Shoulder Press (Dumbbell)","primary":"shoulders"},
+"05293BCA":{"name":"Sumo Squat (Dumbbell)","primary":"quadriceps"},
+"3765684D":{"name":"Triceps Extension (Dumbbell)","primary":"triceps"},
+"3601968B":{"name":"Bench Press (Dumbbell)","primary":"chest"},
+"5F4E6DD3":{"name":"Deadlift (Dumbbell)","primary":"glutes"},
+"BC3492DA":{"name":"Iso-Lateral High Row (Machine)","primary":"lats"},
+"6AC96645":{"name":"Overhead Press (Dumbbell)","primary":"shoulders"},
+"19A38071":{"name":"Shrug (Machine)","primary":"traps"},
+"3D1CDC75":{"name":"Belt Squat (Machine)","primary":"quadriceps"},
+"91237BDD":{"name":"Calf Press (Machine)","primary":"calves"},
+"875F585F":{"name":"Skullcrusher (Barbell)","primary":"triceps"},
+"A69FF221":{"name":"Arnold Press (Dumbbell)","primary":"shoulders"},
+"CD6DC8E5":{"name":"Bench Dip","primary":"triceps","bodyweight":true},
+"35B51B87":{"name":"Bench Press - Close Grip (Barbell)","primary":"triceps"},
+"E9E4089F":{"name":"Chest Dip (Assisted)","primary":"chest"},
+"D23C609B":{"name":"Chin Up (Assisted)","primary":"lats"},
+"F1E57334":{"name":"Dumbbell Row","primary":"lats"},
+"AA1EB7D8":{"name":"Iso-Lateral Row (Machine)","primary":"upper_back"},
+"09C9F635":{"name":"Lying Leg Raise","primary":"abdominals","bodyweight":true},
+"E05C2C38":{"name":"Standing Calf Raise (Machine)","primary":"calves"},
+"243710DE":{"name":"Treadmill","primary":"cardio"},
+"7AB9A362":{"name":"Upright Row (Barbell)","primary":"shoulders"},
+"ADA8623C":{"name":"Bicep Curl (Cable)","primary":"biceps"},
+"DCF3B31B":{"name":"Crunch","primary":"abdominals","bodyweight":true},
+"D8F7F851":{"name":"Cycling","primary":"cardio"},
+"3D0C7C75":{"name":"Goblet Squat","primary":"quadriceps"},
+"B537D09F":{"name":"Lunge (Dumbbell)","primary":"quadriceps"},
+"2B4B7310":{"name":"Romanian Deadlift (Barbell)","primary":"hamstrings"},
+"062AB91A":{"name":"Seated Calf Raise","primary":"calves"},
+"B05C2C29":{"name":"Single Leg Standing Calf Raise (Machine)","primary":"calves"},
+"06745E58":{"name":"Standing Calf Raise","primary":"calves","bodyweight":true},
+"073032BB":{"name":"Standing Military Press (Barbell)","primary":"shoulders"},
+"DDB29047":{"name":"Behind the Back Wrist Curl (Barbell)","primary":"forearms"},
+"E644F828":{"name":"Bench Press - Wide Grip (Barbell)","primary":"chest"},
+"A5AC6449":{"name":"Bicep Curl (Barbell)","primary":"biceps"},
+"7EB3F7C3":{"name":"Chest Press (Machine)","primary":"chest"},
+"32C4D4A2":{"name":"Cross Body Hammer Curl","primary":"biceps"},
+"BD86EFD5":{"name":"Front Raise (Barbell)","primary":"shoulders"},
+"36E8F14E":{"name":"Hammer Curl (Cable)","primary":"biceps"},
+"D3E2AB55":{"name":"Incline Chest Fly (Dumbbell)","primary":"chest"},
+"39C99849":{"name":"Incline Push Ups","primary":"chest","bodyweight":true},
+"A127DA73":{"name":"Kettlebell Goblet Squat","primary":"quadriceps"},
+"D7D7FCCE":{"name":"Landmine Row","primary":"upper_back"},
+"0EB695C9":{"name":"Leg Press Horizontal (Machine)","primary":"quadriceps"},
+"293483AD":{"name":"Low Cable Fly Crossovers","primary":"chest"},
+"4C6721B9":{"name":"Overhead Dumbbell Lunge","primary":"quadriceps"},
+"FAB6EB2F":{"name":"Preacher Curl (Dumbbell)","primary":"biceps"},
+"729237D1":{"name":"Pull Up (Weighted)","primary":"lats"},
+"9930DF71":{"name":"Seated Overhead Press (Dumbbell)","primary":"shoulders"},
+"9202CC23":{"name":"Seated Wrist Extension (Barbell)","primary":"forearms"},
+"3FD83744":{"name":"Single Leg Press (Machine)","primary":"quadriceps"},
+"2348AB72":{"name":"Spider Curl (Barbell)","primary":"biceps"},
+"9694DA61":{"name":"Squat (Bodyweight)","primary":"quadriceps","bodyweight":true},
+"A8814C06":{"name":"Squat Row","primary":"full_body"},
+"2A48E443":{"name":"Straight Leg Deadlift","primary":"hamstrings"},
+"4B4BF8C2":{"name":"Triceps Dip (Assisted)","primary":"triceps"},
+"21310F5F":{"name":"Triceps Extension (Cable)","primary":"triceps"},
+"0E4523F4":{"name":"Wrist Roller","primary":"forearms"},
+"99D5F10E":{"name":"Ab Wheel","primary":"abdominals","bodyweight":true},
+"E8D86EE8":{"name":"Band Pullaparts","primary":"shoulders","bodyweight":true},
+"0FBF7195":{"name":"Bench Press (Smith Machine)","primary":"chest"},
+"B5D3A742":{"name":"Bulgarian Split Squat (Dumbbell)","primary":"quadriceps"},
+"9DCE2D64":{"name":"Butterfly (Pec Deck)","primary":"chest"},
+"23A48484":{"name":"Cable Crunch","primary":"abdominals"},
+"B582299E":{"name":"Chest Supported Reverse Fly (Dumbbell)","primary":"shoulders"},
+"F21D5693":{"name":"Chest Supported Y Raise (Dumbbell)","primary":"shoulders"},
+"eaa467da-a149-4f55-99a2-3f1387778198":{"name":"Crunch kicks","primary":"abdominals","bodyweight":true},
+"BC10A922":{"name":"Decline Crunch","primary":"abdominals","bodyweight":true},
+"F72FA239":{"name":"Dumbbell Squeeze Press","primary":"chest"},
+"BE640BA0":{"name":"Face Pull","primary":"shoulders"},
+"DBB91A3C":{"name":"Front Raise (Cable)","primary":"shoulders"},
+"4180C405":{"name":"Good Morning (Barbell)","primary":"hamstrings"},
+"3A6FA3D1":{"name":"Incline Bench Press (Smith Machine)","primary":"chest"},
+"24706DCD":{"name":"Iso-Lateral Chest Press (Machine)","primary":"chest"},
+"32B0B590":{"name":"Jackknife Sit Up","primary":"abdominals","bodyweight":true},
+"74103F24":{"name":"JM Press (Barbell)","primary":"triceps"},
+"5CC07A1F":{"name":"Jumping Lunge","primary":"quadriceps","bodyweight":true},
+"BE289E45":{"name":"Lateral Raise (Cable)","primary":"shoulders"},
+"473CF5B8":{"name":"Lat Pulldown (Machine)","primary":"lats"},
+"6E6EE645":{"name":"Lunge (Barbell)","primary":"quadriceps"},
+"7B8D84E8":{"name":"Overhead Press (Barbell)","primary":"shoulders"},
+"30E293E3":{"name":"Pendulum Squat (Machine)","primary":"quadriceps"},
+"4F942934":{"name":"Preacher Curl (Barbell)","primary":"biceps"},
+"1B2B1E7C":{"name":"Pull Up","primary":"lats","bodyweight":true},
+"392887AA":{"name":"Push Up","primary":"chest","bodyweight":true},
+"D8281C62":{"name":"Rear Delt Reverse Fly (Machine)","primary":"shoulders"},
+"112FC6B7":{"name":"Reverse Curl (Barbell)","primary":"biceps"},
+"9F48F858":{"name":"Reverse Curl (Cable)","primary":"biceps"},
+"FFDA283B":{"name":"Reverse Lunge (Dumbbell)","primary":"quadriceps"},
+"234897AB":{"name":"Rope Cable Curl","primary":"biceps"},
+"0222DB42":{"name":"Rowing Machine","primary":"cardio"},
+"C3BCABB3":{"name":"Seated Cable Row - Bar Wide Grip","primary":"upper_back"},
+"5122E7D9":{"name":"Seated Dip Machine","primary":"triceps"},
+"1006DF48":{"name":"Seated Palms Up Wrist Curl","primary":"forearms"},
+"0B841777":{"name":"Shrug (Barbell)","primary":"traps"},
+"2EE45F81":{"name":"Single Arm Lat Pulldown","primary":"lats"},
+"8347DFD1":{"name":"Single Arm Tricep Extension (Dumbbell)","primary":"triceps"},
+"552AB030":{"name":"Single Arm Triceps Pushdown (Cable)","primary":"triceps"},
+"DDCC3821":{"name":"Squat (Smith Machine)","primary":"quadriceps"},
+"6120CAAB":{"name":"Standing Leg Curls","primary":"hamstrings"},
+"6622E5A0":{"name":"Sumo Squat (Barbell)","primary":"quadriceps"},
+"2F8D3067":{"name":"Triceps Extension (Barbell)","primary":"triceps"},
+"286C1D0B":{"name":"Upright Row (Cable)","primary":"shoulders"},
+"B31EB524":{"name":"Wide-Elbow Triceps Press (Dumbbell)","primary":"triceps"},
+"FE389074":{"name":"Rack Pull","primary":"upper_back"},
+"18487FA7":{"name": "Decline Bench Press (Dumbbell)", "primary": "chest"},
+"023947AB":{"name": "HIIT", "primary": "cardio"},
+"A0D8FA1B":{"name": "Boxing", "primary": "cardio"}
+};
+const STEPS = [
+{"d": "2026-08-20", "steps": 14958, "goal": 14730},
+{"d": "2026-08-19", "steps": 10846, "goal": 15160},
+{"d": "2026-08-18", "steps": 17345, "goal": 14910},
+{"d": "2026-08-17", "steps": 13004, "goal": 15380},
+{"d": "2026-08-16", "steps": 15365, "goal": 15380},
+{"d": "2026-08-15", "steps": 17630, "goal": 14810},
+{"d": "2026-08-14", "steps": 15173, "goal": 14770},
+{"d": "2026-08-13", "steps": 14584, "goal": 14810},
+{"d": "2026-08-12", "steps": 13226, "goal": 14980},
+{"d": "2026-08-11", "steps": 17162, "goal": 14730},
+{"d": "2026-08-10", "steps": 13380, "goal": 14880},
+{"d": "2026-08-09", "steps": 19724, "goal": 13670},
+{"d": "2026-08-08", "steps": 15453, "goal": 13220},
+{"d": "2026-08-07", "steps": 16051, "goal": 12510},
+{"d": "2026-08-06", "steps": 18795, "goal": 11810},
+{"d": "2026-08-05", "steps": 11240, "goal": 11870},
+{"d": "2026-08-04", "steps": 12748, "goal": 11770},
+{"d": "2026-08-03", "steps": 10634, "goal": 11890},
+{"d": "2026-08-02", "steps": 14011, "goal": 11360},
+{"d": "2026-08-01", "steps": 11553, "goal": 11310},
+{"d": "2026-07-31", "steps": 11726, "goal": 11260},
+{"d": "2026-07-30", "steps": 11084, "goal": 11300},
+{"d": "2026-07-29", "steps": 10179, "goal": 11580},
+{"d": "2026-07-28", "steps": 10021, "goal": 11750},
+{"d": "2026-07-27", "steps": 12431, "goal": 11580},
+{"d": "2026-07-26", "steps": 15223, "goal": 10660},
+{"d": "2026-07-25", "steps": 10970, "goal": 10580},
+{"d": "2026-07-24", "steps": 10679, "goal": 10560},
+{"d": "2026-07-23", "steps": 7980, "goal": 11200},
+{"d": "2026-07-22", "steps": 10227, "goal": 11300},
+{"d": "2026-07-21", "steps": 13576, "goal": 10730},
+{"d": "2026-07-20", "steps": 11506, "goal": 10530},
+{"d": "2026-07-19", "steps": 14200, "goal": 10120},
+{"d": "2026-07-18", "steps": 2915, "goal": 10920},
+{"d": "2026-07-17", "steps": 14716, "goal": 9960},
+{"d": "2026-07-16", "steps": 14404, "goal": 8840},
+{"d": "2026-07-15", "steps": 9035, "goal": 8780},
+{"d": "2026-07-14", "steps": 14130, "goal": 7440},
+{"d": "2026-07-13", "steps": 11261, "goal": 6480},
+{"d": "2026-07-12", "steps": 8130, "goal": 6060},
+{"d": "2026-07-11", "steps": 10238, "goal": 5590}
+];
+const HEARTRATE = [
+{"d": "2026-08-20", "resting": 55, "min": 50, "max": 154},
+{"d": "2026-08-19", "resting": 53, "min": 49, "max": 147},
+{"d": "2026-08-18", "resting": 54, "min": 52, "max": 151},
+{"d": "2026-08-17", "resting": 56, "min": 50, "max": 134},
+{"d": "2026-08-16", "resting": 58, "min": 56, "max": 110},
+{"d": "2026-08-15", "resting": 57, "min": 53, "max": 159},
+{"d": "2026-08-14", "resting": 55, "min": 52, "max": 163},
+{"d": "2026-08-13", "resting": 52, "min": 51, "max": 160},
+{"d": "2026-08-12", "resting": 54, "min": 50, "max": 114},
+{"d": "2026-08-11", "resting": 57, "min": 51, "max": 121},
+{"d": "2026-08-10", "resting": 53, "min": 49, "max": 127},
+{"d": "2026-08-09", "resting": 55, "min": 51, "max": 138},
+{"d": "2026-08-08", "resting": 51, "min": 49, "max": 149},
+{"d": "2026-08-07", "resting": 57, "min": 52, "max": 144},
+{"d": "2026-08-06", "resting": 56, "min": 50, "max": 146},
+{"d": "2026-08-05", "resting": 56, "min": 41, "max": 111},
+{"d": "2026-08-04", "resting": 54, "min": 50, "max": 152},
+{"d": "2026-08-03", "resting": 62, "min": 57, "max": 155},
+{"d": "2026-08-02", "resting": 62, "min": 58, "max": 152},
+{"d": "2026-08-01", "resting": 61, "min": 53, "max": 154},
+{"d": "2026-07-31", "resting": 59, "min": 53, "max": 148},
+{"d": "2026-07-30", "resting": 56, "min": 54, "max": 140},
+{"d": "2026-07-29", "resting": 59, "min": 54, "max": 110},
+{"d": "2026-07-28", "resting": 58, "min": 53, "max": 153},
+{"d": "2026-07-27", "resting": 55, "min": 53, "max": 130},
+{"d": "2026-07-26", "resting": 60, "min": 61, "max": 109},
+{"d": "2026-07-25", "resting": 57, "min": 51, "max": 113},
+{"d": "2026-07-24", "resting": 58, "min": 52, "max": 122},
+{"d": "2026-07-23", "resting": 59, "min": 55, "max": 105},
+{"d": "2026-07-22", "resting": 53, "min": 45, "max": 141},
+{"d": "2026-07-21", "resting": 53, "min": 52, "max": 149},
+{"d": "2026-07-20", "resting": 54, "min": 46, "max": 131},
+{"d": "2026-07-19", "resting": 58, "min": 55, "max": 105},
+{"d": "2026-07-18", "resting": 54, "min": 52, "max": 123},
+{"d": "2026-07-17", "resting": 65, "min": 63, "max": 124},
+{"d": "2026-07-16", "resting": 59, "min": 51, "max": 147},
+{"d": "2026-07-15", "resting": 62, "min": 69, "max": 114},
+{"d": "2026-07-14", "resting": 59, "min": 55, "max": 138},
+{"d": "2026-07-13", "resting": 55, "min": 51, "max": 133},
+{"d": "2026-07-12", "resting": 61, "min": 59, "max": 103},
+{"d": "2026-07-11", "resting": 60, "min": 53, "max": 118}
+];
+const NUTRITION = [
+{"d": "2026-08-20", "calories": 2126, "goal": 2100, "protein": 170, "proteinGoal": 184, "carbs": 254, "carbsGoal": 210, "fat": 43, "fatGoal": 58},
+{"d": "2026-08-19", "calories": 1690, "goal": 2100, "protein": 159, "proteinGoal": 184, "carbs": 153, "carbsGoal": 210, "fat": 38, "fatGoal": 58},
+{"d": "2026-08-18", "calories": 2244, "goal": 2100, "protein": 191, "proteinGoal": 184, "carbs": 224, "carbsGoal": 210, "fat": 48, "fatGoal": 58},
+{"d": "2026-08-17", "calories": 2034, "goal": 2100, "protein": 180, "proteinGoal": 184, "carbs": 215, "carbsGoal": 210, "fat": 51, "fatGoal": 58},
+{"d": "2026-08-16", "calories": 2152, "goal": 2100, "protein": 148, "proteinGoal": 184, "carbs": 195, "carbsGoal": 210, "fat": 85, "fatGoal": 58},
+{"d": "2026-08-15", "calories": 2116, "goal": 2100, "protein": 197, "proteinGoal": 184, "carbs": 230, "carbsGoal": 210, "fat": 43, "fatGoal": 58},
+{"d": "2026-08-14", "calories": 2197, "goal": 2100, "protein": 191, "proteinGoal": 184, "carbs": 238, "carbsGoal": 210, "fat": 56, "fatGoal": 58},
+{"d": "2026-08-13", "calories": 1899, "goal": 2100, "protein": 127, "proteinGoal": 184, "carbs": 224, "carbsGoal": 210, "fat": 60, "fatGoal": 58},
+{"d": "2026-08-12", "calories": 2006, "goal": 2100, "protein": 113, "proteinGoal": 184, "carbs": 195, "carbsGoal": 210, "fat": 83, "fatGoal": 58},
+{"d": "2026-08-11", "calories": 2113, "goal": 2100, "protein": 147, "proteinGoal": 184, "carbs": 244, "carbsGoal": 210, "fat": 58, "fatGoal": 58},
+{"d": "2026-08-10", "calories": 2145, "goal": 2100, "protein": 165, "proteinGoal": 184, "carbs": 268, "carbsGoal": 210, "fat": 49, "fatGoal": 58}
+];
+const EXPENSES = [
+{"d": "2026-08-20", "category": "session", "amount": 3800, "note": "massage"},
+{"d": "2026-08-16", "category": "session", "amount": 1900, "note": "massage"},
+{"d": "2026-08-09", "category": "session", "amount": 1000, "note": "massage"},
+{"d": "2026-08-08", "category": "session", "amount": 1000, "note": "massage"}
+];
+const BODYLOG = [
+{"d": "2026-08-20", "sleepMin": 352, "weightKg": 69.55, "bodyFatPct": 21.10},
+{"d": "2026-08-19", "weightKg": 70.10, "bodyFatPct": 19.80},
+{"d": "2026-08-18", "weightKg": 69.80, "bodyFatPct": 19.30},
+{"d": "2026-08-17", "weightKg": 70.95, "bodyFatPct": 21.50},
+{"d": "2026-08-16", "weightKg": 70.85, "bodyFatPct": 21.40},
+{"d": "2026-08-15", "weightKg": 69.85, "bodyFatPct": 21.50},
+{"d": "2026-08-14", "weightKg": 69.90, "bodyFatPct": 21.30}
+];
+
+// Pure data-processing logic shared between the sanity-check script and the dashboard HTML.
+// No DOM dependency so it can be unit-checked under plain Node first.
+
+function epley1RM(w, r) { return w * (1 + r / 30); }
+
+function isBodyweight(id, meta) { return !!(meta && meta[id] && meta[id].bodyweight); }
+
+// Volume-equivalent metric per exercise: weight x reps normally, or total reps for
+// exercises flagged "bodyweight" in exercise_meta.json (e.g. push-ups, bodyweight squats),
+// since those are always logged at weight 0 and would otherwise show as permanently flat.
+function metricOf(sets, id, meta) {
+  if (isBodyweight(id, meta)) {
+    let reps = 0;
+    for (const [, r] of sets) reps += (r || 0);
+    return reps;
+  }
+  let v = 0;
+  for (const [wt, r] of sets) v += (wt || 0) * (r || 0);
+  return v;
+}
+
+function mergeWorkoutExercises(workout) {
+  // Some sessions log the same exercise id twice (e.g. duplicate "Concentration Curl" entries);
+  // merge their sets so per-session aggregates are correct.
+  const map = new Map();
+  for (const e of workout.ex) {
+    if (!map.has(e.i)) map.set(e.i, []);
+    map.get(e.i).push(...e.s);
+  }
+  return map;
+}
+
+function buildExerciseSessions(workouts, meta) {
+  // exerciseId -> [{date, sets, volume, topWeight, repsAtTop, e1rm}] sorted ascending by date
+  const byExercise = new Map();
+  for (const w of workouts) {
+    const merged = mergeWorkoutExercises(w);
+    for (const [id, sets] of merged) {
+      if (!byExercise.has(id)) byExercise.set(id, []);
+      const bodyweight = isBodyweight(id, meta);
+      let volume = 0, topWeight = -1, repsAtTop = 0, e1rm = 0;
+      for (const [wt, r] of sets) {
+        const weight = wt || 0, reps = r || 0;
+        volume += bodyweight ? reps : weight * reps;
+        if (weight > topWeight || (weight === topWeight && reps > repsAtTop)) {
+          topWeight = weight; repsAtTop = reps;
+        }
+        const est = epley1RM(weight, reps);
+        if (est > e1rm) e1rm = est;
+      }
+      byExercise.get(id).push({ date: w.d, title: w.t, sets, volume, topWeight, repsAtTop, e1rm, bodyweight });
+    }
+  }
+  for (const sessions of byExercise.values()) sessions.sort((a, b) => a.date.localeCompare(b.date));
+  return byExercise;
+}
+
+function volumeComparison(workouts, meta, recentStart, recentEnd, baseStart, baseEnd) {
+  // Per-exercise average per-session volume (see metricOf) in two date windows (inclusive
+  // on both ends), for exercises that appear in at least one of the windows. Cardio is
+  // excluded (tracked separately via cardioSessions). deltaPct is null when either window
+  // has no sessions for that exercise — the caller renders those as "new" / "not since".
+  const sessions = buildExerciseSessions(workouts, meta);
+  const rows = [];
+  for (const [id, sess] of sessions) {
+    if (meta[id] && meta[id].primary === 'cardio') continue;
+    const recent = sess.filter(s => s.date >= recentStart && s.date <= recentEnd);
+    const base = sess.filter(s => s.date >= baseStart && s.date <= baseEnd);
+    if (recent.length === 0 && base.length === 0) continue;
+    const avg = arr => arr.length ? arr.reduce((a, s) => a + s.volume, 0) / arr.length : null;
+    const recentAvg = avg(recent), baseAvg = avg(base);
+    const deltaPct = (recentAvg != null && baseAvg != null && baseAvg > 0)
+      ? ((recentAvg - baseAvg) / baseAvg * 100) : null;
+    rows.push({
+      id, name: meta[id] ? meta[id].name : id, primary: meta[id] ? meta[id].primary : null,
+      bodyweight: isBodyweight(id, meta),
+      recentAvg, recentN: recent.length, baseAvg, baseN: base.length, deltaPct,
+    });
+  }
+  return rows;
+}
+
+function detectPlateau(sessions) {
+  // Flag "plateaued" if neither volume nor e1RM improved for the last 2 consecutive session-over-session deltas.
+  if (sessions.length < 3) return { plateaued: false, reason: "insufficient history" };
+  const n = sessions.length;
+  const d1v = sessions[n - 1].volume - sessions[n - 2].volume;
+  const d2v = sessions[n - 2].volume - sessions[n - 3].volume;
+  const d1r = sessions[n - 1].e1rm - sessions[n - 2].e1rm;
+  const d2r = sessions[n - 2].e1rm - sessions[n - 3].e1rm;
+  const plateaued = d1v <= 0 && d2v <= 0 && d1r <= 0 && d2r <= 0;
+  return { plateaued, d1v, d2v, d1r, d2r };
+}
+
+function isoWeekStart(dateStr) {
+  const d = new Date(dateStr + "T00:00:00Z");
+  const day = (d.getUTCDay() + 6) % 7; // Mon=0
+  d.setUTCDate(d.getUTCDate() - day);
+  return d.toISOString().slice(0, 10);
+}
+
+function weeklyMuscleSets(workouts, meta) {
+  // weekStart -> muscleGroup -> setCount (counts ALL logged sets, attributed to primary muscle group)
+  const weeks = new Map();
+  for (const w of workouts) {
+    const wk = isoWeekStart(w.d);
+    if (!weeks.has(wk)) weeks.set(wk, {});
+    const merged = mergeWorkoutExercises(w);
+    for (const [id, sets] of merged) {
+      const m = meta[id];
+      if (!m) continue;
+      const grp = m.primary;
+      if (grp === "cardio") continue;
+      weeks.get(wk)[grp] = (weeks.get(wk)[grp] || 0) + sets.length;
+    }
+  }
+  return weeks;
+}
+
+function cardioSessions(workouts, id) {
+  // date-ascending {date, min, km, paceMinPerKm} for exercise `id`'s logged cardio stats.
+  // Cardio machines (e.g. Rowing Machine) aren't tracked via weight/reps, so duration/distance
+  // is stored separately on the exercise entry as `c: {min, km}` when available.
+  const sessions = [];
+  for (const w of workouts) {
+    for (const e of w.ex) {
+      if (e.i === id && e.c) {
+        const { min, km } = e.c;
+        sessions.push({ date: w.d, min, km, paceMinPerKm: km > 0 ? min / km : null });
+      }
+    }
+  }
+  sessions.sort((a, b) => a.date.localeCompare(b.date));
+  // pace-based progress verdict vs. the immediately prior session (lower min/km = faster = progress)
+  for (let i = 0; i < sessions.length; i++) {
+    const prev = i > 0 ? sessions[i - 1] : null;
+    if (!prev || sessions[i].paceMinPerKm == null || prev.paceMinPerKm == null) {
+      sessions[i].verdict = 'baseline';
+    } else if (sessions[i].paceMinPerKm < prev.paceMinPerKm) {
+      sessions[i].verdict = 'faster';
+    } else if (sessions[i].paceMinPerKm > prev.paceMinPerKm) {
+      sessions[i].verdict = 'slower';
+    } else {
+      sessions[i].verdict = 'same';
+    }
+  }
+  return sessions;
+}
+
+function cardioDurationSessions(workouts, id) {
+  // date-ascending {date, min, note, verdict} for a duration-only cardio exercise (e.g.
+  // Boxing, which has no distance/pace) — progress = longer duration than the prior
+  // session. `note` carries the exercise's logged free-text note (e.g. "Jab - Front and
+  // Back"), which for something like Boxing that's always the same duration is the actual
+  // session-to-session signal, not the duration verdict.
+  const sessions = [];
+  for (const w of workouts) {
+    for (const e of w.ex) {
+      if (e.i === id && e.c) sessions.push({ date: w.d, min: e.c.min, note: e.n || '' });
+    }
+  }
+  sessions.sort((a, b) => a.date.localeCompare(b.date));
+  for (let i = 0; i < sessions.length; i++) {
+    const prev = i > 0 ? sessions[i - 1] : null;
+    if (!prev) sessions[i].verdict = 'baseline';
+    else if (sessions[i].min > prev.min) sessions[i].verdict = 'longer';
+    else if (sessions[i].min < prev.min) sessions[i].verdict = 'shorter';
+    else sessions[i].verdict = 'same';
+  }
+  return sessions;
+}
+
+function dailySteps(stepsData) {
+  // date-ascending {date, steps, goal, hitGoal} from the daily step-count log (steps.json).
+  // Skips rows with a null/missing steps value (e.g. an in-progress "today" from Garmin) —
+  // there's nothing meaningful to chart yet, and a null would break arithmetic downstream.
+  const days = stepsData
+    .filter(s => s.steps != null && s.goal != null)
+    .map(s => ({ date: s.d, steps: s.steps, goal: s.goal, hitGoal: s.steps >= s.goal }));
+  days.sort((a, b) => a.date.localeCompare(b.date));
+  return days;
+}
+
+function weeklyStepsGoalRate(stepsData) {
+  // weekStart -> {days, hit, rate, avgSteps} — progress on steps is measured as goal-hit rate per
+  // week rather than day-over-day steps, since raw daily counts are too noisy to compare directly.
+  const weeks = new Map();
+  for (const s of stepsData) {
+    if (s.steps == null || s.goal == null) continue;
+    const wk = isoWeekStart(s.d);
+    if (!weeks.has(wk)) weeks.set(wk, { days: 0, hit: 0, totalSteps: 0 });
+    const w = weeks.get(wk);
+    w.days += 1;
+    w.totalSteps += s.steps;
+    if (s.steps >= s.goal) w.hit += 1;
+  }
+  for (const w of weeks.values()) { w.rate = w.hit / w.days; w.avgSteps = w.totalSteps / w.days; }
+  return weeks;
+}
+
+function dailyRestingHR(hrData) {
+  // date-ascending {date, resting, min, max, verdict} — lower resting HR than the prior logged
+  // day = improved cardiovascular fitness = progress (same convention as rowing pace).
+  // Skips rows with a null resting value (e.g. an incomplete "today") — nothing to chart yet.
+  const days = hrData
+    .filter(h => h.resting != null)
+    .map(h => ({ date: h.d, resting: h.resting, min: h.min, max: h.max }));
+  days.sort((a, b) => a.date.localeCompare(b.date));
+  for (let i = 0; i < days.length; i++) {
+    const prev = i > 0 ? days[i - 1] : null;
+    if (!prev || days[i].resting == null || prev.resting == null) {
+      days[i].verdict = 'baseline';
+    } else if (days[i].resting < prev.resting) {
+      days[i].verdict = 'improved';
+    } else if (days[i].resting > prev.resting) {
+      days[i].verdict = 'higher';
+    } else {
+      days[i].verdict = 'same';
+    }
+  }
+  return days;
+}
+
+function weeklyRestingHR(hrData) {
+  // weekStart -> {days, avg} average resting HR per week — smooths day-to-day noise
+  // (sleep/stress/illness) out of the trend, same approach as weeklyStepsGoalRate.
+  const weeks = new Map();
+  for (const h of hrData) {
+    if (h.resting == null) continue;
+    const wk = isoWeekStart(h.d);
+    if (!weeks.has(wk)) weeks.set(wk, { days: 0, total: 0 });
+    const w = weeks.get(wk);
+    w.days += 1;
+    w.total += h.resting;
+  }
+  for (const w of weeks.values()) w.avg = w.total / w.days;
+  return weeks;
+}
+
+function classifyDeficit(deficit, goal) {
+  // deficit = calories - goal. Negative = under goal = "deficit" (progress, if the goal is fat
+  // loss). Positive = over goal = "surplus". Within a 5%-of-goal band around zero = "maintenance".
+  const band = goal * 0.05;
+  if (deficit < -band) return 'deficit';
+  if (deficit > band) return 'surplus';
+  return 'maintenance';
+}
+
+function dailyNutrition(nutritionData) {
+  // date-ascending {date, calories, goal, deficit, verdict, protein, proteinGoal, carbs,
+  // carbsGoal, fat, fatGoal} from the daily calorie/macro log (nutrition.json). deficit =
+  // calories - goal (negative = under goal); verdict is 'deficit'/'surplus'/'maintenance' —
+  // see classifyDeficit. Skips rows with no logged calories (MyFitnessPal has nothing for
+  // that day) or no calorie goal to compare against. Per-macro goals are nullable (older
+  // synced rows predate macro-goal capture).
+  const days = nutritionData
+    .filter(n => n.calories != null && n.goal != null)
+    .map(n => {
+      const deficit = n.calories - n.goal;
+      return {
+        date: n.d, calories: n.calories, goal: n.goal, deficit,
+        verdict: classifyDeficit(deficit, n.goal),
+        protein: n.protein || 0, proteinGoal: n.proteinGoal ?? null,
+        carbs: n.carbs || 0, carbsGoal: n.carbsGoal ?? null,
+        fat: n.fat || 0, fatGoal: n.fatGoal ?? null,
+      };
+    });
+  days.sort((a, b) => a.date.localeCompare(b.date));
+  return days;
+}
+
+function weeklyCalorieDeficit(nutritionData) {
+  // weekStart -> {days, avgCalories, avgGoal, avgDeficit, deficitDays, surplusDays,
+  // maintenanceDays} — deficit = calories - goal, averaged per week (negative = net deficit
+  // for the week). Progress is judged on avgDeficit trending more negative week-over-week.
+  const weeks = new Map();
+  for (const n of nutritionData) {
+    if (n.calories == null || n.goal == null) continue;
+    const wk = isoWeekStart(n.d);
+    if (!weeks.has(wk)) weeks.set(wk, { days: 0, totalCalories: 0, totalGoal: 0, totalDeficit: 0, deficitDays: 0, surplusDays: 0, maintenanceDays: 0 });
+    const w = weeks.get(wk);
+    const deficit = n.calories - n.goal;
+    w.days += 1;
+    w.totalCalories += n.calories;
+    w.totalGoal += n.goal;
+    w.totalDeficit += deficit;
+    const verdict = classifyDeficit(deficit, n.goal);
+    if (verdict === 'deficit') w.deficitDays += 1;
+    else if (verdict === 'surplus') w.surplusDays += 1;
+    else w.maintenanceDays += 1;
+  }
+  for (const w of weeks.values()) {
+    w.avgCalories = w.totalCalories / w.days;
+    w.avgGoal = w.totalGoal / w.days;
+    w.avgDeficit = w.totalDeficit / w.days;
+  }
+  return weeks;
+}
+
+function weeklyMacros(nutritionData) {
+  // weekStart -> {days, avgProtein, avgCarbs, avgFat} average daily macros (grams) per week.
+  const weeks = new Map();
+  for (const n of nutritionData) {
+    if (n.calories == null) continue;
+    const wk = isoWeekStart(n.d);
+    if (!weeks.has(wk)) weeks.set(wk, { days: 0, totalProtein: 0, totalCarbs: 0, totalFat: 0 });
+    const w = weeks.get(wk);
+    w.days += 1;
+    w.totalProtein += n.protein || 0;
+    w.totalCarbs += n.carbs || 0;
+    w.totalFat += n.fat || 0;
+  }
+  for (const w of weeks.values()) {
+    w.avgProtein = w.totalProtein / w.days;
+    w.avgCarbs = w.totalCarbs / w.days;
+    w.avgFat = w.totalFat / w.days;
+  }
+  return weeks;
+}
+
+function dailyExpenses(expensesData) {
+  // date-ascending {date, category, amount, note} — personal-expense log (non-food/supplement/
+  // medication spend on yourself: spa, clothing, sessions, etc.). Skips rows with no amount.
+  const days = expensesData
+    .filter(e => e.amount != null)
+    .map(e => ({ date: e.d, category: e.category || 'other', amount: e.amount, note: e.note || '' }));
+  days.sort((a, b) => a.date.localeCompare(b.date));
+  return days;
+}
+
+function expenseCalendarMonth(expensesData, year, month) {
+  // Mon-Sun calendar grid for `month` (1-12) of `year`, padded with leading/trailing days from
+  // adjacent months so every row is a full week. Each cell carries that day's entries + total;
+  // categoryTotals/monthTotal only count days that actually fall inside the target month.
+  const days = dailyExpenses(expensesData);
+  const byDate = new Map();
+  for (const e of days) {
+    if (!byDate.has(e.date)) byDate.set(e.date, []);
+    byDate.get(e.date).push(e);
+  }
+  const first = new Date(Date.UTC(year, month - 1, 1));
+  const last = new Date(Date.UTC(year, month, 0));
+  const startOffset = (first.getUTCDay() + 6) % 7; // Mon=0
+  const endOffset = (7 - ((last.getUTCDay() + 6) % 7) - 1) % 7;
+  const gridStart = new Date(first); gridStart.setUTCDate(gridStart.getUTCDate() - startOffset);
+  const gridEnd = new Date(last); gridEnd.setUTCDate(gridEnd.getUTCDate() + endOffset);
+  const cells = [];
+  const categoryTotals = {};
+  let monthTotal = 0;
+  for (let d = new Date(gridStart); d <= gridEnd; d.setUTCDate(d.getUTCDate() + 1)) {
+    const dateStr = d.toISOString().slice(0, 10);
+    const entries = byDate.get(dateStr) || [];
+    const total = entries.reduce((s, e) => s + e.amount, 0);
+    const inMonth = d.getUTCMonth() === month - 1;
+    if (inMonth) {
+      monthTotal += total;
+      for (const e of entries) categoryTotals[e.category] = (categoryTotals[e.category] || 0) + e.amount;
+    }
+    cells.push({ date: dateStr, day: d.getUTCDate(), inMonth, total, entries });
+  }
+  return { year, month, cells, monthTotal, categoryTotals };
+}
+
+// ---------- reward mechanism ----------
+// Weekly budget banks toward a massage/spa fund, denominated in Rs: a completed week
+// (Mon-Sun) that hits >=4 logged training days (of which >=3 must be strength-training
+// days — a day with at least one non-cardio exercise; e.g. 2 boxing + 2 lifting days is
+// 4 workouts but only 2 strength days, so it doesn't qualify) AND an average of >=12,000
+// steps/day adds REWARD_WEEKLY_BUDGET to a running balance, capped at
+// REWARD_MAX_BANKED_WEEKS worth (earning past the cap while already banked to the max is
+// simply not added — it isn't queued for later). Every 6 continuous scored weeks with no
+// redemption at all earns a bonus of REWARD_MAX_BANKED_WEEKS worth on top (same cap
+// applies), then the streak resets. Logging a personal expense in the 'session' category
+// (the existing category already used for massage/spa spend) is the redemption event: its
+// actual logged `amount` (price varies session to session) is subtracted from the balance
+// right then — multiple sessions in a week are fine, each just subtracts its own cost. If
+// that pushes the balance below zero, it's a real deficit (spent ahead of what's banked)
+// rather than clamping at zero, since the caller displays a negative balance as weeks owed
+// instead of a Rs figure.
+const REWARD_WEEKLY_BUDGET = 1900;
+const REWARD_MAX_BANKED_WEEKS = 2;
+const REWARD_BONUS_STREAK_WEEKS = 6;
+const REWARD_MIN_WORKOUTS = 4;
+const REWARD_MIN_STRENGTH_WORKOUTS = 3;
+const REWARD_MIN_AVG_STEPS = 12000;
+const REWARD_REDEEM_CATEGORY = 'session';
+const REWARD_START_DATE = '2026-08-02'; // the mechanism itself started here — weeks/redemptions before it aren't scored
+
+function isStrengthDay(workout, meta) {
+  // A day counts toward the strength-training minimum if it has at least one exercise
+  // whose exercise_meta primary muscle group isn't 'cardio' (an exercise with no meta
+  // entry at all defaults to counting as strength, same as elsewhere in this file).
+  return workout.ex.some(e => !(meta[e.i] && meta[e.i].primary === 'cardio'));
+}
+
+function rewardLedger(workouts, stepsData, expensesData, latestDate, meta) {
+  meta = meta || {};
+  const cap = REWARD_WEEKLY_BUDGET * REWARD_MAX_BANKED_WEEKS;
+  const bonusAmount = REWARD_WEEKLY_BUDGET * REWARD_MAX_BANKED_WEEKS;
+  // Only raises balance toward cap, never lowers an already-higher balance — so a bonus
+  // landing right after a big earn can't accidentally erase the surplus.
+  const addCapped = (bal, amt) => (bal >= cap ? bal : Math.min(bal + amt, cap));
+
+  // First fully-in-scope week: if REWARD_START_DATE isn't itself a Monday, the week it falls
+  // in is only partially covered, so scoring starts the following Monday instead.
+  const startWk = isoWeekStart(REWARD_START_DATE);
+  const firstScoredWeek = startWk === REWARD_START_DATE
+    ? startWk
+    : (() => { const d = new Date(startWk + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + 7); return d.toISOString().slice(0, 10); })();
+
+  const workoutDaysByWeek = new Map();
+  const strengthDaysByWeek = new Map();
+  for (const w of workouts) {
+    const wk = isoWeekStart(w.d);
+    if (!workoutDaysByWeek.has(wk)) workoutDaysByWeek.set(wk, new Set());
+    workoutDaysByWeek.get(wk).add(w.d);
+    if (isStrengthDay(w, meta)) {
+      if (!strengthDaysByWeek.has(wk)) strengthDaysByWeek.set(wk, new Set());
+      strengthDaysByWeek.get(wk).add(w.d);
+    }
+  }
+
+  const stepsByWeek = new Map();
+  for (const s of stepsData) {
+    if (s.steps == null) continue;
+    const wk = isoWeekStart(s.d);
+    if (!stepsByWeek.has(wk)) stepsByWeek.set(wk, { total: 0, days: 0 });
+    const rec = stepsByWeek.get(wk);
+    rec.total += s.steps; rec.days += 1;
+  }
+
+  // Only score weeks from firstScoredWeek onward that have also fully elapsed by latestDate —
+  // the in-progress week is reported separately by currentWeekRewardProgress instead of being
+  // scored early.
+  const currentWeek = isoWeekStart(latestDate);
+  const weeks = [...new Set([...workoutDaysByWeek.keys(), ...stepsByWeek.keys()])]
+    .filter(wk => wk >= firstScoredWeek && wk < currentWeek)
+    .sort();
+
+  const redemptionEntries = dailyExpenses(expensesData)
+    .filter(e => e.category === REWARD_REDEEM_CATEGORY && e.date >= REWARD_START_DATE);
+  const redeemedWeeks = new Set(redemptionEntries.map(e => isoWeekStart(e.date)));
+
+  // Merge weekly earn events (dated at week-end) and redemption events (dated at the expense
+  // date, carrying its actual amount) into one chronological timeline so a mid-week
+  // redemption lands in the right place relative to the weeks around it.
+  const events = [];
+  for (const wk of weeks) {
+    const wkEnd = new Date(wk + "T00:00:00Z"); wkEnd.setUTCDate(wkEnd.getUTCDate() + 6);
+    const workoutCount = (workoutDaysByWeek.get(wk) || new Set()).size;
+    const strengthCount = (strengthDaysByWeek.get(wk) || new Set()).size;
+    const stepsRec = stepsByWeek.get(wk);
+    const avgSteps = stepsRec && stepsRec.days ? stepsRec.total / stepsRec.days : null;
+    const earned = workoutCount >= REWARD_MIN_WORKOUTS && strengthCount >= REWARD_MIN_STRENGTH_WORKOUTS
+      && avgSteps != null && avgSteps >= REWARD_MIN_AVG_STEPS;
+    events.push({ type: 'week', date: wkEnd.toISOString().slice(0, 10), week: wk, workoutCount, strengthCount, avgSteps, earned });
+  }
+  for (const r of redemptionEntries) events.push({ type: 'redeem', date: r.date, amount: r.amount, note: r.note });
+  events.sort((a, b) => a.date.localeCompare(b.date) || (a.type === 'week' ? -1 : 1));
+
+  let balance = 0, cleanStreak = 0;
+  const weeklyRows = [];
+  const redemptionLog = [];
+  for (const ev of events) {
+    if (ev.type === 'week') {
+      if (ev.earned) balance = addCapped(balance, REWARD_WEEKLY_BUDGET);
+      let bonusAwarded = null;
+      if (redeemedWeeks.has(ev.week)) {
+        // any redemption landing in this week already broke the streak when it was processed
+      } else {
+        cleanStreak++;
+        if (cleanStreak >= REWARD_BONUS_STREAK_WEEKS) {
+          balance = addCapped(balance, bonusAmount);
+          bonusAwarded = bonusAmount;
+          cleanStreak = 0;
+        }
+      }
+      weeklyRows.push({ week: ev.week, weekEnd: ev.date, workoutCount: ev.workoutCount, strengthCount: ev.strengthCount, avgSteps: ev.avgSteps, earned: ev.earned, bonusAwarded, cleanStreak, balanceAfter: balance });
+    } else {
+      balance -= ev.amount;
+      cleanStreak = 0;
+      redemptionLog.push({ date: ev.date, amount: ev.amount, note: ev.note, balanceAfter: balance });
+    }
+  }
+
+  return {
+    balance, cap, weeklyBudget: REWARD_WEEKLY_BUDGET, bonusAmount, bonusStreakWeeks: REWARD_BONUS_STREAK_WEEKS,
+    cleanStreak, minWorkouts: REWARD_MIN_WORKOUTS, minStrengthWorkouts: REWARD_MIN_STRENGTH_WORKOUTS, minAvgSteps: REWARD_MIN_AVG_STEPS,
+    weeklyRows, redemptions: redemptionLog,
+  };
+}
+
+function currentWeekRewardProgress(workouts, stepsData, latestDate, meta) {
+  // Read-only snapshot of the in-progress week — not scored into the ledger until it's over.
+  meta = meta || {};
+  const wk = isoWeekStart(latestDate);
+  const weekWorkouts = workouts.filter(w => isoWeekStart(w.d) === wk);
+  const workoutDays = new Set(weekWorkouts.map(w => w.d));
+  const strengthDays = new Set(weekWorkouts.filter(w => isStrengthDay(w, meta)).map(w => w.d));
+  const stepsRows = stepsData.filter(s => s.steps != null && isoWeekStart(s.d) === wk);
+  const avgSteps = stepsRows.length ? stepsRows.reduce((a, s) => a + s.steps, 0) / stepsRows.length : null;
+  return {
+    week: wk, workoutCount: workoutDays.size, strengthCount: strengthDays.size, daysLogged: stepsRows.length, avgSteps,
+    minWorkouts: REWARD_MIN_WORKOUTS, minStrengthWorkouts: REWARD_MIN_STRENGTH_WORKOUTS, minAvgSteps: REWARD_MIN_AVG_STEPS,
+  };
+}
+
+function weeklyVolume(workouts) {
+  const weeks = new Map();
+  for (const w of workouts) {
+    const wk = isoWeekStart(w.d);
+    let vol = 0;
+    for (const e of w.ex) for (const [wt, r] of e.s) vol += (wt || 0) * (r || 0);
+    weeks.set(wk, (weeks.get(wk) || 0) + vol);
+  }
+  return weeks;
+}
+
+function roundToPlate(weight) {
+  // round to nearest 2.5 (typical dumbbell/plate increment in this log)
+  return Math.round(weight / 2.5) * 2.5;
+}
+
+function prescribe(sessions, plateauInfo) {
+  if (sessions.length === 0) return null;
+  const last = sessions[sessions.length - 1];
+  const prev = sessions.length >= 2 ? sessions[sessions.length - 2] : null;
+  if (!prev) {
+    return { rule: "baseline", load: last.topWeight, reps: last.repsAtTop, note: "only one logged session — repeat as baseline" };
+  }
+  if (plateauInfo.plateaued) {
+    return { rule: "hold (plateaued)", load: last.topWeight, reps: last.repsAtTop, note: "no volume/1RM gain in 2+ sessions — hold load, consider a rep-range or variation change" };
+  }
+  const droppedOrSame = (last.topWeight < prev.topWeight) || (last.topWeight === prev.topWeight && last.repsAtTop < prev.repsAtTop);
+  const alreadyJumped = last.topWeight > prev.topWeight;
+  if (droppedOrSame) {
+    return { rule: "same load (reps/RIR dropped)", load: last.topWeight, reps: last.repsAtTop, note: "reps or load regressed vs prior session — repeat to consolidate" };
+  }
+  if (alreadyJumped) {
+    return { rule: "hold new load, add rep", load: last.topWeight, reps: last.repsAtTop + 1, note: "load already jumped last session — consolidate reps at the new weight" };
+  }
+  // reps maintained or increased at same weight -> progress
+  if (last.topWeight > 0) {
+    const newLoad = roundToPlate(last.topWeight * 1.0375); // ~+3.75% midpoint of 2.5-5%
+    return { rule: "+load (reps at target, RIR available)", load: newLoad, reps: last.repsAtTop, note: `+~3.75% load (${last.topWeight}->${newLoad})` };
+  }
+  return { rule: "+1 rep (bodyweight)", load: 0, reps: last.repsAtTop + 1, note: "bodyweight/unloaded movement — progress via reps" };
+}
+
+function dailyBodyLog(bodyLogData) {
+  // date-ascending {date, sleepMin, weightKg, bodyFatPct} — manual daily log. Garmin has no
+  // sleep or body-composition data for this account (checked directly against the API), so
+  // these three fields are hand-entered via the popup rather than synced, and any of them
+  // may be null on a given day.
+  const days = (bodyLogData || [])
+    .filter(b => b.sleepMin != null || b.weightKg != null || b.bodyFatPct != null)
+    .map(b => ({ date: b.d, sleepMin: b.sleepMin ?? null, weightKg: b.weightKg ?? null, bodyFatPct: b.bodyFatPct ?? null }));
+  days.sort((a, b) => a.date.localeCompare(b.date));
+  return days;
+}
+
+function trailingAvg(days, field, endDate, windowDays) {
+  // Average of `field` over the `windowDays` calendar days ending on endDate (inclusive),
+  // using whatever entries actually exist in that window rather than requiring it be full
+  // (the log is sparse until enough days have been manually entered).
+  windowDays = windowDays || 7;
+  const end = new Date(endDate + "T00:00:00Z");
+  const start = new Date(end); start.setUTCDate(start.getUTCDate() - (windowDays - 1));
+  const startStr = start.toISOString().slice(0, 10);
+  const vals = days.filter(d => d.date >= startStr && d.date <= endDate && d[field] != null).map(d => d[field]);
+  return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+}
+
+function programDayInfo(workouts, date) {
+  // "Day N" of the current training block: calendar days (inclusive, day 1 = the block's
+  // first logged session) since the most recent gap of >14 days between logged workout
+  // dates — the same gap convention called out elsewhere on the dashboard (e.g. the
+  // Jan-May gap). The streak counts the same way: this block hasn't hit a new gap yet, so
+  // day count and streak read identically for now.
+  const dates = [...new Set(workouts.map(w => w.d))].sort();
+  if (dates.length === 0) return { start: null, dayNumber: null };
+  let start = dates[0];
+  for (let i = 1; i < dates.length; i++) {
+    const gapDays = (new Date(dates[i] + "T00:00:00Z") - new Date(dates[i - 1] + "T00:00:00Z")) / 86400000;
+    if (gapDays > 14) start = dates[i];
+  }
+  const dayNumber = Math.round((new Date(date + "T00:00:00Z") - new Date(start + "T00:00:00Z")) / 86400000) + 1;
+  return { start, dayNumber };
+}
+
+// Collapses exercise_meta's finer-grained primary muscle groups into the broader tags the
+// training-log card's focus chips use (e.g. lats/upper_back/traps all read as "BACK").
+const TRAININGLOG_GROUP_LABEL = {
+  chest: 'CHEST', shoulders: 'SHOULDERS', lats: 'BACK', upper_back: 'BACK', traps: 'BACK',
+  biceps: 'BICEPS', triceps: 'TRICEPS', forearms: 'FOREARMS', abdominals: 'ABS',
+  quadriceps: 'LEGS', hamstrings: 'LEGS', glutes: 'LEGS', calves: 'LEGS',
+  adductors: 'LEGS', abductors: 'LEGS', cardio: 'CARDIO',
+};
+
+function trainingLogSession(workout, meta) {
+  // Groups a day's logged exercise entries (merging any duplicate-logged exercise id, in
+  // first-seen order) into the shape the training-log card renders: per-exercise best set
+  // (highest weight, ties broken by higher reps at that weight — same rule as
+  // buildExerciseSessions' topWeight/repsAtTop) plus the full per-set breakdown, and the
+  // day's distinct focus chips in first-seen order. isFirstGroup marks exercises in the
+  // session's first (primary) focus group, for the highlighted checkmark.
+  const order = [];
+  const byId = new Map();
+  for (const e of workout.ex) {
+    if (!byId.has(e.i)) { byId.set(e.i, { sets: [], cardio: null }); order.push(e.i); }
+    const entry = byId.get(e.i);
+    entry.sets.push(...e.s);
+    if (e.c) entry.cardio = e.c;
+  }
+  const groupsSeen = [];
+  for (const id of order) {
+    const label = meta[id] && meta[id].primary ? (TRAININGLOG_GROUP_LABEL[meta[id].primary] || meta[id].primary.toUpperCase()) : null;
+    if (label && !groupsSeen.includes(label)) groupsSeen.push(label);
+  }
+  const firstGroup = groupsSeen[0] || null;
+  const exercises = order.map(id => {
+    const { sets, cardio } = byId.get(id);
+    const m = meta[id] || {};
+    const bodyweight = !!m.bodyweight;
+    const label = m.primary ? (TRAININGLOG_GROUP_LABEL[m.primary] || m.primary.toUpperCase()) : null;
+    let best;
+    if (cardio) {
+      // km is 0 for duration-only cardio (e.g. Boxing has no distance) — show just the time.
+      best = cardio.km > 0 ? `${cardio.km.toFixed(1)} KM · ${cardio.min} min` : `${cardio.min} min`;
+    } else {
+      let topWeight = -1, repsAtTop = 0;
+      for (const [wt, r] of sets) {
+        const weight = wt || 0, reps = r || 0;
+        if (weight > topWeight || (weight === topWeight && reps > repsAtTop)) { topWeight = weight; repsAtTop = reps; }
+      }
+      best = bodyweight ? `${repsAtTop} REPS` : `${topWeight} KG × ${repsAtTop}`;
+    }
+    const setsStr = cardio ? null : sets.map(([wt, r]) => `${wt}×${r}`).join(' · ') + (bodyweight ? '' : ' kg');
+    return { id, name: m.name || id, group: label, isFirstGroup: label === firstGroup, best, setsStr, cardio: !!cardio };
+  });
+  return { title: workout.t, groups: groupsSeen, exercises };
+}
+
+function sleepGoalMin(bodyDays, date) {
+  // Base sleep target is 7h (420min). Bumps permanently to 7h30 (450min) the first time the
+  // trailing 4 weeks (28 consecutive calendar days, no gaps) have all hit the 7h target —
+  // once earned it stays bumped even if a later day misses it.
+  const BASE = 420, BUMPED = 450, STREAK_DAYS = 28;
+  const sleepByDate = new Map(bodyDays.filter(d => d.sleepMin != null).map(d => [d.date, d.sleepMin]));
+  if (sleepByDate.size === 0) return BASE;
+  const earliest = [...sleepByDate.keys()].sort()[0];
+  let run = 0, earned = false;
+  for (let d = new Date(earliest + "T00:00:00Z"); d.toISOString().slice(0, 10) <= date; d.setUTCDate(d.getUTCDate() + 1)) {
+    const ds = d.toISOString().slice(0, 10);
+    const v = sleepByDate.get(ds);
+    run = (v != null && v >= BASE) ? run + 1 : 0;
+    if (run >= STREAK_DAYS) { earned = true; break; }
+  }
+  return earned ? BUMPED : BASE;
+}
+
+function trainingLogCard(workouts, meta, bodyLogData, stepsData, date) {
+  // Assembles everything the "Training Log" tab needs for one day: falls back to null/—
+  // fields gracefully when that day has no matching workout, or no manual body-log entry
+  // yet (e.g. the popup hasn't been answered for the latest day).
+  const workout = workouts.find(w => w.d === date);
+  const { dayNumber } = programDayInfo(workouts, date);
+  const bodyDays = dailyBodyLog(bodyLogData);
+  const prevDate = new Date(new Date(date + "T00:00:00Z").getTime() - 86400000).toISOString().slice(0, 10);
+  const weightAvg = trailingAvg(bodyDays, 'weightKg', date, 7);
+  const weightAvgPrev = trailingAvg(bodyDays, 'weightKg', prevDate, 7);
+  const fatAvg = trailingAvg(bodyDays, 'bodyFatPct', date, 7);
+  const fatAvgPrev = trailingAvg(bodyDays, 'bodyFatPct', prevDate, 7);
+  const today = bodyDays.find(d => d.date === date) || null;
+  const stepsRow = (stepsData || []).find(s => s.d === date) || null;
+  const session = workout ? trainingLogSession(workout, meta) : null;
+  return {
+    date, dayNumber, session,
+    weightAvg, weightDelta: (weightAvg != null && weightAvgPrev != null) ? weightAvg - weightAvgPrev : null,
+    fatAvg, fatDelta: (fatAvg != null && fatAvgPrev != null) ? fatAvg - fatAvgPrev : null,
+    sleepMin: today ? today.sleepMin : null,
+    sleepGoalMin: sleepGoalMin(bodyDays, date),
+    steps: stepsRow ? stepsRow.steps : null,
+    stepsGoal: stepsRow ? stepsRow.goal : null,
+  };
+}
+
+function weeklySnapshot(workouts, meta) {
+  // Compares every session in the most recent logged week against each exercise's own
+  // last prior logged session (not tied to matching workout titles, since split-day
+  // session names vary run to run), on total volume (weight x reps), or total reps for
+  // exercises flagged "bodyweight" in meta.
+  if (workouts.length === 0) return [];
+  meta = meta || {};
+  const byEx = buildExerciseSessions(workouts, meta);
+  const currentWeek = workouts.map(w => isoWeekStart(w.d)).sort().slice(-1)[0];
+  const thisWeek = workouts.filter(w => isoWeekStart(w.d) === currentWeek).sort((a, b) => a.d.localeCompare(b.d));
+  const results = [];
+  for (const w of thisWeek) {
+    const merged = mergeWorkoutExercises(w);
+    const exercises = [];
+    let up = 0, down = 0, flat = 0, isNew = 0;
+    for (const [id, sets] of merged) {
+      if (meta[id] && meta[id].primary === 'cardio') continue; // tracked separately (see cardioSessions), not via volume/reps
+      const bodyweight = isBodyweight(id, meta);
+      const vol = metricOf(sets, id, meta);
+      const sessions = byEx.get(id) || [];
+      const idx = sessions.findIndex(s => s.date === w.d);
+      const prior = idx > 0 ? sessions[idx - 1] : null;
+      let verdict, prevVol = null, prevDate = null;
+      if (prior) {
+        prevVol = prior.volume; prevDate = prior.date;
+        if (vol > prevVol) { verdict = 'up'; up++; }
+        else if (vol < prevVol) { verdict = 'down'; down++; }
+        else { verdict = 'flat'; flat++; }
+      } else {
+        verdict = 'new'; isNew++;
+      }
+      exercises.push({ id, vol, prevVol, prevDate, verdict, bodyweight });
+    }
+    if (exercises.length === 0) continue; // pure-cardio day (e.g. a standalone Boxing session) — nothing strength-side to check
+    const overall = (up === 0 && down === 0 && flat === 0) ? 'new' : (up > down ? 'up' : 'no-hypertrophy');
+    results.push({ date: w.d, title: w.t, exercises, summary: { up, down, flat, new: isNew }, overall });
+  }
+  return results;
+}
+
+
+
+// ---------- derived data ----------
+const weeklyVol = weeklyVolume(WORKOUTS);
+const weekKeys = [...weeklyVol.keys()].sort();
+const snapshot = weeklySnapshot(WORKOUTS, EXMETA);
+
+// ---------- header stats ----------
+const dates = WORKOUTS.map(w => w.d).sort();
+document.getElementById('dateRangeLabel').textContent =
+  `${WORKOUTS.length} workouts logged · ${dates[0]} to ${dates[dates.length-1]}`;
+
+function statTile(v, l) { return `<div class="stat-tile"><div class="v">${v}</div><div class="l">${l}</div></div>`; }
+{
+  const totalVol = [...weeklyVol.values()].reduce((a,b)=>a+b,0);
+  const activeWeeks = weekKeys.filter(w => weeklyVol.get(w) > 0).length;
+  const avgPerActiveWeek = Math.round(totalVol / Math.max(activeWeeks,1));
+  document.getElementById('statRow').innerHTML =
+    statTile(WORKOUTS.length, 'total workouts') +
+    statTile(activeWeeks, 'weeks with training') +
+    statTile(Math.round(totalVol/1000)+'k', 'lifetime volume (kg·reps)') +
+    statTile(avgPerActiveWeek.toLocaleString(), 'avg volume / active week');
+}
+{
+  const currentWeek = weekKeys[weekKeys.length - 1];
+  const thisWeekWorkouts = WORKOUTS.filter(w => isoWeekStart(w.d) === currentWeek);
+  const setsThisWeek = thisWeekWorkouts.reduce((sum, w) => sum + w.ex.reduce((s2, e) => s2 + e.s.length, 0), 0);
+  const volThisWeek = weeklyVol.get(currentWeek) || 0;
+  const agg = snapshot.reduce((a, s) => ({
+    up: a.up + s.summary.up, down: a.down + s.summary.down, flat: a.flat + s.summary.flat, new: a.new + s.summary.new
+  }), { up: 0, down: 0, flat: 0, new: 0 });
+  const hypertrophyStr = `${agg.up} up · ${agg.down} down · ${agg.flat} flat` + (agg.new ? ` · ${agg.new} new` : '');
+  document.getElementById('statRowWeek').innerHTML =
+    statTile(thisWeekWorkouts.length, 'workouts this week') +
+    statTile(setsThisWeek, 'sets this week') +
+    statTile(Math.round(volThisWeek).toLocaleString(), 'volume this week (kg·reps)') +
+    statTile(hypertrophyStr, 'exercises vs. last time');
+}
+
+// ---------- SVG helpers ----------
+const NS = "http://www.w3.org/2000/svg";
+function svgEl(tag, attrs) {
+  const el = document.createElementNS(NS, tag);
+  for (const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+function weeklyVolumeBarChart() {
+  const w = 1000, h = 160, pad = 28;
+  const svg = svgEl('svg', { width: '100%', height: h, viewBox: `0 0 ${w} ${h}`, preserveAspectRatio: 'none' });
+  const vals = weekKeys.map(k => weeklyVol.get(k));
+  const max = Math.max(...vals, 1);
+  const bw = (w - 2*pad) / weekKeys.length;
+  // gridlines
+  for (let g = 0; g <= 4; g++) {
+    const gy = pad + (h - 2*pad) * (1 - g/4);
+    svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: gy, y2: gy, class: 'gridline' }));
+  }
+  weekKeys.forEach((k, i) => {
+    const v = weeklyVol.get(k);
+    const bh = (v / max) * (h - 2*pad);
+    const x = pad + i*bw;
+    const y = h - pad - bh;
+    const rect = svgEl('rect', { x: x+1, y, width: Math.max(bw-2,1), height: Math.max(bh,0), fill: 'var(--series-1)', rx: 2 });
+    const title = svgEl('title', {});
+    title.textContent = `Week of ${k}: ${Math.round(v).toLocaleString()} kg·reps`;
+    rect.appendChild(title);
+    svg.appendChild(rect);
+  });
+  svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: h-pad, y2: h-pad, class: 'axisline' }));
+  return svg;
+}
+
+// ---------- this week vs. last week hypertrophy snapshot ----------
+{
+  let html = '';
+  if (snapshot.length === 0) html = '<p class="sub">No workouts logged yet.</p>';
+  for (const s of snapshot) {
+    const overallBadge = s.overall === 'up'
+      ? `<span class="badge progress">↑ hypertrophy — ${s.summary.up}/${s.exercises.length} exercises up</span>`
+      : s.overall === 'new'
+      ? `<span class="badge baseline">first time logging this workout</span>`
+      : `<span class="badge plateau">no net hypertrophy — ${s.summary.up} up / ${s.summary.down} down / ${s.summary.flat} flat</span>`;
+    let rows = '';
+    for (const e of s.exercises) {
+      const name = EXMETA[e.id] ? EXMETA[e.id].name : e.id;
+      const unit = e.bodyweight ? ' reps' : '';
+      const prevStr = e.prevVol === null ? '—' : Math.round(e.prevVol).toLocaleString() + unit;
+      const thisStr = Math.round(e.vol).toLocaleString() + unit;
+      const delta = e.prevVol === null ? '—' : (e.vol - e.prevVol >= 0 ? '+' : '') + Math.round(e.vol - e.prevVol).toLocaleString() + unit;
+      const badge = e.verdict === 'up' ? `<span class="badge progress">hypertrophy</span>`
+        : e.verdict === 'new' ? `<span class="badge baseline">new</span>`
+        : `<span class="badge plateau">no hypertrophy</span>`;
+      const nameLabel = e.bodyweight ? `${name} <span style="color:var(--text-muted);font-size:10.5px;">(bw)</span>` : name;
+      rows += `<tr><td>${nameLabel}</td><td>${e.prevDate || '—'}</td><td>${prevStr}</td><td>${thisStr}</td><td>${delta}</td><td>${badge}</td></tr>`;
+    }
+    html += `<div class="day-section"><h3>${s.title} <span style="font-weight:400;color:var(--text-muted);font-size:12px;">— ${s.date}</span></h3>
+      <div style="margin-bottom:8px;">${overallBadge}</div>
+      <table class="tv"><thead><tr><th>Exercise</th><th>Last done</th><th>Prev volume</th><th>This volume</th><th>Δ</th><th>Verdict</th></tr></thead><tbody>${rows}</tbody></table>
+    </div>`;
+  }
+  document.getElementById('weeklySnapshot').innerHTML = html;
+}
+
+document.getElementById('weeklyVolumeChart').appendChild(weeklyVolumeBarChart());
+{
+  const withBadge = weekKeys.map((k, i) => {
+    const vol = weeklyVol.get(k);
+    const prevVol = i > 0 ? weeklyVol.get(weekKeys[i - 1]) : null;
+    let badge = '<span class="badge baseline">—</span>';
+    if (prevVol != null) {
+      if (vol > prevVol) badge = '<span class="badge progress">higher</span>';
+      else if (vol < prevVol) badge = '<span class="badge plateau">lower</span>';
+      else badge = '<span class="badge baseline">same</span>';
+    }
+    return `<tr><td>${k}</td><td>${Math.round(vol).toLocaleString()}</td><td>${badge}</td></tr>`;
+  });
+  const rows = withBadge.slice().reverse().join('');
+  document.getElementById('weeklyVolumeTable').innerHTML =
+    `<table class="tv"><thead><tr><th>Week of</th><th>Volume (kg·reps)</th><th>vs. prior week</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// ---------- muscle labels (used by the Volume Log tab) ----------
+const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_back:'Upper back', biceps:'Biceps', triceps:'Triceps', quadriceps:'Quads', hamstrings:'Hamstrings', glutes:'Glutes', calves:'Calves', traps:'Traps', abdominals:'Abs', forearms:'Forearms', adductors:'Adductors', abductors:'Abductors' };
+
+// ---------- volume log: per-exercise recent vs. baseline avg volume ----------
+{
+  const VOL_RECENT_START = '2026-08-02';
+  const VOL_BASE_START = '2026-01-01';
+  const VOL_BASE_END = '2026-08-01';
+  const volRecentEnd = dates[dates.length - 1];
+  const volRows = volumeComparison(WORKOUTS, EXMETA, VOL_RECENT_START, volRecentEnd, VOL_BASE_START, VOL_BASE_END);
+
+  document.getElementById('volRangeLabel').textContent =
+    `Recent ${VOL_RECENT_START} to ${volRecentEnd} vs. baseline ${VOL_BASE_START} to ${VOL_BASE_END}`;
+
+  const up = volRows.filter(r => r.deltaPct != null && r.deltaPct > 0).length;
+  const down = volRows.filter(r => r.deltaPct != null && r.deltaPct < 0).length;
+  const isNewCount = volRows.filter(r => r.recentN > 0 && r.baseN === 0).length;
+  const goneCount = volRows.filter(r => r.recentN === 0 && r.baseN > 0).length;
+  document.getElementById('volStatRow').innerHTML =
+    statTile(volRows.length, 'exercises tracked') +
+    statTile(up, 'volume up') +
+    statTile(down, 'volume down') +
+    statTile(isNewCount, 'new since ' + VOL_RECENT_START) +
+    statTile(goneCount, 'not since ' + VOL_RECENT_START);
+
+  const fmtVol = n => n == null ? '—' : Math.round(n).toLocaleString();
+  const fmtPct = n => (n >= 0 ? '+' : '') + n.toFixed(0) + '%';
+
+  // Anatomical upper-to-lower order (distinct from MUSCLE_ORDER above, which is ordered
+  // for the set-count chart, not top-to-bottom on the body).
+  const VOL_MUSCLE_ORDER = ['shoulders', 'chest', 'lats', 'upper_back', 'traps', 'biceps', 'triceps', 'forearms', 'abdominals', 'adductors', 'abductors', 'quadriceps', 'hamstrings', 'glutes', 'calves'];
+
+  const volGroupsRender = [...VOL_MUSCLE_ORDER, ...new Set(volRows.map(r => r.primary).filter(g => g && !VOL_MUSCLE_ORDER.includes(g)))];
+
+  let volHtml = '';
+  for (const grp of volGroupsRender) {
+    const rows = volRows.filter(r => (r.primary || '') === grp)
+      .sort((a, b) => (b.deltaPct ?? -Infinity) - (a.deltaPct ?? -Infinity));
+    if (rows.length === 0) continue;
+    const trs = rows.map(r => {
+      let statusCell;
+      if (r.deltaPct != null) {
+        statusCell = `<span class="badge ${r.deltaPct >= 0 ? 'progress' : 'surplus'}">${fmtPct(r.deltaPct)}</span>`;
+      } else if (r.baseN === 0) {
+        statusCell = `<span class="badge baseline">new</span>`;
+      } else {
+        statusCell = `<span class="badge plateau">not since ${VOL_RECENT_START}</span>`;
+      }
+      const bw = r.bodyweight ? ' <span style="color:var(--text-muted);font-size:10px;">bw</span>' : '';
+      return `<tr><td>${r.name}${bw}</td><td>${fmtVol(r.recentAvg)}</td><td>${r.recentN || '—'}</td><td>${fmtVol(r.baseAvg)}</td><td>${r.baseN || '—'}</td><td>${statusCell}</td></tr>`;
+    }).join('');
+    volHtml += `<div class="day-section"><h3>${MUSCLE_LABEL[grp] || grp}</h3>
+      <table class="tv"><thead><tr><th>Exercise</th><th>Recent avg</th><th>N</th><th>Baseline avg</th><th>N</th><th>Change</th></tr></thead><tbody>${trs}</tbody></table>
+    </div>`;
+  }
+  document.getElementById('volumeLogTables').innerHTML = volHtml;
+}
+
+// ---------- rowing machine cardio trend ----------
+{
+  const rowing = cardioSessions(WORKOUTS, '0222DB42');
+  if (rowing.length === 0) {
+    document.getElementById('rowingChart').innerHTML = '<p class="sub">No distance/duration logged yet.</p>';
+  } else {
+    const latest = rowing[rowing.length - 1];
+    const verdictBadge = latest.verdict === 'faster' ? `<span class="badge progress">↑ progress — pace improved</span>`
+      : latest.verdict === 'slower' ? `<span class="badge plateau">pace slower than last session</span>`
+      : latest.verdict === 'same' ? `<span class="badge baseline">pace unchanged</span>`
+      : `<span class="badge baseline">first logged session</span>`;
+    const prev = rowing.length >= 2 ? rowing[rowing.length - 2] : null;
+    const deltaStr = prev ? ` (${latest.paceMinPerKm.toFixed(2)} vs ${prev.paceMinPerKm.toFixed(2)} min/km last time)` : '';
+    document.getElementById('rowingSummary').innerHTML = `${verdictBadge}<span style="color:var(--text-muted);font-size:12px;margin-left:8px;">${latest.date}${deltaStr}</span>`;
+    const w = 1000, h = 140, pad = 28;
+    const svg = svgEl('svg', { width: '100%', height: h, viewBox: `0 0 ${w} ${h}`, preserveAspectRatio: 'none' });
+    const vals = rowing.map(r => r.km);
+    const max = Math.max(...vals, 1);
+    const bw = (w - 2*pad) / rowing.length;
+    for (let g = 0; g <= 4; g++) {
+      const gy = pad + (h - 2*pad) * (1 - g/4);
+      svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: gy, y2: gy, class: 'gridline' }));
+    }
+    rowing.forEach((r, i) => {
+      const bh = (r.km / max) * (h - 2*pad);
+      const x = pad + i*bw;
+      const y = h - pad - bh;
+      const rect = svgEl('rect', { x: x+1, y, width: Math.max(bw-2,1), height: Math.max(bh,0), fill: 'var(--series-1)', rx: 2 });
+      const title = svgEl('title', {});
+      title.textContent = `${r.date}: ${r.km} km in ${r.min} min (${r.paceMinPerKm.toFixed(2)} min/km)`;
+      rect.appendChild(title);
+      svg.appendChild(rect);
+    });
+    svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: h-pad, y2: h-pad, class: 'axisline' }));
+    document.getElementById('rowingChart').appendChild(svg);
+
+    document.getElementById('rowingTable').innerHTML = rowing.slice().reverse().map(r => {
+      const badge = r.verdict === 'faster' ? `<span class="badge progress">faster</span>`
+        : r.verdict === 'slower' ? `<span class="badge plateau">slower</span>`
+        : r.verdict === 'same' ? `<span class="badge baseline">same</span>`
+        : `<span class="badge baseline">baseline</span>`;
+      return `<tr><td>${r.date}</td><td>${r.min} min</td><td>${r.km} km</td><td>${r.paceMinPerKm.toFixed(2)}</td><td>${badge}</td></tr>`;
+    }).join('');
+  }
+}
+
+// ---------- boxing cardio trend ----------
+{
+  const boxing = cardioDurationSessions(WORKOUTS, 'A0D8FA1B');
+  if (boxing.length === 0) {
+    document.getElementById('boxingChart').innerHTML = '<p class="sub">No boxing sessions logged yet.</p>';
+  } else {
+    const latest = boxing[boxing.length - 1];
+    const noteBadge = latest.note ? `<span class="badge baseline">${latest.note}</span>` : `<span class="badge baseline">no note logged</span>`;
+    document.getElementById('boxingSummary').innerHTML = `${noteBadge}<span style="color:var(--text-muted);font-size:12px;margin-left:8px;">${latest.date} &middot; ${latest.min} min</span>`;
+    const w = 1000, h = 140, pad = 28;
+    const svg = svgEl('svg', { width: '100%', height: h, viewBox: `0 0 ${w} ${h}`, preserveAspectRatio: 'none' });
+    const vals = boxing.map(r => r.min);
+    const max = Math.max(...vals, 1);
+    const bw = (w - 2*pad) / boxing.length;
+    for (let g = 0; g <= 4; g++) {
+      const gy = pad + (h - 2*pad) * (1 - g/4);
+      svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: gy, y2: gy, class: 'gridline' }));
+    }
+    boxing.forEach((r, i) => {
+      const bh = (r.min / max) * (h - 2*pad);
+      const x = pad + i*bw;
+      const y = h - pad - bh;
+      const rect = svgEl('rect', { x: x+1, y, width: Math.max(bw-2,1), height: Math.max(bh,0), fill: 'var(--series-1)', rx: 2 });
+      const title = svgEl('title', {});
+      title.textContent = `${r.date}: ${r.min} min${r.note ? ' — ' + r.note : ''}`;
+      rect.appendChild(title);
+      svg.appendChild(rect);
+    });
+    svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: h-pad, y2: h-pad, class: 'axisline' }));
+    document.getElementById('boxingChart').appendChild(svg);
+
+    document.getElementById('boxingTable').innerHTML = boxing.slice().reverse().map(r =>
+      `<tr><td>${r.date}</td><td>${r.min} min</td><td>${r.note || '—'}</td></tr>`
+    ).join('');
+  }
+}
+
+// ---------- steps count trend ----------
+{
+  const days = dailySteps(STEPS);
+  if (days.length === 0) {
+    document.getElementById('stepsChart').innerHTML = '<p class="sub">No step data logged yet.</p>';
+  } else {
+    const stepWeeks = weeklyStepsGoalRate(STEPS);
+    const stepWeekKeys = [...stepWeeks.keys()].sort();
+    const curWk = stepWeekKeys[stepWeekKeys.length - 1];
+    const prevWk = stepWeekKeys.length >= 2 ? stepWeekKeys[stepWeekKeys.length - 2] : null;
+    const curRate = stepWeeks.get(curWk);
+    const prevRate = prevWk ? stepWeeks.get(prevWk) : null;
+    let summaryBadge;
+    if (!prevRate) {
+      summaryBadge = `<span class="badge baseline">first tracked week</span>`;
+    } else if (curRate.rate > prevRate.rate) {
+      summaryBadge = `<span class="badge progress">↑ progress — goal-hit rate up</span>`;
+    } else if (curRate.rate < prevRate.rate) {
+      summaryBadge = `<span class="badge plateau">goal-hit rate down</span>`;
+    } else {
+      summaryBadge = `<span class="badge baseline">goal-hit rate unchanged</span>`;
+    }
+    const curPct = Math.round(curRate.rate * 100);
+    const prevStr = prevRate ? ` (${curPct}% vs ${Math.round(prevRate.rate * 100)}% last week)` : ` (${curPct}% this week)`;
+    document.getElementById('stepsSummary').innerHTML = `${summaryBadge}<span style="color:var(--text-muted);font-size:12px;margin-left:8px;">${Math.round(curRate.avgSteps).toLocaleString()} avg steps/day${prevStr}</span>`;
+
+    const w = 1000, h = 140, pad = 28;
+    const svg = svgEl('svg', { width: '100%', height: h, viewBox: `0 0 ${w} ${h}`, preserveAspectRatio: 'none' });
+    const vals = days.map(d => d.steps);
+    const max = Math.max(...vals, 1);
+    const bw = (w - 2*pad) / days.length;
+    for (let g = 0; g <= 4; g++) {
+      const gy = pad + (h - 2*pad) * (1 - g/4);
+      svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: gy, y2: gy, class: 'gridline' }));
+    }
+    days.forEach((d, i) => {
+      const bh = (d.steps / max) * (h - 2*pad);
+      const x = pad + i*bw;
+      const y = h - pad - bh;
+      const rect = svgEl('rect', { x: x+1, y, width: Math.max(bw-2,1), height: Math.max(bh,0), fill: d.hitGoal ? 'var(--good)' : 'var(--warning)', rx: 2 });
+      const title = svgEl('title', {});
+      title.textContent = `${d.date}: ${d.steps.toLocaleString()} steps (goal ${d.goal.toLocaleString()}) — ${d.hitGoal ? 'met' : 'missed'}`;
+      rect.appendChild(title);
+      svg.appendChild(rect);
+    });
+    svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: h-pad, y2: h-pad, class: 'axisline' }));
+    document.getElementById('stepsChart').appendChild(svg);
+
+    document.getElementById('stepsTable').innerHTML = days.slice().reverse().map(d => {
+      const badge = d.hitGoal ? `<span class="badge progress">met</span>` : `<span class="badge plateau">missed</span>`;
+      return `<tr><td>${d.date}</td><td>${d.steps.toLocaleString()}</td><td>${d.goal.toLocaleString()}</td><td>${badge}</td></tr>`;
+    }).join('');
+  }
+}
+
+// ---------- resting heart rate trend ----------
+{
+  const hrDays = dailyRestingHR(HEARTRATE);
+  if (hrDays.length === 0) {
+    document.getElementById('hrChart').innerHTML = '<p class="sub">No heart rate data logged yet.</p>';
+  } else {
+    const hrWeeks = weeklyRestingHR(HEARTRATE);
+    const hrWeekKeys = [...hrWeeks.keys()].sort();
+    const curWk = hrWeekKeys[hrWeekKeys.length - 1];
+    const prevWk = hrWeekKeys.length >= 2 ? hrWeekKeys[hrWeekKeys.length - 2] : null;
+    const curAvg = hrWeeks.get(curWk);
+    const prevAvg = prevWk ? hrWeeks.get(prevWk) : null;
+    let summaryBadge;
+    if (!prevAvg) {
+      summaryBadge = `<span class="badge baseline">first tracked week</span>`;
+    } else if (curAvg.avg < prevAvg.avg) {
+      summaryBadge = `<span class="badge progress">↑ progress — resting HR down</span>`;
+    } else if (curAvg.avg > prevAvg.avg) {
+      summaryBadge = `<span class="badge plateau">resting HR up</span>`;
+    } else {
+      summaryBadge = `<span class="badge baseline">resting HR unchanged</span>`;
+    }
+    const prevHrStr = prevAvg ? ` (${curAvg.avg.toFixed(1)} vs ${prevAvg.avg.toFixed(1)} bpm avg last week)` : ` (${curAvg.avg.toFixed(1)} bpm avg this week)`;
+    document.getElementById('hrSummary').innerHTML = `${summaryBadge}<span style="color:var(--text-muted);font-size:12px;margin-left:8px;">${prevHrStr}</span>`;
+
+    const w = 1000, h = 140, pad = 28;
+    const svg = svgEl('svg', { width: '100%', height: h, viewBox: `0 0 ${w} ${h}`, preserveAspectRatio: 'none' });
+    const vals = hrDays.map(d => d.resting);
+    const valMin = Math.min(...vals), valMax = Math.max(...vals);
+    const range = (valMax - valMin) || 1;
+    const scaleMin = valMin - range * 0.15, scaleMax = valMax + range * 0.15;
+    const bw = (w - 2*pad) / hrDays.length;
+    for (let g = 0; g <= 4; g++) {
+      const gy = pad + (h - 2*pad) * (1 - g/4);
+      svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: gy, y2: gy, class: 'gridline' }));
+    }
+    hrDays.forEach((d, i) => {
+      const bh = ((d.resting - scaleMin) / (scaleMax - scaleMin)) * (h - 2*pad);
+      const x = pad + i*bw;
+      const y = h - pad - bh;
+      const color = d.verdict === 'improved' ? 'var(--good)' : d.verdict === 'higher' ? 'var(--warning)' : 'var(--series-1)';
+      const rect = svgEl('rect', { x: x+1, y, width: Math.max(bw-2,1), height: Math.max(bh,0), fill: color, rx: 2 });
+      const title = svgEl('title', {});
+      title.textContent = `${d.date}: ${d.resting} bpm resting (${d.min}-${d.max} range)`;
+      rect.appendChild(title);
+      svg.appendChild(rect);
+    });
+    svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: h-pad, y2: h-pad, class: 'axisline' }));
+    document.getElementById('hrChart').appendChild(svg);
+
+    document.getElementById('hrTable').innerHTML = hrDays.slice().reverse().map(d => {
+      const badge = d.verdict === 'improved' ? `<span class="badge progress">improved</span>`
+        : d.verdict === 'higher' ? `<span class="badge plateau">higher</span>`
+        : d.verdict === 'same' ? `<span class="badge baseline">same</span>`
+        : `<span class="badge baseline">baseline</span>`;
+      return `<tr><td>${d.date}</td><td>${d.resting} bpm</td><td>${d.min}</td><td>${d.max}</td><td>${badge}</td></tr>`;
+    }).join('');
+  }
+}
+
+// ---------- calories trend ----------
+{
+  const calDays = dailyNutrition(NUTRITION);
+  if (calDays.length === 0) {
+    document.getElementById('caloriesChart').innerHTML = '<p class="sub">No MyFitnessPal data logged yet.</p>';
+  } else {
+    const calWeeks = weeklyCalorieDeficit(NUTRITION);
+    const calWeekKeys = [...calWeeks.keys()].sort();
+    const curWk = calWeekKeys[calWeekKeys.length - 1];
+    const prevWk = calWeekKeys.length >= 2 ? calWeekKeys[calWeekKeys.length - 2] : null;
+    const curW = calWeeks.get(curWk);
+    const prevW = prevWk ? calWeeks.get(prevWk) : null;
+    let summaryBadge;
+    if (!prevW) {
+      summaryBadge = `<span class="badge baseline">first tracked week</span>`;
+    } else if (curW.avgDeficit < prevW.avgDeficit) {
+      summaryBadge = `<span class="badge progress">↑ progress — deficit bigger than last week</span>`;
+    } else if (curW.avgDeficit > prevW.avgDeficit) {
+      summaryBadge = `<span class="badge surplus">deficit smaller than last week</span>`;
+    } else {
+      summaryBadge = `<span class="badge baseline">deficit unchanged</span>`;
+    }
+    const curDeficitStr = `${curW.avgDeficit >= 0 ? '+' : ''}${Math.round(curW.avgDeficit).toLocaleString()} avg cal/day`;
+    const prevStr = prevW ? ` (vs ${prevW.avgDeficit >= 0 ? '+' : ''}${Math.round(prevW.avgDeficit).toLocaleString()} last week)` : ` this week`;
+    document.getElementById('caloriesSummary').innerHTML = `${summaryBadge}<span style="color:var(--text-muted);font-size:12px;margin-left:8px;">${curDeficitStr}${prevStr}</span>`;
+
+    const verdictColor = v => v === 'deficit' ? 'var(--good)' : v === 'surplus' ? 'var(--critical)' : 'var(--text-muted)';
+
+    const w = 1000, h = 140, pad = 28;
+    const svg = svgEl('svg', { width: '100%', height: h, viewBox: `0 0 ${w} ${h}`, preserveAspectRatio: 'none' });
+    const deficits = calDays.map(d => d.deficit);
+    const rawMax = Math.max(...deficits.map(Math.abs), 1);
+    const scaleMax = rawMax * 1.15; // symmetric around zero, with headroom
+    const yFor = v => pad + (h - 2*pad) * (1 - (v + scaleMax) / (2 * scaleMax));
+    const zeroY = yFor(0);
+    for (let g = 0; g <= 4; g++) {
+      const gy = pad + (h - 2*pad) * (g / 4);
+      svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: gy, y2: gy, class: 'gridline' }));
+    }
+    svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: zeroY, y2: zeroY, stroke: 'var(--axis)', 'stroke-width': 1.5 }));
+    const stepX = calDays.length > 1 ? (w - 2*pad) / (calDays.length - 1) : 0;
+    const points = calDays.map((d, i) => ({ x: pad + i * stepX, y: yFor(d.deficit), d }));
+    if (points.length > 1) {
+      const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+      svg.appendChild(svgEl('path', { d: pathD, fill: 'none', stroke: 'var(--series-1)', 'stroke-width': 2 }));
+    }
+    points.forEach(p => {
+      const dot = svgEl('circle', { cx: p.x, cy: p.y, r: points.length > 1 ? 4 : 5, fill: verdictColor(p.d.verdict) });
+      const title = svgEl('title', {});
+      title.textContent = `${p.d.date}: ${p.d.calories.toLocaleString()} cal (goal ${p.d.goal.toLocaleString()}) — ${p.d.deficit >= 0 ? '+' : ''}${p.d.deficit.toLocaleString()} (${p.d.verdict})`;
+      dot.appendChild(title);
+      svg.appendChild(dot);
+    });
+    document.getElementById('caloriesChart').appendChild(svg);
+
+    document.getElementById('caloriesTable').innerHTML = calDays.slice().reverse().map(d => {
+      const badge = d.verdict === 'deficit' ? `<span class="badge progress">deficit</span>`
+        : d.verdict === 'surplus' ? `<span class="badge surplus">surplus</span>`
+        : `<span class="badge baseline">maintenance</span>`;
+      const deficitStr = `${d.deficit >= 0 ? '+' : ''}${d.deficit.toLocaleString()}`;
+      return `<tr><td>${d.date}</td><td>${d.calories.toLocaleString()}</td><td>${d.goal.toLocaleString()}</td><td>${deficitStr}</td><td>${badge}</td></tr>`;
+    }).join('');
+  }
+}
+
+// ---------- macros breakdown ----------
+{
+  const macroDays = dailyNutrition(NUTRITION);
+  if (macroDays.length === 0) {
+    document.getElementById('macrosChart').innerHTML = '<p class="sub">No MyFitnessPal data logged yet.</p>';
+  } else {
+    const macroWeeks = weeklyMacros(NUTRITION);
+    const macroWeekKeys = [...macroWeeks.keys()].sort();
+    const curWk = macroWeekKeys[macroWeekKeys.length - 1];
+    const cur = macroWeeks.get(curWk);
+    document.getElementById('macrosSummary').innerHTML =
+      `<span style="color:var(--text-muted);font-size:12px;">this week avg — `
+      + `<span style="color:var(--series-1);">${Math.round(cur.avgProtein)}g protein</span> · `
+      + `<span style="color:var(--series-2);">${Math.round(cur.avgCarbs)}g carbs</span> · `
+      + `<span style="color:var(--series-3);">${Math.round(cur.avgFat)}g fat</span></span>`;
+
+    const latest = macroDays[macroDays.length - 1];
+    const goalBars = [
+      ['Protein', latest.protein, latest.proteinGoal, 'var(--series-1)'],
+      ['Carbs', latest.carbs, latest.carbsGoal, 'var(--series-2)'],
+      ['Fat', latest.fat, latest.fatGoal, 'var(--series-3)'],
+    ];
+    if (goalBars.every(([, , goal]) => goal == null)) {
+      document.getElementById('macrosGoalBars').innerHTML =
+        `<p class="sub" style="margin:0;">No per-macro goal synced yet for ${latest.date}.</p>`;
+    } else {
+      document.getElementById('macrosGoalBars').innerHTML = goalBars.map(([label, grams, goal, color]) => {
+        if (goal == null) return '';
+        const pct = Math.min(grams / goal, 1) * 100;
+        const onTarget = Math.abs(grams - goal) <= goal * 0.1;
+        const overLimit = (label === 'Carbs' || label === 'Fat') && grams > goal;
+        const fillColor = overLimit ? 'var(--critical)' : (onTarget ? 'var(--good)' : color);
+        return `<div class="macro-goal-row">
+          <span class="label">${label}</span>
+          <span class="track"><span class="fill" style="width:${pct}%;background:${fillColor};"></span></span>
+          <span class="val">${grams}g / ${goal}g</span>
+        </div>`;
+      }).join('');
+    }
+
+    const w = 1000, h = 140, pad = 28;
+    const svg = svgEl('svg', { width: '100%', height: h, viewBox: `0 0 ${w} ${h}`, preserveAspectRatio: 'none' });
+    const totals = macroDays.map(d => d.protein + d.carbs + d.fat);
+    const max = Math.max(...totals, 1);
+    const bw = (w - 2*pad) / macroDays.length;
+    for (let g = 0; g <= 4; g++) {
+      const gy = pad + (h - 2*pad) * (1 - g/4);
+      svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: gy, y2: gy, class: 'gridline' }));
+    }
+    macroDays.forEach((d, i) => {
+      const x = pad + i*bw;
+      const segs = [
+        ['protein', d.protein, 'var(--series-1)'],
+        ['carbs', d.carbs, (d.carbsGoal != null && d.carbs > d.carbsGoal) ? 'var(--critical)' : 'var(--series-2)'],
+        ['fat', d.fat, (d.fatGoal != null && d.fat > d.fatGoal) ? 'var(--critical)' : 'var(--series-3)'],
+      ];
+      let yCursor = h - pad;
+      for (const [label, grams, color] of segs) {
+        const segH = (grams / max) * (h - 2*pad);
+        const y = yCursor - segH;
+        const rect = svgEl('rect', { x: x+1, y, width: Math.max(bw-2,1), height: Math.max(segH,0), fill: color, rx: 1 });
+        const title = svgEl('title', {});
+        title.textContent = `${d.date}: ${label} ${grams}g`;
+        rect.appendChild(title);
+        svg.appendChild(rect);
+        yCursor = y;
+      }
+    });
+    svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: h-pad, y2: h-pad, class: 'axisline' }));
+    document.getElementById('macrosChart').appendChild(svg);
+
+    document.getElementById('macrosTable').innerHTML = macroDays.slice().reverse().map(d =>
+      `<tr><td>${d.date}</td><td>${d.protein}g</td><td>${d.carbs}g</td><td>${d.fat}g</td></tr>`
+    ).join('');
+  }
+}
+
+// ---------- reward mechanism ----------
+{
+  const inr = n => '₹' + Math.round(Math.abs(n)).toLocaleString('en-IN');
+  // Positive balance reads as Rs banked; negative reads as weeks owed (spent ahead of what's
+  // banked — sessions cost real, varying amounts, so a deficit rarely lands on a whole week).
+  const balanceStr = b => b >= 0 ? inr(b) : `-${(Math.abs(b) / 1900).toFixed(1)} weeks`;
+  const rewardDate = dates[dates.length - 1];
+  const ledger = rewardLedger(WORKOUTS, STEPS, EXPENSES, rewardDate, EXMETA);
+  const current = currentWeekRewardProgress(WORKOUTS, STEPS, rewardDate, EXMETA);
+
+  const pct = Math.max(0, Math.min(100, Math.round(ledger.balance / ledger.cap * 100)));
+  document.getElementById('rewardBalanceCard').innerHTML = `
+    <div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;">
+      <div style="font-size:34px;font-weight:700;${ledger.balance < 0 ? 'color:var(--serious);' : ''}">${balanceStr(ledger.balance)}</div>
+      <div class="sub" style="margin:0;">current reward balance &mdash; caps at ${inr(ledger.cap)} (2 weeks banked) &mdash; +${inr(ledger.bonusAmount)} bonus every ${ledger.bonusStreakWeeks} clean weeks (${ledger.cleanStreak}/${ledger.bonusStreakWeeks} so far)</div>
+    </div>
+    <div class="tl-bar" style="margin-top:12px;"><span style="width:${pct}%;background:${ledger.balance < 0 ? 'var(--serious)' : 'var(--series-1)'};"></span></div>`;
+
+  const workoutsOk = current.workoutCount >= current.minWorkouts;
+  const strengthOk = current.strengthCount >= current.minStrengthWorkouts;
+  const stepsOk = current.avgSteps != null && current.avgSteps >= current.minAvgSteps;
+  const avgStepsStr = current.avgSteps != null ? Math.round(current.avgSteps).toLocaleString() : '—';
+  document.getElementById('rewardCurrentWeek').innerHTML =
+    `<p class="sub" style="margin:0 0 8px;">This week (in progress, week of ${current.week}):</p>
+     <span class="badge ${workoutsOk ? 'progress' : 'baseline'}">${current.workoutCount}/${current.minWorkouts} workouts</span>
+     <span class="badge ${strengthOk ? 'progress' : 'baseline'}" style="margin-left:6px;">${current.strengthCount}/${current.minStrengthWorkouts} strength</span>
+     <span class="badge ${stepsOk ? 'progress' : 'baseline'}" style="margin-left:6px;">avg ${avgStepsStr} / ${current.minAvgSteps.toLocaleString()} steps</span>`;
+
+  document.getElementById('rewardWeeklyTable').innerHTML = ledger.weeklyRows.slice().reverse().map(r => {
+    const avgStr = r.avgSteps != null ? Math.round(r.avgSteps).toLocaleString() : '—';
+    const badge = r.earned ? `<span class="badge progress">hit</span>` : `<span class="badge plateau">missed</span>`;
+    const bonus = r.bonusAwarded ? ` <span class="badge progress">+${inr(r.bonusAwarded)} bonus</span>` : '';
+    return `<tr><td>${r.week}</td><td>${r.workoutCount} (${r.strengthCount} strength)</td><td>${avgStr}</td><td>${badge}</td><td>${balanceStr(r.balanceAfter)}${bonus}</td></tr>`;
+  }).join('') || `<tr><td colspan="5" style="color:var(--text-muted);">No completed weeks yet.</td></tr>`;
+
+  document.getElementById('rewardRedemptions').innerHTML = ledger.redemptions.length
+    ? ledger.redemptions.slice().reverse().map(r =>
+        `<div style="font-size:12.5px;padding:4px 0;">${r.date} &mdash; spent ${inr(r.amount)}${r.note ? ' (' + r.note + ')' : ''}, balance now ${balanceStr(r.balanceAfter)}</div>`
+      ).join('')
+    : `<p class="sub" style="margin:0;">No redemptions logged yet.</p>`;
+}
+
+// ---------- training log card ----------
+{
+  const tlDate = dates[dates.length - 1];
+  const tl = trainingLogCard(WORKOUTS, EXMETA, BODYLOG, STEPS, tlDate);
+  const el = document.getElementById('trainingLogCard');
+  const saveBtn = document.getElementById('tlSaveImgBtn');
+  if (!tl.session) {
+    el.innerHTML = `<p class="sub">No workout logged for ${tlDate} yet.</p>`;
+    saveBtn.style.display = 'none';
+  } else {
+    const trendHtml = (delta) => {
+      if (delta == null || Math.abs(delta) < 0.005) return '';
+      const down = delta < 0;
+      const color = down ? 'var(--tlc-good)' : 'var(--tlc-bad)'; // decreasing weight/body fat reads as progress here
+      return `<div class="trend" style="color:${color};">${down ? '▼' : '▲'} ${Math.abs(delta).toFixed(2)}</div>`;
+    };
+    const weightStr = tl.weightAvg != null ? `${tl.weightAvg.toFixed(2)}<span class="unit"> kg</span>` : '—';
+    const fatStr = tl.fatAvg != null ? `${tl.fatAvg.toFixed(2)}<span class="unit"> %</span>` : '—';
+    const sleepStr = tl.sleepMin != null ? `${Math.floor(tl.sleepMin / 60)}h ${tl.sleepMin % 60}m` : '—';
+    const sleepPct = tl.sleepMin != null ? Math.min(100, Math.round(tl.sleepMin / tl.sleepGoalMin * 100)) : 0;
+    const stepsStr = tl.steps != null ? tl.steps.toLocaleString() : '—';
+    const stepsPct = (tl.steps != null && tl.stepsGoal) ? Math.min(100, Math.round(tl.steps / tl.stepsGoal * 100)) : 0;
+
+    const chips = tl.session.groups.map(g => `<span class="tl-chip"><span class="ck">✓</span>${g}</span>`).join('');
+    const rows = tl.session.exercises.map(e => `
+      <div class="tl-exrow">
+        <div class="dot ${e.isFirstGroup ? 'primary' : 'secondary'}">✓</div>
+        <div class="body">
+          <div class="name">${e.name}</div>
+          ${e.setsStr ? `<div class="sets">${e.setsStr}</div>` : ''}
+        </div>
+        <div class="best">${e.best}</div>
+      </div>`).join('');
+
+    el.innerHTML = `
+      <div class="tl-wrap">
+      <div class="tl-card">
+        <div class="tl-eyebrow">Training Log</div>
+        <div class="tl-eyebrow-rule"></div>
+        <div class="tl-head">
+          <div class="tl-daybadge"><div class="n">${tl.dayNumber ?? '—'}</div><div class="streak">⚡ ${tl.dayNumber ?? '—'}</div></div>
+          <div>
+            <div class="tl-focus">Today's focus &mdash; ${tl.date}</div>
+            <div class="tl-title">${tl.session.title}</div>
+            <div>${chips}</div>
+          </div>
+        </div>
+        <div class="tl-statgrid">
+          <div class="tl-stat"><div class="v"><span class="icon">⚖️</span>${weightStr}</div><div class="l">Weight (7d avg)</div>${trendHtml(tl.weightDelta)}</div>
+          <div class="tl-stat"><div class="v"><span class="icon">📊</span>${fatStr}</div><div class="l">Body fat (7d avg)</div>${trendHtml(tl.fatDelta)}</div>
+          <div class="tl-stat"><div class="v"><span class="icon">👣</span>${stepsStr}</div><div class="l">Steps</div><div class="tl-bar"><span style="width:${stepsPct}%;background:var(--tlc-muted);"></span></div></div>
+          <div class="tl-stat"><div class="v"><span class="icon">🌙</span>${sleepStr}</div><div class="l">Sleep</div><div class="tl-bar"><span style="width:${sleepPct}%;background:var(--tlc-accent);"></span></div></div>
+        </div>
+        <div class="tl-exlist">${rows}</div>
+      </div>
+      </div>`;
+
+    // ---------- save-as-image: hand-drawn Canvas 2D render of the card above, since a
+    // dependency-free way to rasterize arbitrary DOM/CSS (gradients, clip-path, emoji)
+    // reliably across browsers doesn't really exist without an external library. Mirrors
+    // the .tl-card CSS by hand; only the pieces that card actually uses.
+    function tlDrawCard(ctx, W, scale, draw) {
+      const C = {
+        fg: '#f4faf8', muted: 'rgba(244,250,248,0.56)', faint: 'rgba(244,250,248,0.36)',
+        accent: '#2fe6b8', good: '#2fe6b8', bad: '#ff8a65',
+        line: 'rgba(255,255,255,0.10)', panel: 'rgba(255,255,255,0.07)', panelB: 'rgba(255,255,255,0.14)',
+      };
+      const padX = 24;
+      const innerW = W - padX * 2;
+      ctx.scale(scale, scale);
+      try { ctx.letterSpacing = '3px'; } catch (e) {}
+
+      function roundRect(x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
+      }
+      function shieldPath(x, y, w, h) {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + w, y);
+        ctx.lineTo(x + w, y + h * 0.62);
+        ctx.lineTo(x + w / 2, y + h);
+        ctx.lineTo(x, y + h * 0.62);
+        ctx.closePath();
+      }
+      function fitText(text, maxWidth) {
+        // Canvas has no flexbox to reserve space automatically — truncate with an ellipsis
+        // if the name would otherwise run into the right-aligned value next to it.
+        if (ctx.measureText(text).width <= maxWidth) return text;
+        let lo = 0, hi = text.length;
+        while (lo < hi) {
+          const mid = (lo + hi + 1) >> 1;
+          if (ctx.measureText(text.slice(0, mid) + '…').width <= maxWidth) lo = mid; else hi = mid - 1;
+        }
+        return text.slice(0, lo) + '…';
+      }
+      function pillRow(items, x, y, maxW) {
+        let cx = x, cy = y; const rowH = 22, gap = 6;
+        ctx.font = '700 10.5px system-ui, -apple-system, "Segoe UI", sans-serif';
+        for (const label of items) {
+          const w = ctx.measureText('✓ ' + label.toUpperCase()).width + 24;
+          if (cx + w > x + maxW && cx > x) { cx = x; cy += rowH + 6; }
+          if (draw) {
+            roundRect(cx, cy, w, rowH, rowH / 2);
+            ctx.fillStyle = C.panel; ctx.fill();
+            ctx.strokeStyle = C.panelB; ctx.lineWidth = 1; ctx.stroke();
+            ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = C.accent; ctx.fillText('✓', cx + 10, cy + rowH / 2 + 1);
+            ctx.fillStyle = C.muted; ctx.fillText(label.toUpperCase(), cx + 22, cy + rowH / 2 + 1);
+          }
+          cx += w + gap;
+        }
+        return cy + rowH;
+      }
+
+      let y = 26;
+      // eyebrow + rule
+      ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+      ctx.font = '700 11px system-ui, -apple-system, "Segoe UI", sans-serif';
+      if (draw) { ctx.fillStyle = C.faint; ctx.fillText('TRAINING LOG', W / 2, y + 10); }
+      y += 14 + 8;
+      if (draw) {
+        const g = ctx.createLinearGradient(W / 2 - 20, 0, W / 2 + 20, 0);
+        g.addColorStop(0, 'rgba(47,230,184,0)'); g.addColorStop(0.5, C.accent); g.addColorStop(1, 'rgba(47,230,184,0)');
+        ctx.fillStyle = g; ctx.fillRect(W / 2 - 20, y, 40, 2);
+      }
+      y += 2 + 22;
+
+      // head: shield badge + focus/title/chips
+      const headTop = y, badgeW = 78, badgeH = 94;
+      if (draw) {
+        ctx.save();
+        ctx.shadowColor = 'rgba(47,230,184,0.55)'; ctx.shadowBlur = 18;
+        shieldPath(padX, headTop, badgeW, badgeH);
+        const bg = ctx.createLinearGradient(padX, headTop, padX, headTop + badgeH);
+        bg.addColorStop(0, 'rgba(47,230,184,0.20)'); bg.addColorStop(1, 'rgba(47,230,184,0.02)');
+        ctx.fillStyle = bg; ctx.fill();
+        ctx.restore();
+        shieldPath(padX, headTop, badgeW, badgeH);
+        ctx.strokeStyle = 'rgba(47,230,184,0.4)'; ctx.lineWidth = 1; ctx.stroke();
+        ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+        ctx.fillStyle = C.fg; ctx.font = '800 30px system-ui, -apple-system, "Segoe UI", sans-serif';
+        ctx.fillText(String(tl.dayNumber ?? '—'), padX + badgeW / 2, headTop + 44);
+        ctx.fillStyle = C.accent; ctx.font = '700 11px system-ui, -apple-system, "Segoe UI", sans-serif';
+        ctx.fillText('⚡ ' + (tl.dayNumber ?? '—'), padX + badgeW / 2, headTop + 62);
+      }
+      const textX = padX + badgeW + 18, textMaxW = innerW - badgeW - 18;
+      let ty = headTop;
+      if (draw) {
+        ctx.textAlign = 'left'; ctx.fillStyle = C.faint; ctx.font = '700 10px system-ui, -apple-system, "Segoe UI", sans-serif';
+        ctx.fillText(("TODAY'S FOCUS — " + tl.date).toUpperCase(), textX, ty + 10);
+      }
+      ty += 22;
+      if (draw) { ctx.fillStyle = C.fg; ctx.font = '800 20px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.fillText(fitText(tl.session.title, textMaxW), textX, ty + 16); }
+      ty += 30;
+      ty = pillRow(tl.session.groups, textX, ty, textMaxW);
+      y = Math.max(headTop + badgeH, ty) + 22;
+
+      // stat grid (2x2)
+      const gap = 10, cellW = (innerW - gap) / 2, cellH = 78;
+      const stats = [
+        { icon: '⚖', v: tl.weightAvg != null ? tl.weightAvg.toFixed(2) + ' kg' : '—', l: 'WEIGHT (7D AVG)', delta: tl.weightDelta },
+        { icon: '📊', v: tl.fatAvg != null ? tl.fatAvg.toFixed(2) + ' %' : '—', l: 'BODY FAT (7D AVG)', delta: tl.fatDelta },
+        { icon: '👣', v: tl.steps != null ? tl.steps.toLocaleString() : '—', l: 'STEPS', bar: (tl.steps != null && tl.stepsGoal) ? Math.min(100, tl.steps / tl.stepsGoal * 100) : 0, barColor: C.muted },
+        { icon: '🌙', v: tl.sleepMin != null ? `${Math.floor(tl.sleepMin / 60)}h ${tl.sleepMin % 60}m` : '—', l: 'SLEEP', bar: tl.sleepMin != null ? Math.min(100, tl.sleepMin / tl.sleepGoalMin * 100) : 0, barColor: C.accent },
+      ];
+      stats.forEach((s, i) => {
+        const cx = padX + (i % 2) * (cellW + gap), cy = y + Math.floor(i / 2) * (cellH + gap);
+        if (!draw) return;
+        roundRect(cx, cy, cellW, cellH, 14); ctx.fillStyle = C.panel; ctx.fill();
+        ctx.strokeStyle = C.panelB; ctx.lineWidth = 1; ctx.stroke();
+        ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+        ctx.font = '800 17px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.fillStyle = C.fg;
+        ctx.fillText(s.icon + '  ' + s.v, cx + 14, cy + 28);
+        ctx.font = '700 9.5px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.fillStyle = C.faint;
+        ctx.fillText(s.l, cx + 14, cy + 46);
+        if (s.delta != null && Math.abs(s.delta) >= 0.005) {
+          const down = s.delta < 0;
+          ctx.fillStyle = down ? C.good : C.bad; ctx.font = '700 10.5px system-ui, -apple-system, "Segoe UI", sans-serif';
+          ctx.fillText((down ? '▼ ' : '▲ ') + Math.abs(s.delta).toFixed(2), cx + 14, cy + 62);
+        } else if (s.bar != null) {
+          roundRect(cx + 14, cy + 56, cellW - 28, 4, 2); ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fill();
+          roundRect(cx + 14, cy + 56, Math.max(2, (cellW - 28) * s.bar / 100), 4, 2); ctx.fillStyle = s.barColor; ctx.fill();
+        }
+      });
+      y += cellH * 2 + gap + 20;
+
+      // exercise rows
+      if (draw) { ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(padX, y); ctx.lineTo(padX + innerW, y); ctx.stroke(); }
+      for (const e of tl.session.exercises) {
+        const rowH = e.setsStr ? 46 : 40;
+        if (draw) {
+          const cy = y + rowH / 2 - 10;
+          ctx.beginPath(); ctx.arc(padX + 10, cy, 10, 0, Math.PI * 2);
+          ctx.fillStyle = e.isFirstGroup ? 'rgba(47,230,184,0.22)' : 'rgba(255,255,255,0.08)'; ctx.fill();
+          ctx.fillStyle = e.isFirstGroup ? C.accent : C.faint; ctx.font = '700 10px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText('✓', padX + 10, cy + 1);
+          ctx.textAlign = 'right'; ctx.font = '800 13.5px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.fillStyle = C.fg;
+          ctx.fillText(e.best, padX + innerW, y + 18);
+          const bestW = ctx.measureText(e.best).width;
+          ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+          ctx.font = '700 13.5px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.fillStyle = C.fg;
+          ctx.fillText(fitText(e.name, innerW - 30 - bestW - 12), padX + 30, y + 18);
+          if (e.setsStr) { ctx.font = '11.5px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.fillStyle = C.faint; ctx.fillText(fitText(e.setsStr, innerW - 30), padX + 30, y + 34); }
+          ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(padX, y + rowH); ctx.lineTo(padX + innerW, y + rowH); ctx.stroke();
+        }
+        y += rowH;
+      }
+      y += 4;
+      return y;
+    }
+
+    function tlRenderPNG() {
+      const W = 460, SCALE = 3;
+      const measure = document.createElement('canvas').getContext('2d');
+      const H = tlDrawCard(measure, W, 1, false);
+      const canvas = document.createElement('canvas');
+      canvas.width = W * SCALE; canvas.height = H * SCALE;
+      const ctx = canvas.getContext('2d');
+      const bg = ctx.createLinearGradient(0, 0, 0, H * SCALE);
+      bg.addColorStop(0, '#0c211c'); bg.addColorStop(0.45, '#081714'); bg.addColorStop(1, '#05100d');
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W * SCALE, H * SCALE);
+      const glow = ctx.createRadialGradient(W * SCALE * 0.12, 0, 0, W * SCALE * 0.12, 0, W * SCALE * 0.9);
+      glow.addColorStop(0, 'rgba(47,230,184,0.18)'); glow.addColorStop(1, 'rgba(47,230,184,0)');
+      ctx.fillStyle = glow; ctx.fillRect(0, 0, W * SCALE, H * SCALE);
+      tlDrawCard(ctx, W, SCALE, true);
+      canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `training-log-day${tl.dayNumber ?? tl.date}.png`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+      }, 'image/png');
+    }
+    saveBtn.style.display = '';
+    saveBtn.onclick = tlRenderPNG;
+  }
+}
+
+// ---------- tab switching ----------
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tabpanel').forEach(p => p.hidden = true);
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).hidden = false;
+  });
+});
+
+</script>
