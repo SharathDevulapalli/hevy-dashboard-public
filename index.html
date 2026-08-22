@@ -122,6 +122,18 @@
   }
   .vol-box-content { flex: 1 1 auto; min-width: 0; }
   .vol-group-insight { font-weight: 600; font-size: 12.5px; margin: 0 0 10px; }
+  .vol-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 20px; }
+  .vol-tab-btn {
+    appearance: none; cursor: pointer; font: inherit; font-size: 12.5px; font-weight: 600;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 999px;
+    color: var(--text-muted); padding: 6px 14px;
+  }
+  .vol-tab-btn:hover { color: var(--text-primary); }
+  .vol-tab-btn.active {
+    color: var(--text-primary); border-color: var(--series-1);
+    background: color-mix(in srgb, var(--series-1) 18%, transparent);
+  }
+  .vol-group-panel[hidden] { display: none; }
   .tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
   .tab-btn {
     appearance: none; background: none; border: none; cursor: pointer; font: inherit;
@@ -364,6 +376,7 @@
     </header>
     <section>
       <p class="sub" id="volumeLogTakeaway" style="font-weight:600;"></p>
+      <div class="vol-tabs" id="volTabs"></div>
       <div id="volumeLogTables"></div>
     </section>
   </div>
@@ -1901,7 +1914,7 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     return `${best.name} leading (${best.deltaPct >= 0 ? '+' : ''}${best.deltaPct.toFixed(0)}%); ${worst.name} lagging (${worst.deltaPct >= 0 ? '+' : ''}${worst.deltaPct.toFixed(0)}%).`;
   };
 
-  let volHtml = '';
+  const volSections = []; // { key, label, html } — one per rendered muscle-group tab
   const consumedPrimaries = new Set();
   for (const grp of volGroupsRender) {
     if (consumedPrimaries.has(grp)) continue;
@@ -1923,8 +1936,10 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     // movement-pattern breakdown yet. A single primary-muscle group with a curated
     // breakdown (e.g. shoulders, chest, quads) gets it too; a plain flat group doesn't.
     const boxed = !!(combined || subgroups);
+    const sectionKey = displayLabel.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     if (!boxed) {
-      volHtml += `<div class="day-section"><h3>${displayLabel}</h3>${insightHtml}${rowsToTable(rows)}</div>`;
+      volSections.push({ key: sectionKey, label: displayLabel,
+        html: `<div class="day-section"><h3>${displayLabel}</h3>${insightHtml}${rowsToTable(rows)}</div>` });
       continue;
     }
 
@@ -1947,12 +1962,27 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
         inner += `<h4 style="font-size:12.5px;margin:14px 0 4px;">Other</h4>${rowsToTable(leftover)}`;
       }
     }
-    volHtml += `<div class="day-section vol-boxed">
+    volSections.push({ key: sectionKey, label: displayLabel,
+      html: `<div class="day-section vol-boxed">
       <div class="vol-box-label">${displayLabel}</div>
       <div class="vol-box-content">${insightHtml}${inner}</div>
-    </div>`;
+    </div>` });
   }
-  document.getElementById('volumeLogTables').innerHTML = volHtml;
+
+  document.getElementById('volTabs').innerHTML = volSections.map((s, i) =>
+    `<button class="vol-tab-btn${i === 0 ? ' active' : ''}" type="button" data-group="${s.key}">${s.label}</button>`
+  ).join('');
+  document.getElementById('volumeLogTables').innerHTML = volSections.map((s, i) =>
+    `<div class="vol-group-panel" data-group="${s.key}"${i === 0 ? '' : ' hidden'}>${s.html}</div>`
+  ).join('');
+  document.querySelectorAll('#volTabs .vol-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#volTabs .vol-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#volumeLogTables .vol-group-panel').forEach(p => p.hidden = true);
+      btn.classList.add('active');
+      document.querySelector(`#volumeLogTables .vol-group-panel[data-group="${btn.dataset.group}"]`).hidden = false;
+    });
+  });
 }
 
 // ---------- rowing machine cardio trend ----------
