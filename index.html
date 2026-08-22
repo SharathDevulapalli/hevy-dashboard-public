@@ -1790,6 +1790,18 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
       { name: 'Bodyweight Compound', what: 'General chest/triceps endurance',
         exercises: ['Push Up'] },
     ],
+    quadriceps: [
+      { name: 'Squat (bilateral, compound)', what: 'Overall quad mass, biggest strength numbers',
+        exercises: ['Squat (Machine)', 'Squat (Smith Machine)', 'Squat (Bodyweight)'] },
+      { name: 'Leg Press variants', what: 'Quad-dominant, spares lower back vs. free squat',
+        exercises: ['Leg Press (Machine)', 'Leg Press Horizontal (Machine)', 'Belt Squat (Machine)', 'Pendulum Squat (Machine)'] },
+      { name: 'Lunge/Split-Stance', what: 'Unilateral quad + stability, directly transfers to real-world movement',
+        exercises: ['Lunge (Barbell)', 'Lunge (Dumbbell)', 'Walking Lunge (Dumbbell)', 'Walking Lunge', 'Lunge', 'Overhead Dumbbell Lunge'] },
+      { name: 'Sumo/Goblet Squat', what: 'Quad + adductor crossover, front-loaded',
+        exercises: ['Sumo Squat (Dumbbell)', 'Goblet Squat'] },
+      { name: 'Isolation', what: 'Pure quad, no hip/glute assistance',
+        exercises: ['Leg Extension (Machine)'] },
+    ],
   };
 
   // Umbrella groups that merge several primary-muscle tags into one boxed "Back" section
@@ -1842,6 +1854,19 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     // subgroup breakdown later the same way the groups above did.
     { label: 'Core', primaries: ['abdominals'] },
     { label: 'Hip Complex', primaries: ['adductors', 'abductors', 'glutes'] },
+    {
+      label: 'Hamstrings & Calves', primaries: ['hamstrings', 'calves'],
+      subgroups: [
+        { name: 'Hip Hinge (Hamstring-dominant)', what: 'Hamstring + glute, posterior chain',
+          exercises: ['Romanian Deadlift (Dumbbell)'] },
+        { name: 'Leg Curl (isolation)', what: 'Pure hamstring, no hip involvement',
+          exercises: ['Lying Leg Curl (Machine)', 'Standing Leg Curls'] },
+        { name: 'Vertical Press (secondary hamstring)', what: 'Primarily quad, but loads hamstring at depth',
+          exercises: ['Vertical Leg press'] },
+        { name: 'Calves', what: 'Calf mass/strength',
+          exercises: ['Calf Press (Machine)', 'Standing Calf Raise'] },
+      ],
+    },
   ];
 
   const rowsToTable = rows => {
@@ -1893,28 +1918,35 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     const insightHtml = `<p class="sub vol-group-insight">${groupInsight(rows)}</p>`;
 
     const subgroups = combined ? combined.subgroups : EXERCISE_SUBGROUPS[grp];
-    if (!subgroups) {
+    // Every merged/umbrella group (Core, Hip Complex, Back, Arms, ...) gets the boxed
+    // vertical-label layout so it reads as one distinct unit — whether or not it has a
+    // movement-pattern breakdown yet. A single primary-muscle group with a curated
+    // breakdown (e.g. shoulders, chest, quads) gets it too; a plain flat group doesn't.
+    const boxed = !!(combined || subgroups);
+    if (!boxed) {
       volHtml += `<div class="day-section"><h3>${displayLabel}</h3>${insightHtml}${rowsToTable(rows)}</div>`;
       continue;
     }
 
-    const claimed = new Set();
-    let inner = '';
-    for (const sg of subgroups) {
-      // Ordered by the curated exercises list above (so name-variants like "Overhead
-      // Press"/"Shoulder Press" sit next to each other), not re-sorted by deltaPct.
-      const sgRows = sg.exercises.map(name => rows.find(r => r.name === name)).filter(Boolean);
-      if (sgRows.length === 0) continue;
-      sgRows.forEach(r => claimed.add(r.id));
-      inner += `<h4 style="font-size:12.5px;margin:14px 0 4px;">${sg.name} <span style="font-weight:400;color:var(--text-muted);">&mdash; ${sg.what}</span></h4>${rowsToTable(sgRows)}`;
+    let inner;
+    if (!subgroups) {
+      inner = rowsToTable(rows);
+    } else {
+      const claimed = new Set();
+      inner = '';
+      for (const sg of subgroups) {
+        // Ordered by the curated exercises list above (so name-variants like "Overhead
+        // Press"/"Shoulder Press" sit next to each other), not re-sorted by deltaPct.
+        const sgRows = sg.exercises.map(name => rows.find(r => r.name === name)).filter(Boolean);
+        if (sgRows.length === 0) continue;
+        sgRows.forEach(r => claimed.add(r.id));
+        inner += `<h4 style="font-size:12.5px;margin:14px 0 4px;">${sg.name} <span style="font-weight:400;color:var(--text-muted);">&mdash; ${sg.what}</span></h4>${rowsToTable(sgRows)}`;
+      }
+      const leftover = rows.filter(r => !claimed.has(r.id));
+      if (leftover.length > 0) {
+        inner += `<h4 style="font-size:12.5px;margin:14px 0 4px;">Other</h4>${rowsToTable(leftover)}`;
+      }
     }
-    const leftover = rows.filter(r => !claimed.has(r.id));
-    if (leftover.length > 0) {
-      inner += `<h4 style="font-size:12.5px;margin:14px 0 4px;">Other</h4>${rowsToTable(leftover)}`;
-    }
-    // Sub-grouped muscle groups get the boxed layout with a vertical side-label, so their
-    // several sub-tables read as one visually distinct unit instead of blurring into the
-    // flat single-table groups around them.
     volHtml += `<div class="day-section vol-boxed">
       <div class="vol-box-label">${displayLabel}</div>
       <div class="vol-box-content">${insightHtml}${inner}</div>
