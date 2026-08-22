@@ -366,6 +366,13 @@
         </div>
       </div>
     </section>
+    <section style="margin-top:24px;">
+      <h3 style="font-size:14px;margin:0 0 8px;">Supplements</h3>
+      <p class="sub" id="supplementsTakeaway" style="font-weight:600;"></p>
+      <div class="card">
+        <div id="supplementsGrid" style="overflow-x:auto;"></div>
+      </div>
+    </section>
   </div>
 
   <div id="tab-volumelog" class="tabpanel" hidden>
@@ -397,7 +404,7 @@
   <div id="tab-reward" class="tabpanel" hidden>
     <header class="top">
       <h1>Rewards</h1>
-      <p class="sub" style="margin:0;">Rs 1,900/week banks toward a massage/spa fund whenever a completed week (Mon&ndash;Sun) hits &ge;4 training sessions (of which &ge;3 must be strength training &mdash; e.g. 2 boxing + 2 lifting days is 4 workouts but only 2 strength days, so it doesn't count) and an average of &ge;12,000 steps/day &mdash; no cap, it keeps accumulating for as long as you keep hitting weeks and not redeeming, plus a further Rs 3,800 bonus every 6 continuous weeks with no redemption. Logging a "session" personal expense redeems it: its actual amount is subtracted from the balance right there (price varies session to session, and more than one in a week is fine as long as it stays in budget) &mdash; spending past what's banked shows as a negative balance in weeks owed, not Rs.</p>
+      <p class="sub" style="margin:0;">Rs 1,900/week banks toward a massage/spa fund whenever a completed week (Mon&ndash;Sun) hits &ge;4 training sessions (of which &ge;3 must be strength training &mdash; e.g. 2 boxing + 2 lifting days is 4 workouts but only 2 strength days, so it doesn't count) and an average of &ge;12,000 steps/day &mdash; no cap, it keeps accumulating for as long as you keep hitting weeks and not redeeming, plus a further Rs 3,800 bonus every 6 continuous weeks with no redemption. Logging a "recovery" expense (synced automatically from MyFitnessPal's "Session Expense (Rs)" field) redeems it: its actual amount is subtracted from the balance right there (price varies session to session, and more than one in a week is fine as long as it stays in budget) &mdash; spending past what's banked shows as a negative balance in weeks owed, not Rs.</p>
       <p class="sub" id="rewardTakeaway" style="font-weight:600;margin:8px 0 0;"></p>
     </header>
     <section style="margin-top:20px;">
@@ -791,6 +798,7 @@ const HEARTRATE = [
 {"d": "2026-07-11", "resting": 60, "min": 53, "max": 118}
 ];
 const NUTRITION = [
+{"d": "2026-08-22", "calories": 1992, "goal": 2100, "protein": 127, "proteinGoal": 184, "carbs": 304, "carbsGoal": 210, "fat": 40, "fatGoal": 58},
 {"d": "2026-08-21", "calories": 2036, "goal": 2100, "protein": 126, "proteinGoal": 184, "carbs": 214, "carbsGoal": 210, "fat": 78, "fatGoal": 58},
 {"d": "2026-08-20", "calories": 2126, "goal": 2100, "protein": 170, "proteinGoal": 184, "carbs": 254, "carbsGoal": 210, "fat": 43, "fatGoal": 58},
 {"d": "2026-08-19", "calories": 1690, "goal": 2100, "protein": 159, "proteinGoal": 184, "carbs": 153, "carbsGoal": 210, "fat": 38, "fatGoal": 58},
@@ -802,13 +810,18 @@ const NUTRITION = [
 {"d": "2026-08-13", "calories": 1899, "goal": 2100, "protein": 127, "proteinGoal": 184, "carbs": 224, "carbsGoal": 210, "fat": 60, "fatGoal": 58},
 {"d": "2026-08-12", "calories": 2006, "goal": 2100, "protein": 113, "proteinGoal": 184, "carbs": 195, "carbsGoal": 210, "fat": 83, "fatGoal": 58},
 {"d": "2026-08-11", "calories": 2113, "goal": 2100, "protein": 147, "proteinGoal": 184, "carbs": 244, "carbsGoal": 210, "fat": 58, "fatGoal": 58},
-{"d": "2026-08-10", "calories": 2145, "goal": 2100, "protein": 165, "proteinGoal": 184, "carbs": 268, "carbsGoal": 210, "fat": 49, "fatGoal": 58}
+{"d": "2026-08-10", "calories": 2145, "goal": 2100, "protein": 165, "proteinGoal": 184, "carbs": 268, "carbsGoal": 210, "fat": 49, "fatGoal": 58},
+{"d": "2026-08-08", "calories": 489, "goal": 2572, "protein": 17, "proteinGoal": 225, "carbs": 94, "carbsGoal": 193, "fat": 3, "fatGoal": 100},
+{"d": "2026-08-03", "calories": 1358, "goal": 2578, "protein": 57, "proteinGoal": 225, "carbs": 188, "carbsGoal": 290, "fat": 49, "fatGoal": 57},
+{"d": "2026-08-02", "calories": 663, "goal": 2094, "protein": 31, "proteinGoal": 183, "carbs": 89, "carbsGoal": 158, "fat": 18, "fatGoal": 82},
+{"d": "2026-08-01", "calories": 1727, "goal": 2099, "protein": 222, "proteinGoal": 183, "carbs": 355, "carbsGoal": 158, "fat": 61, "fatGoal": 82}
 ];
 const EXPENSES = [
-{"d": "2026-08-20", "category": "session", "amount": 3800, "note": "massage"},
-{"d": "2026-08-16", "category": "session", "amount": 1900, "note": "massage"},
-{"d": "2026-08-09", "category": "session", "amount": 1000, "note": "massage"},
-{"d": "2026-08-08", "category": "session", "amount": 1000, "note": "massage"}
+{"d": "2026-08-22", "category": "recovery", "amount": 25000.0},
+{"d": "2026-08-20", "category": "recovery", "amount": 3800, "note": "massage"},
+{"d": "2026-08-16", "category": "recovery", "amount": 1900, "note": "massage"},
+{"d": "2026-08-09", "category": "recovery", "amount": 1000, "note": "massage"},
+{"d": "2026-08-08", "category": "recovery", "amount": 1000, "note": "massage"}
 ];
 const BODYLOG = [
 {"d": "2026-08-22", "sleepMin": 319, "weightKg": 69.8, "bodyFatPct": 20.7},
@@ -819,6 +832,88 @@ const BODYLOG = [
 {"d": "2026-08-16", "weightKg": 70.85, "bodyFatPct": 21.4},
 {"d": "2026-08-15", "weightKg": 69.85, "bodyFatPct": 21.5},
 {"d": "2026-08-14", "weightKg": 69.9, "bodyFatPct": 21.3}
+];
+const SUPPLEMENTS = [
+{"d": "2026-08-22", "items": ["creatine", "d3_k2", "eaa", "preworkout", "tongkat_ali"]}
+];
+const SUPPLEMENT_META = [
+  {
+    "id": "isabgol",
+    "label": "Sat Isabgol (Psyllium Husk)",
+    "brand": "Organic India",
+    "serving": "5g (1 tbsp)",
+    "timing": "First thing, empty stomach"
+  },
+  {
+    "id": "tongkat_ali",
+    "label": "Tongkat Ali LongJack 400mg",
+    "brand": "Trexgenics",
+    "serving": "1 capsule",
+    "timing": "After breakfast"
+  },
+  {
+    "id": "d3_k2",
+    "label": "D3 + K2-7",
+    "brand": "Unived Basics",
+    "serving": "1 capsule (600 IU D3, 55mcg K2-7)",
+    "timing": "After breakfast"
+  },
+  {
+    "id": "calm",
+    "label": "Calm (Ashwagandha KSM-66 + L-Theanine + 5-HTP)",
+    "brand": "Unived",
+    "serving": "2 capsules",
+    "timing": "After breakfast"
+  },
+  {
+    "id": "citrulline",
+    "label": "L-Citrulline 2000mg",
+    "brand": "Carbamide Forte",
+    "serving": "2g scoop",
+    "timing": "Pre-workout"
+  },
+  {
+    "id": "beta_alanine",
+    "label": "Beta-Alanine (Pro Series)",
+    "brand": "HealthyHey",
+    "serving": "4g scoop",
+    "timing": "Pre-workout"
+  },
+  {
+    "id": "preworkout",
+    "label": "Preworkout (L-Theanine + Caffeine)",
+    "brand": "Unived",
+    "serving": "\u2014",
+    "timing": "Pre-workout"
+  },
+  {
+    "id": "eaa",
+    "label": "EAA+ (BCAA + Glutamine, Lychee Kiwi)",
+    "brand": "Maverick",
+    "serving": "10g scoop",
+    "timing": "During workout"
+  },
+  {
+    "id": "creatine",
+    "label": "Micronised Creatine Monohydrate",
+    "brand": "Maverick",
+    "serving": "3g scoop",
+    "timing": "During workout"
+  },
+  {
+    "id": "glycine",
+    "label": "Pure Glycine (Unflavoured)",
+    "brand": "Trexgenics",
+    "serving": "~2.5g",
+    "timing": "Post-dinner / pre-sleep"
+  },
+  {
+    "id": "magnesium",
+    "label": "Chelated Magnesium Glycinate",
+    "brand": "Unived",
+    "serving": "1 capsule (87.75mg elemental Mg)",
+    "timing": "Post-dinner / pre-sleep"
+  }
 ];
 
 // Pure data-processing logic shared between the sanity-check script and the dashboard HTML.
@@ -1146,9 +1241,36 @@ function weeklyMacros(nutritionData) {
   return weeks;
 }
 
+function supplementCalendar(supplementsData, metaItems, refDateStr, totalDays) {
+  // Forward-looking tracker grid: day 0 = refDateStr (normally "today"), running `totalDays`
+  // (default 90) days into the future so the full grid renders upfront rather than growing
+  // one column at a time. Days after refDateStr are marked isFuture and never tick, since
+  // there's nothing to have logged yet. One row per item in metaItems (supplement_meta.json),
+  // each carrying its own tick array aligned 1:1 with `days`, plus adherence over elapsed
+  // (non-future) days only.
+  totalDays = totalDays || 90;
+  const byDate = new Map(supplementsData.map(r => [r.d, new Set(r.items || [])]));
+  const ref = new Date(refDateStr + 'T00:00:00Z');
+  const days = [];
+  for (let i = 0; i < totalDays; i++) {
+    const d = new Date(ref); d.setUTCDate(d.getUTCDate() + i);
+    const dateStr = d.toISOString().slice(0, 10);
+    days.push({ date: dateStr, isFuture: dateStr > refDateStr });
+  }
+  const elapsedDays = days.filter(day => !day.isFuture).length;
+  const rows = metaItems.map(item => {
+    const ticks = days.map(day => !day.isFuture && !!byDate.get(day.date) && byDate.get(day.date).has(item.id));
+    const takenDays = ticks.filter(Boolean).length;
+    const adherencePct = elapsedDays > 0 ? Math.round((takenDays / elapsedDays) * 100) : null;
+    return Object.assign({}, item, { ticks, takenDays, adherencePct });
+  });
+  return { days, rows, elapsedDays };
+}
+
 function dailyExpenses(expensesData) {
-  // date-ascending {date, category, amount, note} — personal-expense log (non-food/supplement/
-  // medication spend on yourself: spa, clothing, sessions, etc.). Skips rows with no amount.
+  // date-ascending {date, category, amount, note} — personal-expense log. Currently only
+  // tracks the 'recovery' category (massage/spa spend), synced from MyFitnessPal's
+  // "Session Expense (Rs)" measurement field. Skips rows with no amount.
   const days = expensesData
     .filter(e => e.amount != null)
     .map(e => ({ date: e.d, category: e.category || 'other', amount: e.amount, note: e.note || '' }));
@@ -1197,10 +1319,11 @@ function expenseCalendarMonth(expensesData, year, month) {
 // steps/day adds REWARD_WEEKLY_BUDGET to a running balance. No ceiling — it keeps
 // accumulating for as long as you keep hitting weeks and not redeeming. Every 6 continuous
 // scored weeks with no redemption at all earns a bonus of REWARD_BONUS_WEEKS_WORTH weeks'
-// budget on top, then the streak resets. Logging a personal expense in the 'session'
-// category (the existing category already used for massage/spa spend) is the redemption
-// event: its actual logged `amount` (price varies session to session) is subtracted from
-// the balance right then — multiple sessions in a week are fine, each just subtracts its
+// budget on top, then the streak resets. Logging a personal expense in the 'recovery'
+// category (massage/spa spend, synced automatically from MyFitnessPal's "Session Expense
+// (Rs)" measurement field) is the redemption event: its actual logged `amount` (price
+// varies session to session) is subtracted from the balance right then — multiple
+// sessions in a week are fine, each just subtracts its
 // own cost. If that pushes the balance below zero, it's a real deficit (spent ahead of
 // what's banked) rather than clamping at zero, since the caller displays a negative
 // balance as weeks owed instead of a Rs figure.
@@ -1210,7 +1333,7 @@ const REWARD_BONUS_STREAK_WEEKS = 6;
 const REWARD_MIN_WORKOUTS = 4;
 const REWARD_MIN_STRENGTH_WORKOUTS = 3;
 const REWARD_MIN_AVG_STEPS = 12000;
-const REWARD_REDEEM_CATEGORY = 'session';
+const REWARD_REDEEM_CATEGORY = 'recovery';
 const REWARD_START_DATE = '2026-08-02'; // the mechanism itself started here — weeks/redemptions before it aren't scored
 
 function isStrengthDay(workout, meta) {
@@ -2391,6 +2514,68 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
       `<tr><td>${d.date}</td><td>${d.protein}g</td><td>${d.carbs}g</td><td>${d.fat}g</td></tr>`
     ).join('');
   }
+}
+
+// ---------- supplements tracker ----------
+{
+  // Grid starts at the earliest tracked date (day tracking was set up in MFP - see
+  // SUPPLEMENT_TRACKING_START in mfp_sync.py) rather than sliding with "today", so the
+  // start column stays fixed as time passes; it just grows past 90 columns once more than
+  // 90 days have elapsed since then, instead of ever dropping the earliest days off the left.
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const startDate = SUPPLEMENTS.length ? SUPPLEMENTS.map(r => r.d).reduce((a, b) => a < b ? a : b) : todayStr;
+  const daysSinceStart = Math.floor((new Date(todayStr + 'T00:00:00Z') - new Date(startDate + 'T00:00:00Z')) / 86400000) + 1;
+  const totalDays = Math.max(90, daysSinceStart);
+  const sup = supplementCalendar(SUPPLEMENTS, SUPPLEMENT_META, startDate, totalDays);
+
+  const overallTaken = sup.rows.reduce((s, r) => s + r.takenDays, 0);
+  const overallPossible = sup.rows.length * sup.elapsedDays;
+  const overallPct = overallPossible > 0 ? Math.round(overallTaken / overallPossible * 100) : 0;
+  document.getElementById('supplementsTakeaway').textContent = sup.elapsedDays > 0
+    ? `💊 ${overallPct}% adherence across ${sup.rows.length} supplements over ${sup.elapsedDays} tracked day(s).`
+    : `💊 Tracking starts today — nothing logged yet.`;
+
+  let monthHeader = '', dayHeader = '', curMonth = '';
+  for (const day of sup.days) {
+    const dt = new Date(day.date + 'T00:00:00Z');
+    const monthLabel = dt.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
+    monthHeader += monthLabel !== curMonth ? `<th class="sup-month">${monthLabel}</th>` : `<th class="sup-month"></th>`;
+    curMonth = monthLabel;
+    dayHeader += `<th class="sup-day${day.isFuture ? ' sup-future' : ''}" title="${day.date}">${dt.getUTCDate()}</th>`;
+  }
+
+  const rowsHtml = sup.rows.map(r => {
+    const pctStr = r.adherencePct == null ? '—' : `${r.adherencePct}%`;
+    const cells = r.ticks.map((t, i) => {
+      const cls = sup.days[i].isFuture ? 'sup-cell sup-future' : (t ? 'sup-cell sup-yes' : 'sup-cell sup-no');
+      return `<td class="${cls}" title="${sup.days[i].date}">${t ? '✓' : ''}</td>`;
+    }).join('');
+    return `<tr>
+      <th class="sup-label"><div>${r.label} <span class="sup-pct">${pctStr}</span></div><div class="sup-sub">${r.brand} &middot; ${r.timing}</div></th>
+      ${cells}
+    </tr>`;
+  }).join('');
+
+  document.getElementById('supplementsGrid').innerHTML = `
+    <style>
+      .sup-table { border-collapse: collapse; }
+      .sup-label { position: sticky; left: 0; background: var(--surface-1); text-align: left; padding: 6px 12px 6px 0; font-size: 12px; font-weight: 600; white-space: nowrap; z-index: 1; border-right: 1px solid var(--border); }
+      .sup-pct { font-weight: 700; color: var(--good); font-size: 11px; margin-left: 4px; }
+      .sup-sub { font-weight: 400; font-size: 10px; color: var(--text-muted); }
+      .sup-month, .sup-day { text-align: center; color: var(--text-muted); font-weight: 500; min-width: 20px; }
+      .sup-month { font-size: 9px; height: 14px; }
+      .sup-day { font-size: 9.5px; padding-bottom: 2px; }
+      .sup-cell { width: 20px; height: 20px; text-align: center; vertical-align: middle; border: 1px solid var(--border); font-size: 11px; }
+      .sup-yes { background: color-mix(in srgb, var(--good) 22%, transparent); color: var(--good); font-weight: 700; }
+      .sup-future { background: repeating-linear-gradient(45deg, transparent, transparent 3px, var(--border) 3px, var(--border) 4px); }
+    </style>
+    <table class="sup-table">
+      <thead>
+        <tr><th class="sup-label"></th>${monthHeader}</tr>
+        <tr><th class="sup-label"></th>${dayHeader}</tr>
+      </thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>`;
 }
 
 // ---------- reward mechanism ----------
