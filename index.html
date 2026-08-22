@@ -870,13 +870,14 @@ function volumeComparison(workouts, meta, recentStart, recentEnd, baseStart, bas
     const deltaPct = (recentAvg != null && baseAvg != null && baseAvg > 0)
       ? ((recentAvg - baseAvg) / baseAvg * 100) : null;
     const bodyweight = isBodyweight(id, meta);
-    // Estimated 1RM (Epley, from each session's best set) isn't meaningful for bodyweight
+    // Actual heaviest weight ever logged for this exercise (any set, full history) — not an
+    // estimate, and not windowed to recent/baseline. Isn't meaningful for bodyweight
     // exercises (always logged at 0 load) — left null there, rendered as "—".
-    const recent1RM = (!bodyweight && recent.length) ? recent.reduce((a, s) => a + s.e1rm, 0) / recent.length : null;
+    const maxWeight = (!bodyweight && sess.length) ? Math.max(...sess.map(s => s.topWeight)) : null;
     rows.push({
       id, name: meta[id] ? meta[id].name : id, primary: meta[id] ? meta[id].primary : null,
       bodyweight,
-      recentAvg, recentN: recent.length, baseAvg, baseN: base.length, deltaPct, recent1RM,
+      recentAvg, recentN: recent.length, baseAvg, baseN: base.length, deltaPct, maxWeight,
     });
   }
   return rows;
@@ -1766,11 +1767,11 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
         statusCell = `<span class="badge plateau">not since ${VOL_RECENT_START}</span>`;
       }
       const bw = r.bodyweight ? ' <span style="color:var(--text-muted);font-size:10px;">bw</span>' : '';
-      const oneRM = r.recent1RM != null ? `${Math.round(r.recent1RM)} kg` : '—';
+      const oneRM = r.maxWeight != null ? `${r.maxWeight} kg` : '—';
       return `<tr><td>${r.name}${bw}</td><td>${fmtVol(r.recentAvg)}</td><td>${r.recentN || '—'}</td><td>${fmtVol(r.baseAvg)}</td><td>${r.baseN || '—'}</td><td>${statusCell}</td><td>${oneRM}</td></tr>`;
     }).join('');
     volHtml += `<div class="day-section"><h3>${MUSCLE_LABEL[grp] || grp}</h3>
-      <table class="tv"><thead><tr><th>Exercise</th><th>Recent avg</th><th>N</th><th>Baseline avg</th><th>N</th><th>Change</th><th>Est. 1RM</th></tr></thead><tbody>${trs}</tbody></table>
+      <table class="tv"><thead><tr><th>Exercise</th><th>Recent avg</th><th>N</th><th>Baseline avg</th><th>N</th><th>Change</th><th>Max weight (all-time)</th></tr></thead><tbody>${trs}</tbody></table>
     </div>`;
   }
   document.getElementById('volumeLogTables').innerHTML = volHtml;
