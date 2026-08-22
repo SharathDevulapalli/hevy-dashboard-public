@@ -231,7 +231,8 @@
 
   <section>
     <h2>Weekly training volume</h2>
-    <p class="sub">Total load (kg × reps, all exercises) per calendar week, full history. The flat stretch is the Jan–May gap in training.</p>
+    <p class="sub">🏋️ Total load (kg × reps, all exercises) per calendar week, full history.</p>
+    <p class="sub" id="weeklyVolumeTakeaway" style="font-weight:600;"></p>
     <div class="card"><div id="weeklyVolumeChart"></div>
       <details class="tableview"><summary>Table view</summary><div id="weeklyVolumeTable"></div></details>
     </div>
@@ -239,17 +240,17 @@
 
   <section>
     <h2>Strength Training Trend</h2>
-    <p class="sub">Every session logged in the most recent training week, compared exercise-by-exercise against the last prior occurrence of that same workout. Hypertrophy = higher total volume (weight × reps) than last time, or higher total reps for bodyweight movements (marked "bw"); same or lower is flagged as no net hypertrophy for that exercise. Cardio-only sessions (Rowing Machine, Boxing, etc.) don't appear here at all — see Cardio Trend below.</p>
+    <p class="sub" id="hypertrophyTakeaway" style="font-weight:600;"></p>
     <div id="weeklySnapshot"></div>
   </section>
 
   <section>
     <h2>Cardio Trend</h2>
-    <p class="sub">Not counted toward strength volume or muscle-group set targets — tracked and scored separately.</p>
+    <p class="sub">🏃 Not counted toward strength volume or muscle-group set targets — tracked and scored separately.</p>
     <div class="grid-2">
       <div>
         <h3 style="font-size:14px;margin:0 0 8px;">Rowing Machine</h3>
-        <p class="sub">Duration and distance logged per session. Progress = faster pace (min/km) vs. the prior session, regardless of duration.</p>
+        <p class="sub" id="rowingTakeaway" style="font-weight:600;"></p>
         <div class="card">
           <div id="rowingSummary" style="margin-bottom:12px;"></div>
           <div id="rowingChart"></div>
@@ -261,7 +262,7 @@
       </div>
       <div>
         <h3 style="font-size:14px;margin:0 0 8px;">Boxing</h3>
-        <p class="sub">Always a fixed-length session, so duration isn't a progress signal here &mdash; the logged note (drill/variation for the day) is.</p>
+        <p class="sub" id="boxingTakeaway" style="font-weight:600;"></p>
         <div class="card">
           <div id="boxingSummary" style="margin-bottom:12px;"></div>
           <div id="boxingChart"></div>
@@ -273,7 +274,7 @@
       </div>
       <div>
         <h3 style="font-size:14px;margin:0 0 8px;">Steps Count</h3>
-        <p class="sub">Daily steps vs. daily goal. Progress = higher goal-hit rate this week vs. last week.</p>
+        <p class="sub" id="stepsTakeaway" style="font-weight:600;"></p>
         <div class="card">
           <div id="stepsSummary" style="margin-bottom:12px;"></div>
           <div id="stepsChart"></div>
@@ -287,7 +288,7 @@
       </div>
       <div>
         <h3 style="font-size:14px;margin:0 0 8px;">Resting Heart Rate</h3>
-        <p class="sub">Daily resting HR from Garmin. Progress = lower avg resting HR this week vs. last week (fitness improving).</p>
+        <p class="sub" id="hrTakeaway" style="font-weight:600;"></p>
         <div class="card">
           <div id="hrSummary" style="margin-bottom:12px;"></div>
           <div id="hrChart"></div>
@@ -306,13 +307,13 @@
   <div id="tab-nutrition" class="tabpanel" hidden>
     <header class="top">
       <h1>Nutrition</h1>
-      <p class="sub" style="margin:0;">Daily calorie/macro log from MyFitnessPal. Not counted toward strength or cardio scoring — tracked separately.</p>
+      <p class="sub" style="margin:0;">🍽️ Daily calorie/macro log from MyFitnessPal. Not counted toward strength or cardio scoring — tracked separately.</p>
     </header>
     <section style="margin-top:20px;">
       <div class="grid-2">
         <div>
           <h3 style="font-size:14px;margin:0 0 8px;">Calories</h3>
-          <p class="sub">Deficit trend (calories &minus; goal). Below the zero line = deficit (green), above = surplus (red), within 5% of goal = maintenance. This is the key metric &mdash; not total calories.</p>
+          <p class="sub" id="caloriesTakeaway" style="font-weight:600;"></p>
           <div class="card">
             <div id="caloriesSummary" style="margin-bottom:12px;"></div>
             <div id="caloriesChart"></div>
@@ -326,7 +327,7 @@
         </div>
         <div>
           <h3 style="font-size:14px;margin:0 0 8px;">Macros</h3>
-          <p class="sub">Latest day's protein / carbs / fat vs. MyFitnessPal goal. Daily grams (stacked) below &mdash; red segment/bar means carbs or fat exceeded that day's goal.</p>
+          <p class="sub" id="macrosTakeaway" style="font-weight:600;"></p>
           <div class="card">
             <div id="macrosSummary" style="margin-bottom:12px;"></div>
             <div id="macrosGoalBars" style="margin-bottom:14px;"></div>
@@ -350,7 +351,7 @@
       <div class="stat-row" id="volStatRow"></div>
     </header>
     <section>
-      <p class="sub">Volume = weight &times; reps summed per session (total reps for bodyweight exercises, marked "bw" &mdash; always logged at 0 load). Each cell averages across sessions in that window, so a low-N average can swing on a single session; check the N columns before reading much into a small move. Cardio is tracked separately and excluded. Grouped by primary muscle, upper body to lower body; within each group, sorted by largest gain to largest drop.</p>
+      <p class="sub" id="volumeLogTakeaway" style="font-weight:600;"></p>
       <div id="volumeLogTables"></div>
     </section>
   </div>
@@ -358,7 +359,7 @@
   <div id="tab-traininglog" class="tabpanel" hidden>
     <header class="top">
       <h1>Accountability</h1>
-      <p class="sub" style="margin:0;">The same daily card you used to ask for in chat &mdash; today's focus, session breakdown, steps, sleep, and 7-day weight/body-fat trend, computed straight from the synced data plus the sleep/weight/body-fat popup.</p>
+      <p class="sub" id="accountabilityTakeaway" style="font-weight:600;margin:0;"></p>
     </header>
     <section style="margin-top:20px;">
       <div id="trainingLogCard"></div>
@@ -372,6 +373,7 @@
     <header class="top">
       <h1>Rewards</h1>
       <p class="sub" style="margin:0;">Rs 1,900/week banks toward a massage/spa fund whenever a completed week (Mon&ndash;Sun) hits &ge;4 training sessions (of which &ge;3 must be strength training &mdash; e.g. 2 boxing + 2 lifting days is 4 workouts but only 2 strength days, so it doesn't count) and an average of &ge;12,000 steps/day &mdash; no cap, it keeps accumulating for as long as you keep hitting weeks and not redeeming, plus a further Rs 3,800 bonus every 6 continuous weeks with no redemption. Logging a "session" personal expense redeems it: its actual amount is subtracted from the balance right there (price varies session to session, and more than one in a week is fine as long as it stays in budget) &mdash; spending past what's banked shows as a negative balance in weeks owed, not Rs.</p>
+      <p class="sub" id="rewardTakeaway" style="font-weight:600;margin:8px 0 0;"></p>
     </header>
     <section style="margin-top:20px;">
       <div class="card" id="rewardBalanceCard"></div>
@@ -867,10 +869,14 @@ function volumeComparison(workouts, meta, recentStart, recentEnd, baseStart, bas
     const recentAvg = avg(recent), baseAvg = avg(base);
     const deltaPct = (recentAvg != null && baseAvg != null && baseAvg > 0)
       ? ((recentAvg - baseAvg) / baseAvg * 100) : null;
+    const bodyweight = isBodyweight(id, meta);
+    // Estimated 1RM (Epley, from each session's best set) isn't meaningful for bodyweight
+    // exercises (always logged at 0 load) — left null there, rendered as "—".
+    const recent1RM = (!bodyweight && recent.length) ? recent.reduce((a, s) => a + s.e1rm, 0) / recent.length : null;
     rows.push({
       id, name: meta[id] ? meta[id].name : id, primary: meta[id] ? meta[id].primary : null,
-      bodyweight: isBodyweight(id, meta),
-      recentAvg, recentN: recent.length, baseAvg, baseN: base.length, deltaPct,
+      bodyweight,
+      recentAvg, recentN: recent.length, baseAvg, baseN: base.length, deltaPct, recent1RM,
     });
   }
   return rows;
@@ -1457,20 +1463,26 @@ function trainingLogCard(workouts, meta, bodyLogData, stepsData, date) {
   const workout = workouts.find(w => w.d === date);
   const { dayNumber } = programDayInfo(workouts, date);
   const bodyDays = dailyBodyLog(bodyLogData);
-  const prevDate = new Date(new Date(date + "T00:00:00Z").getTime() - 86400000).toISOString().slice(0, 10);
-  const weightAvg = trailingAvg(bodyDays, 'weightKg', date, 7);
-  const weightAvgPrev = trailingAvg(bodyDays, 'weightKg', prevDate, 7);
-  const fatAvg = trailingAvg(bodyDays, 'bodyFatPct', date, 7);
-  const fatAvgPrev = trailingAvg(bodyDays, 'bodyFatPct', prevDate, 7);
-  const today = bodyDays.find(d => d.date === date) || null;
+  // Sleep/weight/body-fat come from a separately-timed source (the Google Form) than the
+  // workout day shown here, and can arrive same-day (e.g. this morning's weigh-in) rather
+  // than lagging like Hevy does — so always reflect the latest logged body entry, even when
+  // it's newer than `date`, rather than only entries up to the workout day.
+  const latestBodyDate = bodyDays.length ? bodyDays[bodyDays.length - 1].date : null;
+  const bodyDate = latestBodyDate && latestBodyDate > date ? latestBodyDate : date;
+  const prevBodyDate = new Date(new Date(bodyDate + "T00:00:00Z").getTime() - 86400000).toISOString().slice(0, 10);
+  const weightAvg = trailingAvg(bodyDays, 'weightKg', bodyDate, 7);
+  const weightAvgPrev = trailingAvg(bodyDays, 'weightKg', prevBodyDate, 7);
+  const fatAvg = trailingAvg(bodyDays, 'bodyFatPct', bodyDate, 7);
+  const fatAvgPrev = trailingAvg(bodyDays, 'bodyFatPct', prevBodyDate, 7);
+  const latest = bodyDays.find(d => d.date === bodyDate) || null;
   const stepsRow = (stepsData || []).find(s => s.d === date) || null;
   const session = workout ? trainingLogSession(workout, meta) : null;
   return {
     date, dayNumber, session,
     weightAvg, weightDelta: (weightAvg != null && weightAvgPrev != null) ? weightAvg - weightAvgPrev : null,
     fatAvg, fatDelta: (fatAvg != null && fatAvgPrev != null) ? fatAvg - fatAvgPrev : null,
-    sleepMin: today ? today.sleepMin : null,
-    sleepGoalMin: sleepGoalMin(bodyDays, date),
+    sleepMin: latest ? latest.sleepMin : null,
+    sleepGoalMin: sleepGoalMin(bodyDays, bodyDate),
     steps: stepsRow ? stepsRow.steps : null,
     stepsGoal: stepsRow ? stepsRow.goal : null,
   };
@@ -1522,6 +1534,31 @@ function weeklySnapshot(workouts, meta) {
 const weeklyVol = weeklyVolume(WORKOUTS);
 const weekKeys = [...weeklyVol.keys()].sort();
 const snapshot = weeklySnapshot(WORKOUTS, EXMETA);
+
+{
+  // Takeaway compares the latest COMPLETE week (weekKeys[length-1] is always in-progress,
+  // same convention as the "This week" stat row above) against the trailing 4-week average
+  // before it, so a partial current week never drags the comparison down.
+  const completed = weekKeys.slice(0, -1);
+  const el = document.getElementById('weeklyVolumeTakeaway');
+  if (completed.length < 2) {
+    el.textContent = 'Not enough completed weeks yet for a trend.';
+  } else {
+    const latest = weeklyVol.get(completed[completed.length - 1]);
+    const trailing = completed.slice(-5, -1).map(k => weeklyVol.get(k));
+    const avgTrailing = trailing.reduce((a, b) => a + b, 0) / trailing.length;
+    const pct = Math.round(((latest - avgTrailing) / avgTrailing) * 100);
+    if (avgTrailing === 0) {
+      el.textContent = latest > 0 ? 'Back to training after a gap.' : 'No volume logged in the trailing weeks.';
+    } else if (Math.abs(pct) < 8) {
+      el.textContent = `Holding steady — within ${Math.abs(pct)}% of your last ${trailing.length}-week average.`;
+    } else if (pct > 0) {
+      el.textContent = `Trending up — last complete week was ${pct}% above your ${trailing.length}-week average.`;
+    } else {
+      el.textContent = `Trending down — last complete week was ${Math.abs(pct)}% below your ${trailing.length}-week average.`;
+    }
+  }
+}
 
 // ---------- header stats ----------
 const dates = WORKOUTS.map(w => w.d).sort();
@@ -1617,6 +1654,23 @@ function weeklyVolumeBarChart() {
     </div>`;
   }
   document.getElementById('weeklySnapshot').innerHTML = html;
+
+  const takeawayEl = document.getElementById('hypertrophyTakeaway');
+  const totalExercises = snapshot.reduce((sum, s) => sum + s.exercises.length, 0);
+  const agg2 = snapshot.reduce((a, s) => ({
+    up: a.up + s.summary.up, down: a.down + s.summary.down, flat: a.flat + s.summary.flat, new: a.new + s.summary.new
+  }), { up: 0, down: 0, flat: 0, new: 0 });
+  if (totalExercises === 0) {
+    takeawayEl.textContent = '';
+  } else if (agg2.up + agg2.down + agg2.flat === 0) {
+    takeawayEl.textContent = `💪 All ${agg2.new} exercise(s) logged this week are first-time — no comparison yet.`;
+  } else if (agg2.up > agg2.down) {
+    takeawayEl.textContent = `💪 Net hypertrophy this week — ${agg2.up} exercises up vs ${agg2.down} down (${agg2.flat} flat).`;
+  } else if (agg2.down > agg2.up) {
+    takeawayEl.textContent = `💪 More plateaus than gains this week — ${agg2.down} exercises down vs ${agg2.up} up (${agg2.flat} flat).`;
+  } else {
+    takeawayEl.textContent = `💪 Mixed week — ${agg2.up} up, ${agg2.down} down, ${agg2.flat} flat.`;
+  }
 }
 
 document.getElementById('weeklyVolumeChart').appendChild(weeklyVolumeBarChart());
@@ -1662,6 +1716,32 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     statTile(isNewCount, 'new since ' + VOL_RECENT_START) +
     statTile(goneCount, 'not since ' + VOL_RECENT_START);
 
+  {
+    // Which muscle group is carrying the recent gains vs which is lagging, averaged across
+    // its tracked exercises' deltaPct (only exercises with both a recent and baseline avg).
+    const byGroup = new Map();
+    for (const r of volRows) {
+      if (r.deltaPct == null) continue;
+      const g = r.primary || 'other';
+      if (!byGroup.has(g)) byGroup.set(g, []);
+      byGroup.get(g).push(r.deltaPct);
+    }
+    const groupAvgs = [...byGroup.entries()].map(([g, vals]) => ({ g, avg: vals.reduce((a,b)=>a+b,0)/vals.length }));
+    const takeawayEl = document.getElementById('volumeLogTakeaway');
+    if (groupAvgs.length === 0) {
+      takeawayEl.textContent = '';
+    } else {
+      groupAvgs.sort((a, b) => b.avg - a.avg);
+      const best = groupAvgs[0], worst = groupAvgs[groupAvgs.length - 1];
+      const label = g => MUSCLE_LABEL[g] || g;
+      if (groupAvgs.length === 1 || best.g === worst.g) {
+        takeawayEl.textContent = `📈 ${label(best.g)} averaging ${best.avg >= 0 ? '+' : ''}${best.avg.toFixed(0)}% vs baseline.`;
+      } else {
+        takeawayEl.textContent = `📈 ${label(best.g)} leading gains (${best.avg >= 0 ? '+' : ''}${best.avg.toFixed(0)}%); ${label(worst.g)} lagging (${worst.avg >= 0 ? '+' : ''}${worst.avg.toFixed(0)}%).`;
+      }
+    }
+  }
+
   const fmtVol = n => n == null ? '—' : Math.round(n).toLocaleString();
   const fmtPct = n => (n >= 0 ? '+' : '') + n.toFixed(0) + '%';
 
@@ -1686,10 +1766,11 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
         statusCell = `<span class="badge plateau">not since ${VOL_RECENT_START}</span>`;
       }
       const bw = r.bodyweight ? ' <span style="color:var(--text-muted);font-size:10px;">bw</span>' : '';
-      return `<tr><td>${r.name}${bw}</td><td>${fmtVol(r.recentAvg)}</td><td>${r.recentN || '—'}</td><td>${fmtVol(r.baseAvg)}</td><td>${r.baseN || '—'}</td><td>${statusCell}</td></tr>`;
+      const oneRM = r.recent1RM != null ? `${Math.round(r.recent1RM)} kg` : '—';
+      return `<tr><td>${r.name}${bw}</td><td>${fmtVol(r.recentAvg)}</td><td>${r.recentN || '—'}</td><td>${fmtVol(r.baseAvg)}</td><td>${r.baseN || '—'}</td><td>${statusCell}</td><td>${oneRM}</td></tr>`;
     }).join('');
     volHtml += `<div class="day-section"><h3>${MUSCLE_LABEL[grp] || grp}</h3>
-      <table class="tv"><thead><tr><th>Exercise</th><th>Recent avg</th><th>N</th><th>Baseline avg</th><th>N</th><th>Change</th></tr></thead><tbody>${trs}</tbody></table>
+      <table class="tv"><thead><tr><th>Exercise</th><th>Recent avg</th><th>N</th><th>Baseline avg</th><th>N</th><th>Change</th><th>Est. 1RM</th></tr></thead><tbody>${trs}</tbody></table>
     </div>`;
   }
   document.getElementById('volumeLogTables').innerHTML = volHtml;
@@ -1709,6 +1790,16 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     const prev = rowing.length >= 2 ? rowing[rowing.length - 2] : null;
     const deltaStr = prev ? ` (${latest.paceMinPerKm.toFixed(2)} vs ${prev.paceMinPerKm.toFixed(2)} min/km last time)` : '';
     document.getElementById('rowingSummary').innerHTML = `${verdictBadge}<span style="color:var(--text-muted);font-size:12px;margin-left:8px;">${latest.date}${deltaStr}</span>`;
+    const rowingTakeawayEl = document.getElementById('rowingTakeaway');
+    if (!prev) {
+      rowingTakeawayEl.textContent = `🚣 First logged session — ${latest.paceMinPerKm.toFixed(2)} min/km.`;
+    } else if (latest.verdict === 'faster') {
+      rowingTakeawayEl.textContent = `🚣 Pace improved to ${latest.paceMinPerKm.toFixed(2)} min/km, down from ${prev.paceMinPerKm.toFixed(2)} last time.`;
+    } else if (latest.verdict === 'slower') {
+      rowingTakeawayEl.textContent = `🚣 Pace slower at ${latest.paceMinPerKm.toFixed(2)} min/km, up from ${prev.paceMinPerKm.toFixed(2)} last time.`;
+    } else {
+      rowingTakeawayEl.textContent = `🚣 Pace unchanged at ${latest.paceMinPerKm.toFixed(2)} min/km.`;
+    }
     const w = 1000, h = 140, pad = 28;
     const svg = svgEl('svg', { width: '100%', height: h, viewBox: `0 0 ${w} ${h}`, preserveAspectRatio: 'none' });
     const vals = rowing.map(r => r.km);
@@ -1775,6 +1866,24 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     document.getElementById('boxingTable').innerHTML = boxing.slice().reverse().map(r =>
       `<tr><td>${r.date}</td><td>${r.min} min</td><td>${r.note || '—'}</td></tr>`
     ).join('');
+
+    // No pace/duration progress signal here (by design — see description above), so the
+    // takeaway is about consistency instead: session count, last 4 logged weeks vs the 4 before.
+    const anchor = new Date(latest.date + "T00:00:00Z");
+    const daysAgo = n => { const d = new Date(anchor); d.setUTCDate(d.getUTCDate() - n); return d.toISOString().slice(0, 10); };
+    const recentStart = daysAgo(27), priorStart = daysAgo(55), priorEnd = daysAgo(28);
+    const recentCount = boxing.filter(r => r.date >= recentStart && r.date <= latest.date).length;
+    const priorCount = boxing.filter(r => r.date >= priorStart && r.date <= priorEnd).length;
+    const takeawayEl = document.getElementById('boxingTakeaway');
+    if (priorCount === 0) {
+      takeawayEl.textContent = `🥊 ${recentCount} session(s) logged in the last 4 weeks.`;
+    } else if (recentCount > priorCount) {
+      takeawayEl.textContent = `🥊 More consistent — ${recentCount} sessions in the last 4 weeks vs ${priorCount} the 4 before.`;
+    } else if (recentCount < priorCount) {
+      takeawayEl.textContent = `🥊 Less frequent — ${recentCount} sessions in the last 4 weeks vs ${priorCount} the 4 before.`;
+    } else {
+      takeawayEl.textContent = `🥊 Steady pace — ${recentCount} sessions in the last 4 weeks, same as the 4 before.`;
+    }
   }
 }
 
@@ -1803,6 +1912,16 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     const curPct = Math.round(curRate.rate * 100);
     const prevStr = prevRate ? ` (${curPct}% vs ${Math.round(prevRate.rate * 100)}% last week)` : ` (${curPct}% this week)`;
     document.getElementById('stepsSummary').innerHTML = `${summaryBadge}<span style="color:var(--text-muted);font-size:12px;margin-left:8px;">${Math.round(curRate.avgSteps).toLocaleString()} avg steps/day${prevStr}</span>`;
+    const stepsTakeawayEl = document.getElementById('stepsTakeaway');
+    if (!prevRate) {
+      stepsTakeawayEl.textContent = `👣 First tracked week — ${curPct}% goal-hit rate, ${Math.round(curRate.avgSteps).toLocaleString()} avg steps/day.`;
+    } else if (curRate.rate > prevRate.rate) {
+      stepsTakeawayEl.textContent = `👣 Goal-hit rate up to ${curPct}%, from ${Math.round(prevRate.rate * 100)}% last week.`;
+    } else if (curRate.rate < prevRate.rate) {
+      stepsTakeawayEl.textContent = `👣 Goal-hit rate down to ${curPct}%, from ${Math.round(prevRate.rate * 100)}% last week.`;
+    } else {
+      stepsTakeawayEl.textContent = `👣 Goal-hit rate unchanged at ${curPct}%.`;
+    }
 
     const w = 1000, h = 140, pad = 28;
     const svg = svgEl('svg', { width: '100%', height: h, viewBox: `0 0 ${w} ${h}`, preserveAspectRatio: 'none' });
@@ -1857,6 +1976,16 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     }
     const prevHrStr = prevAvg ? ` (${curAvg.avg.toFixed(1)} vs ${prevAvg.avg.toFixed(1)} bpm avg last week)` : ` (${curAvg.avg.toFixed(1)} bpm avg this week)`;
     document.getElementById('hrSummary').innerHTML = `${summaryBadge}<span style="color:var(--text-muted);font-size:12px;margin-left:8px;">${prevHrStr}</span>`;
+    const hrTakeawayEl = document.getElementById('hrTakeaway');
+    if (!prevAvg) {
+      hrTakeawayEl.textContent = `❤️ First tracked week — averaging ${curAvg.avg.toFixed(1)} bpm resting.`;
+    } else if (curAvg.avg < prevAvg.avg) {
+      hrTakeawayEl.textContent = `❤️ Resting HR down to ${curAvg.avg.toFixed(1)} bpm avg, from ${prevAvg.avg.toFixed(1)} last week — fitness improving.`;
+    } else if (curAvg.avg > prevAvg.avg) {
+      hrTakeawayEl.textContent = `❤️ Resting HR up to ${curAvg.avg.toFixed(1)} bpm avg, from ${prevAvg.avg.toFixed(1)} last week.`;
+    } else {
+      hrTakeawayEl.textContent = `❤️ Resting HR unchanged at ${curAvg.avg.toFixed(1)} bpm avg.`;
+    }
 
     const w = 1000, h = 140, pad = 28;
     const svg = svgEl('svg', { width: '100%', height: h, viewBox: `0 0 ${w} ${h}`, preserveAspectRatio: 'none' });
@@ -1918,6 +2047,17 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     const curDeficitStr = `${curW.avgDeficit >= 0 ? '+' : ''}${Math.round(curW.avgDeficit).toLocaleString()} avg cal/day`;
     const prevStr = prevW ? ` (vs ${prevW.avgDeficit >= 0 ? '+' : ''}${Math.round(prevW.avgDeficit).toLocaleString()} last week)` : ` this week`;
     document.getElementById('caloriesSummary').innerHTML = `${summaryBadge}<span style="color:var(--text-muted);font-size:12px;margin-left:8px;">${curDeficitStr}${prevStr}</span>`;
+    const caloriesTakeawayEl = document.getElementById('caloriesTakeaway');
+    const fmtDeficit = v => `${v >= 0 ? '+' : ''}${Math.round(v).toLocaleString()} cal/day`;
+    if (!prevW) {
+      caloriesTakeawayEl.textContent = `🔥 First tracked week — averaging ${fmtDeficit(curW.avgDeficit)} vs goal.`;
+    } else if (curW.avgDeficit < prevW.avgDeficit) {
+      caloriesTakeawayEl.textContent = `🔥 Bigger deficit this week — ${fmtDeficit(curW.avgDeficit)}, vs ${fmtDeficit(prevW.avgDeficit)} last week.`;
+    } else if (curW.avgDeficit > prevW.avgDeficit) {
+      caloriesTakeawayEl.textContent = `🔥 Smaller deficit this week — ${fmtDeficit(curW.avgDeficit)}, vs ${fmtDeficit(prevW.avgDeficit)} last week.`;
+    } else {
+      caloriesTakeawayEl.textContent = `🔥 Deficit unchanged at ${fmtDeficit(curW.avgDeficit)}.`;
+    }
 
     const verdictColor = v => v === 'deficit' ? 'var(--good)' : v === 'surplus' ? 'var(--critical)' : 'var(--text-muted)';
 
@@ -1973,6 +2113,15 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
       + `<span style="color:var(--series-1);">${Math.round(cur.avgProtein)}g protein</span> · `
       + `<span style="color:var(--series-2);">${Math.round(cur.avgCarbs)}g carbs</span> · `
       + `<span style="color:var(--series-3);">${Math.round(cur.avgFat)}g fat</span></span>`;
+
+    // Protein-on-target rate over the trailing 7 logged days (within 10% of goal, same
+    // threshold the goal bars below use) — carbs/fat don't get a takeaway since going under
+    // goal there is fine (only going over is flagged, already visible in the chart colors).
+    const trailing7 = macroDays.slice(-7).filter(d => d.proteinGoal != null);
+    const onTargetDays = trailing7.filter(d => d.protein >= d.proteinGoal * 0.9).length;
+    document.getElementById('macrosTakeaway').textContent = trailing7.length === 0
+      ? ''
+      : `🥗 Protein goal hit ${onTargetDays}/${trailing7.length} of the last logged days.`;
 
     const latest = macroDays[macroDays.length - 1];
     const goalBars = [
@@ -2058,6 +2207,21 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   const workoutsOk = current.workoutCount >= current.minWorkouts;
   const strengthOk = current.strengthCount >= current.minStrengthWorkouts;
   const stepsOk = current.avgSteps != null && current.avgSteps >= current.minAvgSteps;
+
+  {
+    const workoutsShort = Math.max(0, current.minWorkouts - current.workoutCount);
+    const strengthShort = Math.max(0, current.minStrengthWorkouts - current.strengthCount);
+    const takeawayEl = document.getElementById('rewardTakeaway');
+    if (workoutsShort === 0 && strengthShort === 0 && stepsOk) {
+      takeawayEl.textContent = `On pace — this week's target is already met, ${ledger.bonusStreakWeeks - ledger.cleanStreak} more clean week(s) for the next bonus.`;
+    } else {
+      const needs = [];
+      if (workoutsShort > 0) needs.push(`${workoutsShort} more workout(s)`);
+      if (strengthShort > 0) needs.push(`${strengthShort} more strength day(s)`);
+      if (!stepsOk) needs.push(current.avgSteps == null ? 'steps data' : `steps avg up to ${current.minAvgSteps.toLocaleString()}`);
+      takeawayEl.textContent = `Needs ${needs.join(', ')} this week to hit the target.`;
+    }
+  }
   const avgStepsStr = current.avgSteps != null ? Math.round(current.avgSteps).toLocaleString() : '—';
   document.getElementById('rewardCurrentWeek').innerHTML =
     `<p class="sub" style="margin:0 0 8px;">This week (in progress, week of ${current.week}):</p>
@@ -2085,6 +2249,26 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   const tl = trainingLogCard(WORKOUTS, EXMETA, BODYLOG, STEPS, tlDate);
   const el = document.getElementById('trainingLogCard');
   const saveBtn = document.getElementById('tlSaveImgBtn');
+
+  {
+    // Weight/fat trend reads "down = progress" here (same convention as the card's own
+    // trend arrows above); sleep is called out only when it's short of goal, since hitting
+    // goal is already the expected default rather than news.
+    const parts = [];
+    if (tl.weightDelta != null && Math.abs(tl.weightDelta) >= 0.005) {
+      parts.push(`weight ${tl.weightDelta < 0 ? 'down' : 'up'} ${Math.abs(tl.weightDelta).toFixed(2)}kg`);
+    }
+    if (tl.fatDelta != null && Math.abs(tl.fatDelta) >= 0.005) {
+      parts.push(`body fat ${tl.fatDelta < 0 ? 'down' : 'up'} ${Math.abs(tl.fatDelta).toFixed(2)}%`);
+    }
+    let sentence = parts.length ? `${parts.join(', ')} over the last 7 days.` : '';
+    if (tl.sleepMin != null && tl.sleepMin < tl.sleepGoalMin) {
+      const short = tl.sleepGoalMin - tl.sleepMin;
+      sentence += `${sentence ? ' ' : ''}Sleep ${Math.floor(short / 60)}h ${short % 60}m short of goal last night.`;
+    }
+    document.getElementById('accountabilityTakeaway').textContent = sentence ? `📋 ${sentence}` : '';
+  }
+
   if (!tl.session) {
     el.innerHTML = `<p class="sub">No workout logged for ${tlDate} yet.</p>`;
     saveBtn.style.display = 'none';
