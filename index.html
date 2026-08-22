@@ -110,6 +110,18 @@
   .badge.surplus { background: color-mix(in srgb, var(--critical) 20%, transparent); color: var(--critical); }
   .day-section { margin-bottom: 26px; }
   .day-section h3 { font-size: 15px; margin: 0 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--grid); }
+  .vol-boxed {
+    display: flex; align-items: stretch; gap: 16px;
+    border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px 16px 12px;
+    background: var(--surface-1);
+  }
+  .vol-box-label {
+    flex: 0 0 auto; writing-mode: vertical-rl; transform: rotate(180deg);
+    font-size: 15px; font-weight: 700; letter-spacing: 0.04em;
+    color: var(--text-primary); padding: 4px 0; border-right: 1px solid var(--grid);
+  }
+  .vol-box-content { flex: 1 1 auto; min-width: 0; }
+  .vol-group-insight { font-weight: 600; font-size: 12.5px; margin: 0 0 10px; }
   .tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
   .tab-btn {
     appearance: none; background: none; border: none; cursor: pointer; font: inherit;
@@ -1760,7 +1772,7 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   const EXERCISE_SUBGROUPS = {
     shoulders: [
       { name: 'Overhead Press (compound)', what: 'Front + side delt, triceps',
-        exercises: ['Overhead Press (Barbell)', 'Standing Military Press (Barbell)', 'Overhead Press (Dumbbell)', 'Shoulder Press (Dumbbell)', 'Shoulder Press (Machine Plates)', 'Arnold Press (Dumbbell)'] },
+        exercises: ['Overhead Press (Barbell)', 'Overhead Press (Dumbbell)', 'Shoulder Press (Dumbbell)', 'Shoulder Press (Machine Plates)', 'Standing Military Press (Barbell)', 'Arnold Press (Dumbbell)'] },
       { name: 'Front Raise (isolation)', what: 'Anterior delt only',
         exercises: ['Front Raise (Dumbbell)', 'Front Raise (Barbell)', 'Front Raise (Cable)'] },
       { name: 'Lateral/Upright (medial delt)', what: 'Side delt, traps',
@@ -1787,22 +1799,40 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     return `<table class="tv"><thead><tr><th>Exercise</th><th>Recent avg</th><th>N</th><th>Baseline avg</th><th>N</th><th>Change</th><th>Max weight (all-time)</th></tr></thead><tbody>${trs}</tbody></table>`;
   };
 
+  // One-line insight scoped to a single muscle group's own exercises (same best/worst-by-
+  // deltaPct logic as the tab-level takeaway above, just narrowed to this group).
+  const groupInsight = rows => {
+    const withDelta = rows.filter(r => r.deltaPct != null);
+    if (withDelta.length === 0) return 'No comparable data yet this window.';
+    if (withDelta.length === 1) {
+      const r = withDelta[0];
+      return `${r.name} ${r.deltaPct >= 0 ? '+' : ''}${r.deltaPct.toFixed(0)}% vs baseline.`;
+    }
+    const sorted = withDelta.slice().sort((a, b) => b.deltaPct - a.deltaPct);
+    const best = sorted[0], worst = sorted[sorted.length - 1];
+    if (best.id === worst.id) return `${best.name} ${best.deltaPct >= 0 ? '+' : ''}${best.deltaPct.toFixed(0)}% vs baseline.`;
+    return `${best.name} leading (${best.deltaPct >= 0 ? '+' : ''}${best.deltaPct.toFixed(0)}%); ${worst.name} lagging (${worst.deltaPct >= 0 ? '+' : ''}${worst.deltaPct.toFixed(0)}%).`;
+  };
+
   let volHtml = '';
   for (const grp of volGroupsRender) {
     const rows = volRows.filter(r => (r.primary || '') === grp)
       .sort((a, b) => (b.deltaPct ?? -Infinity) - (a.deltaPct ?? -Infinity));
     if (rows.length === 0) continue;
+    const insightHtml = `<p class="sub vol-group-insight">${groupInsight(rows)}</p>`;
 
     const subgroups = EXERCISE_SUBGROUPS[grp];
     if (!subgroups) {
-      volHtml += `<div class="day-section"><h3>${MUSCLE_LABEL[grp] || grp}</h3>${rowsToTable(rows)}</div>`;
+      volHtml += `<div class="day-section"><h3>${MUSCLE_LABEL[grp] || grp}</h3>${insightHtml}${rowsToTable(rows)}</div>`;
       continue;
     }
 
     const claimed = new Set();
     let inner = '';
     for (const sg of subgroups) {
-      const sgRows = rows.filter(r => sg.exercises.includes(r.name));
+      // Ordered by the curated exercises list above (so name-variants like "Overhead
+      // Press"/"Shoulder Press" sit next to each other), not re-sorted by deltaPct.
+      const sgRows = sg.exercises.map(name => rows.find(r => r.name === name)).filter(Boolean);
       if (sgRows.length === 0) continue;
       sgRows.forEach(r => claimed.add(r.id));
       inner += `<h4 style="font-size:12.5px;margin:14px 0 4px;">${sg.name} <span style="font-weight:400;color:var(--text-muted);">&mdash; ${sg.what}</span></h4>${rowsToTable(sgRows)}`;
@@ -1811,7 +1841,13 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     if (leftover.length > 0) {
       inner += `<h4 style="font-size:12.5px;margin:14px 0 4px;">Other</h4>${rowsToTable(leftover)}`;
     }
-    volHtml += `<div class="day-section"><h3>${MUSCLE_LABEL[grp] || grp}</h3>${inner}</div>`;
+    // Sub-grouped muscle groups get the boxed layout with a vertical side-label, so their
+    // several sub-tables read as one visually distinct unit instead of blurring into the
+    // flat single-table groups around them.
+    volHtml += `<div class="day-section vol-boxed">
+      <div class="vol-box-label">${MUSCLE_LABEL[grp] || grp}</div>
+      <div class="vol-box-content">${insightHtml}${inner}</div>
+    </div>`;
   }
   document.getElementById('volumeLogTables').innerHTML = volHtml;
 }
