@@ -1752,11 +1752,25 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
 
   const volGroupsRender = [...VOL_MUSCLE_ORDER, ...new Set(volRows.map(r => r.primary).filter(g => g && !VOL_MUSCLE_ORDER.includes(g)))];
 
-  let volHtml = '';
-  for (const grp of volGroupsRender) {
-    const rows = volRows.filter(r => (r.primary || '') === grp)
-      .sort((a, b) => (b.deltaPct ?? -Infinity) - (a.deltaPct ?? -Infinity));
-    if (rows.length === 0) continue;
+  // Movement-pattern sub-buckets within a primary muscle group, for groups worth splitting
+  // further (e.g. "shoulders" mixes overhead pressing, isolation raises, and rear-delt work,
+  // which train very differently despite sharing a primary muscle tag). Matched by exact
+  // exercise name; anything in the group not listed in any bucket below still shows, under
+  // an "Other" bucket, rather than silently disappearing.
+  const EXERCISE_SUBGROUPS = {
+    shoulders: [
+      { name: 'Overhead Press (compound)', what: 'Front + side delt, triceps',
+        exercises: ['Overhead Press (Barbell)', 'Standing Military Press (Barbell)', 'Overhead Press (Dumbbell)', 'Shoulder Press (Dumbbell)', 'Shoulder Press (Machine Plates)', 'Arnold Press (Dumbbell)'] },
+      { name: 'Front Raise (isolation)', what: 'Anterior delt only',
+        exercises: ['Front Raise (Dumbbell)', 'Front Raise (Barbell)', 'Front Raise (Cable)'] },
+      { name: 'Lateral/Upright (medial delt)', what: 'Side delt, traps',
+        exercises: ['Lateral Raise (Dumbbell)', 'Upright Row (Barbell)'] },
+      { name: 'Rear Delt (posterior)', what: 'Rear delt, posture-correction',
+        exercises: ['Rear Delt Reverse Fly (Dumbbell)', 'Band Pullaparts', 'Band Pull-Aparts'] },
+    ],
+  };
+
+  const rowsToTable = rows => {
     const trs = rows.map(r => {
       let statusCell;
       if (r.deltaPct != null) {
@@ -1770,9 +1784,34 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
       const oneRM = r.maxWeight != null ? `${r.maxWeight} kg` : '—';
       return `<tr><td>${r.name}${bw}</td><td>${fmtVol(r.recentAvg)}</td><td>${r.recentN || '—'}</td><td>${fmtVol(r.baseAvg)}</td><td>${r.baseN || '—'}</td><td>${statusCell}</td><td>${oneRM}</td></tr>`;
     }).join('');
-    volHtml += `<div class="day-section"><h3>${MUSCLE_LABEL[grp] || grp}</h3>
-      <table class="tv"><thead><tr><th>Exercise</th><th>Recent avg</th><th>N</th><th>Baseline avg</th><th>N</th><th>Change</th><th>Max weight (all-time)</th></tr></thead><tbody>${trs}</tbody></table>
-    </div>`;
+    return `<table class="tv"><thead><tr><th>Exercise</th><th>Recent avg</th><th>N</th><th>Baseline avg</th><th>N</th><th>Change</th><th>Max weight (all-time)</th></tr></thead><tbody>${trs}</tbody></table>`;
+  };
+
+  let volHtml = '';
+  for (const grp of volGroupsRender) {
+    const rows = volRows.filter(r => (r.primary || '') === grp)
+      .sort((a, b) => (b.deltaPct ?? -Infinity) - (a.deltaPct ?? -Infinity));
+    if (rows.length === 0) continue;
+
+    const subgroups = EXERCISE_SUBGROUPS[grp];
+    if (!subgroups) {
+      volHtml += `<div class="day-section"><h3>${MUSCLE_LABEL[grp] || grp}</h3>${rowsToTable(rows)}</div>`;
+      continue;
+    }
+
+    const claimed = new Set();
+    let inner = '';
+    for (const sg of subgroups) {
+      const sgRows = rows.filter(r => sg.exercises.includes(r.name));
+      if (sgRows.length === 0) continue;
+      sgRows.forEach(r => claimed.add(r.id));
+      inner += `<h4 style="font-size:12.5px;margin:14px 0 4px;">${sg.name} <span style="font-weight:400;color:var(--text-muted);">&mdash; ${sg.what}</span></h4>${rowsToTable(sgRows)}`;
+    }
+    const leftover = rows.filter(r => !claimed.has(r.id));
+    if (leftover.length > 0) {
+      inner += `<h4 style="font-size:12.5px;margin:14px 0 4px;">Other</h4>${rowsToTable(leftover)}`;
+    }
+    volHtml += `<div class="day-section"><h3>${MUSCLE_LABEL[grp] || grp}</h3>${inner}</div>`;
   }
   document.getElementById('volumeLogTables').innerHTML = volHtml;
 }
