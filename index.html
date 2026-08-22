@@ -1022,6 +1022,12 @@ function isoWeekStart(dateStr) {
   return d.toISOString().slice(0, 10);
 }
 
+function addDaysISO(dateStr, days) {
+  const d = new Date(dateStr + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
 function weeklyMuscleSets(workouts, meta) {
   // weekStart -> muscleGroup -> setCount (counts ALL logged sets, attributed to primary muscle group)
   const weeks = new Map();
@@ -1429,10 +1435,37 @@ function rewardLedger(workouts, stepsData, expensesData, latestDate, meta) {
     }
   }
 
+  // Projected payoff week: if the balance is negative (spent ahead of what's banked),
+  // simulate forward from the current in-progress week assuming every future week hits
+  // target (including the 6-clean-week bonus, since a debt implies the streak was just
+  // reset and a long enough payoff period will likely cross a bonus threshold on the way)
+  // to find the first week whose earnings would bring the balance back to >= 0. Purely
+  // illustrative — actual weeks may not all hit target — so the UI should frame it as a
+  // best-case estimate, not a promise.
+  let projectedZeroWeek = null, projectedZeroWeeksNeeded = null;
+  if (balance < 0) {
+    let simBalance = balance, simStreak = cleanStreak, wk = currentWeek, weeksSimulated = 0;
+    const MAX_WEEKS = 520; // ~10 years safety cap
+    while (simBalance < 0 && weeksSimulated < MAX_WEEKS) {
+      simBalance += REWARD_WEEKLY_BUDGET;
+      simStreak++;
+      if (simStreak >= REWARD_BONUS_STREAK_WEEKS) {
+        simBalance += bonusAmount;
+        simStreak = 0;
+      }
+      weeksSimulated++;
+      if (weeksSimulated > 1) wk = addDaysISO(wk, 7);
+    }
+    if (simBalance >= 0) {
+      projectedZeroWeek = wk;
+      projectedZeroWeeksNeeded = weeksSimulated;
+    }
+  }
+
   return {
     balance, weeklyBudget: REWARD_WEEKLY_BUDGET, bonusAmount, bonusStreakWeeks: REWARD_BONUS_STREAK_WEEKS,
     cleanStreak, minWorkouts: REWARD_MIN_WORKOUTS, minStrengthWorkouts: REWARD_MIN_STRENGTH_WORKOUTS, minAvgSteps: REWARD_MIN_AVG_STEPS,
-    weeklyRows, redemptions: redemptionLog,
+    weeklyRows, redemptions: redemptionLog, projectedZeroWeek, projectedZeroWeeksNeeded,
   };
 }
 
@@ -2591,11 +2624,17 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   // No ceiling on the balance itself anymore — the bar instead tracks progress toward the
   // next 6-clean-week bonus, the one thing left with a natural denominator.
   const bonusPct = Math.max(0, Math.min(100, Math.round(ledger.cleanStreak / ledger.bonusStreakWeeks * 100)));
+  const resetLine = ledger.balance < 0
+    ? (ledger.projectedZeroWeek
+        ? `<div class="sub" style="margin:4px 0 0;color:var(--serious);">at ${inr(ledger.weeklyBudget)}/week (plus bonuses), back to Rs 0 by week of ${ledger.projectedZeroWeek} &mdash; ${ledger.projectedZeroWeeksNeeded} clean week(s) away, best case if every week from here hits target</div>`
+        : `<div class="sub" style="margin:4px 0 0;color:var(--serious);">too far in deficit to project a payoff week</div>`)
+    : '';
   document.getElementById('rewardBalanceCard').innerHTML = `
     <div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;">
       <div style="font-size:34px;font-weight:700;${ledger.balance < 0 ? 'color:var(--serious);' : ''}">${balanceStr(ledger.balance)}</div>
       <div class="sub" style="margin:0;">current reward balance, no cap &mdash; +${inr(ledger.bonusAmount)} bonus every ${ledger.bonusStreakWeeks} clean weeks (${ledger.cleanStreak}/${ledger.bonusStreakWeeks} so far)</div>
     </div>
+    ${resetLine}
     <div class="tl-bar" style="margin-top:12px;"><span style="width:${bonusPct}%;background:var(--series-1);"></span></div>`;
 
   const workoutsOk = current.workoutCount >= current.minWorkouts;
