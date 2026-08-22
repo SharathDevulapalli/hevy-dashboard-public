@@ -397,6 +397,7 @@
 
 <script>
 const WORKOUTS = [
+{"d": "2026-08-21", "t": "Hamstrings & Calves", "ex": [{"i": "8BEBFED6", "s": [[45, 15], [50, 15], [50, 15]]}, {"i": "F4B4C6EE", "s": [[40, 15], [45, 15], [45, 15]]}, {"i": "D57C2EC7", "s": [[25, 15], [25, 15], [25, 15]]}, {"i": "3D1CDC75", "s": [[15, 15], [30, 15], [30, 15]], "n": "With belt around waist"}, {"i": "72CFFAD5", "s": [[50, 10], [50, 10], [50, 10]]}, {"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 15], [200, 15], [250, 15]]}, {"i": "B8127AD1", "s": [[20, 15], [25, 15], [25, 15]]}]},
 {"d": "2026-08-20", "t": "Back & Biceps", "ex": [{"i": "55E6546F", "s": [[20, 15], [30, 15], [30, 15]]}, {"i": "F1E57334", "s": [[30, 15], [30, 15], [30, 15]], "n": "Eaxh side"}, {"i": "BC3492DA", "s": [[40, 15], [40, 15], [50, 10]], "n": "Two hands together"}, {"i": "D2387AB1", "s": [[25, 15], [30, 15], [30, 8], [25, 8]]}, {"i": "0393F233", "s": [[45, 15], [50, 15], [55, 15]], "n": "Using cable machine"}, {"i": "ADA8623C", "s": [[20, 15], [20, 15], [25, 15]]}, {"i": "8BAB2735", "s": [[10, 15], [10, 15], [15, 15]]}, {"i": "C01F58D1", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "FAB6EB2F", "s": [[15, 15], [15, 15], [20, 12]], "n": "Each side"}, {"i": "0222DB42", "s": [[0, 0]], "c": {"min": 12, "km": 2.41}}]},
 {"d": "2026-08-19", "t": "Boxing", "ex": [{"i": "023947AB", "s": [[0, 0]], "c": {"min": 10, "km": 0.0}, "n": "Warmup"}, {"i": "A0D8FA1B", "s": [[0, 0]], "c": {"min": 40, "km": 0.0}, "n": "Jab- 4 way movement"}, {"i": "023947AB", "s": [[0, 0]], "c": {"min": 10, "km": 0.0}, "n": "Cool down"}]},
 {"d": "2026-08-18", "t": "Quads & Triceps", "ex": [{"i": "CC35A01F", "s": [[80, 20], [120, 15], [160, 15], [200, 15], [240, 15]]}, {"i": "75A4F6C4", "s": [[20, 24], [25, 24], [30, 24]], "n": "3 mini sets withh a breather in between"}, {"i": "C7973E0E", "s": [[150, 15], [200, 15], [250, 20]]}, {"i": "6E6EE645", "s": [[10, 20], [10, 30], [10, 30]], "n": "Bag - 10 each leg and 15 each leg"}, {"i": "CDC472B1", "s": [[20, 15], [20, 15], [25, 10]], "n": "3 variations together"}, {"i": "93A552C6", "s": [[20, 15], [20, 15], [25, 10]]}, {"i": "B5EFBF9C", "s": [[20, 15], [20, 15], [25, 10]]}, {"i": "6127A3AD", "s": [[10, 15], [15, 15], [20, 15]], "n": "Both sides together"}, {"i": "0222DB42", "s": [[0, 0]], "c": {"min": 12, "km": 2.63}}]},
@@ -671,9 +672,11 @@ const EXMETA = {
 "FE389074":{"name":"Rack Pull","primary":"upper_back"},
 "18487FA7":{"name": "Decline Bench Press (Dumbbell)", "primary": "chest"},
 "023947AB":{"name": "HIIT", "primary": "cardio"},
-"A0D8FA1B":{"name": "Boxing", "primary": "cardio"}
+"A0D8FA1B":{"name": "Boxing", "primary": "cardio"},
+"D57C2EC7":{"name": "Hip Thrust (Barbell)", "primary": "glutes"}
 };
 const STEPS = [
+{"d": "2026-08-21", "steps": 11395, "goal": 14760},
 {"d": "2026-08-20", "steps": 14958, "goal": 14730},
 {"d": "2026-08-19", "steps": 10846, "goal": 15160},
 {"d": "2026-08-18", "steps": 17345, "goal": 14910},
@@ -717,6 +720,7 @@ const STEPS = [
 {"d": "2026-07-11", "steps": 10238, "goal": 5590}
 ];
 const HEARTRATE = [
+{"d": "2026-08-21", "resting": 59, "min": 56, "max": 122},
 {"d": "2026-08-20", "resting": 55, "min": 50, "max": 154},
 {"d": "2026-08-19", "resting": 53, "min": 49, "max": 147},
 {"d": "2026-08-18", "resting": 54, "min": 52, "max": 151},
@@ -760,6 +764,7 @@ const HEARTRATE = [
 {"d": "2026-07-11", "resting": 60, "min": 53, "max": 118}
 ];
 const NUTRITION = [
+{"d": "2026-08-21", "calories": 2036, "goal": 2100, "protein": 126, "proteinGoal": 184, "carbs": 214, "carbsGoal": 210, "fat": 78, "fatGoal": 58},
 {"d": "2026-08-20", "calories": 2126, "goal": 2100, "protein": 170, "proteinGoal": 184, "carbs": 254, "carbsGoal": 210, "fat": 43, "fatGoal": 58},
 {"d": "2026-08-19", "calories": 1690, "goal": 2100, "protein": 159, "proteinGoal": 184, "carbs": 153, "carbsGoal": 210, "fat": 38, "fatGoal": 58},
 {"d": "2026-08-18", "calories": 2244, "goal": 2100, "protein": 191, "proteinGoal": 184, "carbs": 224, "carbsGoal": 210, "fat": 48, "fatGoal": 58},
