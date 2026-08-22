@@ -1812,6 +1812,31 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
           exercises: ['Shrug (Machine)', 'Shrug (Barbell)'] },
       ],
     },
+    {
+      label: 'Arms', primaries: ['biceps', 'triceps'],
+      subgroups: [
+        { name: 'Standard Curl (mid-bicep)', what: 'Overall bicep mass, most transferable strength',
+          exercises: ['Bicep Curl (Cable)', 'Bicep Curl (Dumbbell)', 'Bicep Curl (Barbell)', 'EZ Bar Biceps Curl'] },
+        { name: 'Incline Curl (long head stretch)', what: 'Long head — adds peak height to the bicep, most relevant to how a flexed arm looks',
+          exercises: ['Seated Incline Curl (Dumbbell)', 'Seated Incline Hammer Curl (Dumbbell)'] },
+        { name: 'Preacher Curl (peak contraction)', what: 'Strict isolation, no momentum — good for the squeeze/peak',
+          exercises: ['Preacher Curl (Barbell)', 'Preacher Curl (Machine)', 'Preacher Curl (Dumbbell)'] },
+        { name: 'Hammer/Neutral Grip', what: 'Brachialis — pushes the bicep up rather than just thicker, widens arm circumference',
+          exercises: ['Hammer Curl (Dumbbell)', 'Hammer Curl (Cable)'] },
+        { name: 'Concentration', what: 'Isolated peak contraction, single-arm focus',
+          exercises: ['Concentration Curl'] },
+        { name: 'Pushdown (cable, elbows fixed)', what: 'Lateral head, most trainable for volume',
+          exercises: ['Triceps Rope Pushdown', 'Triceps Pressdown', 'Triceps Pushdown', 'Single Arm Triceps Pushdown (Cable)'] },
+        { name: 'Overhead Extension (long head stretch)', what: 'Long head — adds mass to the back of the arm, most visible from behind/side',
+          exercises: ['Overhead Triceps Extension (Cable)', 'Triceps Extension (Dumbbell)', 'Triceps Extension (Cable)'] },
+        { name: 'Compound Press (heaviest loading)', what: 'All three heads, heaviest weight capacity',
+          exercises: ['Skullcrusher (Barbell)', 'Bench Press - Close Grip (Barbell)'] },
+        { name: 'Dip Variations', what: 'Full triceps + chest crossover, bodyweight progression',
+          exercises: ['Triceps Dip (Assisted)', 'Seated Dip Machine', 'Bench Dip'] },
+        { name: 'Kickback (peak contraction)', what: 'Isolated peak squeeze',
+          exercises: ['Triceps Kickback (Dumbbell)'] },
+      ],
+    },
   ];
 
   const rowsToTable = rows => {
