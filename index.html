@@ -1837,6 +1837,11 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
           exercises: ['Triceps Kickback (Dumbbell)'] },
       ],
     },
+    // Core and Hip Complex have no movement-pattern subgroups yet (no `subgroups` key) —
+    // they just relabel/merge their primary-muscle tag(s) into one section, ready to take a
+    // subgroup breakdown later the same way the groups above did.
+    { label: 'Core', primaries: ['abdominals'] },
+    { label: 'Hip Complex', primaries: ['adductors', 'abductors', 'glutes'] },
   ];
 
   const rowsToTable = rows => {
