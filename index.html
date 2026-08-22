@@ -1792,6 +1792,28 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     ],
   };
 
+  // Umbrella groups that merge several primary-muscle tags into one boxed "Back" section
+  // (lats/upper_back/traps train together as one region day-to-day, even though each
+  // exercise carries a narrower primary tag) — rendered at the position of the first listed
+  // primary in VOL_MUSCLE_ORDER, with the other primaries skipped in the main loop below.
+  const COMBINED_GROUPS = [
+    {
+      label: 'Back', primaries: ['lats', 'upper_back', 'traps'],
+      subgroups: [
+        { name: 'Vertical Pull (Lats width)', what: 'Lat width — the actual driver of the V-taper/shoulder-to-waist ratio',
+          exercises: ['Lat Pulldown (Cable)', 'Lat Pulldown - Close Grip (Cable)', 'Straight Arm Lat Pulldown (Cable)', 'Iso-Lateral High Row (Machine)'] },
+        { name: 'Horizontal Pull (Back thickness)', what: 'Mid-back thickness, rhomboids, posture',
+          exercises: ['Bent Over Row (Barbell)', 'Dumbbell Row', 'Seated Cable Row - V Grip (Cable)', 'T Bar Row', 'Chest Supported Incline Row (Dumbbell)', 'Iso-Lateral Row (Machine)'] },
+        { name: 'Hip Hinge Pull', what: 'Posterior chain, grip, overall pulling strength',
+          exercises: ['Rack Pull'] },
+        { name: 'Isolation/Stretch', what: 'Lat stretch, serratus, chest-to-lat tie-in',
+          exercises: ['Pullover (Dumbbell)'] },
+        { name: 'Traps', what: 'Upper trap thickness — frames the neck/shoulder line',
+          exercises: ['Shrug (Machine)', 'Shrug (Barbell)'] },
+      ],
+    },
+  ];
+
   const rowsToTable = rows => {
     const trs = rows.map(r => {
       let statusCell;
@@ -1825,15 +1847,24 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   };
 
   let volHtml = '';
+  const consumedPrimaries = new Set();
   for (const grp of volGroupsRender) {
-    const rows = volRows.filter(r => (r.primary || '') === grp)
-      .sort((a, b) => (b.deltaPct ?? -Infinity) - (a.deltaPct ?? -Infinity));
+    if (consumedPrimaries.has(grp)) continue;
+    const combined = COMBINED_GROUPS.find(c => c.primaries[0] === grp);
+
+    const rows = (combined
+      ? volRows.filter(r => combined.primaries.includes(r.primary || ''))
+      : volRows.filter(r => (r.primary || '') === grp)
+    ).sort((a, b) => (b.deltaPct ?? -Infinity) - (a.deltaPct ?? -Infinity));
+    if (combined) combined.primaries.forEach(p => consumedPrimaries.add(p));
     if (rows.length === 0) continue;
+
+    const displayLabel = combined ? combined.label : (MUSCLE_LABEL[grp] || grp);
     const insightHtml = `<p class="sub vol-group-insight">${groupInsight(rows)}</p>`;
 
-    const subgroups = EXERCISE_SUBGROUPS[grp];
+    const subgroups = combined ? combined.subgroups : EXERCISE_SUBGROUPS[grp];
     if (!subgroups) {
-      volHtml += `<div class="day-section"><h3>${MUSCLE_LABEL[grp] || grp}</h3>${insightHtml}${rowsToTable(rows)}</div>`;
+      volHtml += `<div class="day-section"><h3>${displayLabel}</h3>${insightHtml}${rowsToTable(rows)}</div>`;
       continue;
     }
 
@@ -1855,7 +1886,7 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     // several sub-tables read as one visually distinct unit instead of blurring into the
     // flat single-table groups around them.
     volHtml += `<div class="day-section vol-boxed">
-      <div class="vol-box-label">${MUSCLE_LABEL[grp] || grp}</div>
+      <div class="vol-box-label">${displayLabel}</div>
       <div class="vol-box-content">${insightHtml}${inner}</div>
     </div>`;
   }
