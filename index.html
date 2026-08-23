@@ -108,6 +108,12 @@
   .badge.progress { background: color-mix(in srgb, var(--good) 20%, transparent); color: var(--good); }
   .badge.baseline { background: color-mix(in srgb, var(--text-muted) 22%, transparent); color: var(--text-muted); }
   .badge.surplus { background: color-mix(in srgb, var(--critical) 20%, transparent); color: var(--critical); }
+  .callout {
+    border-radius: 10px; padding: 10px 14px; font-size: 12.5px; font-weight: 600;
+    border-left: 3px solid var(--text-muted); background: color-mix(in srgb, var(--text-muted) 10%, transparent);
+  }
+  .callout.good { border-left-color: var(--good); background: color-mix(in srgb, var(--good) 12%, transparent); }
+  .callout.critical { border-left-color: var(--critical); background: color-mix(in srgb, var(--critical) 12%, transparent); }
   .day-section { margin-bottom: 26px; }
   .day-section h3 { font-size: 15px; margin: 0 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--grid); }
   .vol-boxed {
@@ -404,19 +410,33 @@
   <div id="tab-reward" class="tabpanel" hidden>
     <header class="top">
       <h1>Rewards</h1>
-      <p class="sub" style="margin:0;">One recovery session (massage/spa) is banked every 6 <strong>continuous</strong> weeks that each hit the same weekly target as below &mdash; a week that misses it resets the streak back to 0. Starts fresh from zero on Monday 24 Aug; no debt here, spending a session you haven't earned just leaves you at zero rather than negative. Logging a "recovery" expense (synced automatically from MyFitnessPal's "Session Expense (Rs)" field) redeems one.</p>
-      <p class="sub" id="sessionTakeaway" style="font-weight:600;margin:8px 0 0;"></p>
     </header>
+
     <section style="margin-top:20px;">
       <div class="card" id="sessionBalanceCard"></div>
     </section>
+
+    <section>
+      <h2>Target</h2>
+      <table class="tv">
+        <thead><tr><th>Metric</th><th>Threshold</th></tr></thead>
+        <tbody>
+          <tr><td>Workouts / week</td><td>&ge; 4 <span style="color:var(--text-muted);font-size:11px;">(core/rowing-only days don't count)</span></td></tr>
+          <tr><td>Strength days / week</td><td>&ge; 3</td></tr>
+          <tr><td>Avg steps / day</td><td>&ge; 12,000</td></tr>
+          <tr><td>Continuous weeks &rarr; 1 session</td><td>6</td></tr>
+        </tbody>
+      </table>
+    </section>
+
     <section>
       <h2>This week</h2>
-      <p class="sub">Each completed week checked against the target; the current in-progress week is shown here and isn't scored until it's over.</p>
       <div class="card">
+        <div class="callout" id="sessionTakeaway" style="margin-bottom:12px;"></div>
         <div id="rewardCurrentWeek"></div>
       </div>
     </section>
+
     <section>
       <h2>Session ledger</h2>
       <div class="card">
@@ -426,7 +446,7 @@
         </table>
         <details class="tableview" id="sessionRedemptionsDetails">
           <summary>Sessions redeemed</summary>
-          <div id="sessionRedemptions"></div>
+          <table class="tv"><thead><tr><th>Date</th><th>Note</th><th>Sessions available after</th></tr></thead><tbody id="sessionRedemptions"></tbody></table>
         </details>
       </div>
     </section>
@@ -435,9 +455,7 @@
 
     <section>
       <h2>Rs ledger (legacy, still running)</h2>
-      <p class="sub" style="margin:0;">Rs 1,900/week banks toward a massage/spa fund whenever a completed week (Mon&ndash;Sun) hits &ge;4 training sessions (of which &ge;3 must be strength training &mdash; e.g. 2 boxing + 2 lifting days is 4 workouts but only 2 strength days, so it doesn't count) and an average of &ge;12,000 steps/day &mdash; no cap, it keeps accumulating for as long as you keep hitting weeks and not redeeming, plus a further Rs 3,800 bonus every 6 continuous weeks with no redemption. The same "recovery" expense that redeems a session above also subtracts its actual amount from this balance (price varies session to session, and more than one in a week is fine as long as it stays in budget) &mdash; spending past what's banked shows as a negative balance in weeks owed, not Rs.</p>
-      <p class="sub" id="rewardTakeaway" style="font-weight:600;margin:8px 0 0;"></p>
-      <div class="card" style="margin-top:12px;" id="rewardBalanceCard"></div>
+      <div class="card" id="rewardBalanceCard"></div>
     </section>
     <section>
       <h2>Weekly ledger</h2>
@@ -448,7 +466,7 @@
         </table>
         <details class="tableview" id="rewardRedemptionsDetails">
           <summary>Redemption history</summary>
-          <div id="rewardRedemptions"></div>
+          <table class="tv"><thead><tr><th>Date</th><th>Amount</th><th>Note</th><th>Balance after</th></tr></thead><tbody id="rewardRedemptions"></tbody></table>
         </details>
       </div>
     </section>
@@ -2835,22 +2853,26 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     const workoutsShort = Math.max(0, current.minWorkouts - current.workoutCount);
     const strengthShort = Math.max(0, current.minStrengthWorkouts - current.strengthCount);
     const takeawayEl = document.getElementById('sessionTakeaway');
-    if (workoutsShort === 0 && strengthShort === 0 && stepsOk) {
-      takeawayEl.textContent = `On pace — this week's target is already met, ${sessLedger.streakWeeks - sessLedger.currentStreak} more continuous week(s) for the next session.`;
+    const onPace = workoutsShort === 0 && strengthShort === 0 && stepsOk;
+    takeawayEl.classList.add('callout', onPace ? 'good' : 'critical');
+    if (onPace) {
+      takeawayEl.textContent = `On pace — target already met, ${sessLedger.streakWeeks - sessLedger.currentStreak} more continuous week(s) for the next session.`;
     } else {
       const needs = [];
       if (workoutsShort > 0) needs.push(`${workoutsShort} more workout(s)`);
       if (strengthShort > 0) needs.push(`${strengthShort} more strength day(s)`);
       if (!stepsOk) needs.push(current.avgSteps == null ? 'steps data' : `steps avg up to ${current.minAvgSteps.toLocaleString()}`);
-      takeawayEl.textContent = `Needs ${needs.join(', ')} this week to keep the streak alive.`;
+      takeawayEl.textContent = `Needs ${needs.join(', ')} to keep the streak alive.`;
     }
   }
   const avgStepsStr = current.avgSteps != null ? Math.round(current.avgSteps).toLocaleString() : '—';
   document.getElementById('rewardCurrentWeek').innerHTML =
-    `<p class="sub" style="margin:0 0 8px;">In progress, week of ${current.week}:</p>
-     <span class="badge ${workoutsOk ? 'progress' : 'baseline'}">${current.workoutCount}/${current.minWorkouts} workouts</span>
-     <span class="badge ${strengthOk ? 'progress' : 'baseline'}" style="margin-left:6px;">${current.strengthCount}/${current.minStrengthWorkouts} strength</span>
-     <span class="badge ${stepsOk ? 'progress' : 'baseline'}" style="margin-left:6px;">avg ${avgStepsStr} / ${current.minAvgSteps.toLocaleString()} steps</span>`;
+    `<table class="tv"><thead><tr><th>Week of</th><th>Workouts</th><th>Strength</th><th>Avg steps</th></tr></thead>
+     <tbody><tr><td>${current.week} (in progress)</td>
+       <td><span class="badge ${workoutsOk ? 'progress' : 'baseline'}">${current.workoutCount}/${current.minWorkouts}</span></td>
+       <td><span class="badge ${strengthOk ? 'progress' : 'baseline'}">${current.strengthCount}/${current.minStrengthWorkouts}</span></td>
+       <td><span class="badge ${stepsOk ? 'progress' : 'baseline'}">${avgStepsStr}/${current.minAvgSteps.toLocaleString()}</span></td>
+     </tr></tbody></table>`;
 
   document.getElementById('sessionWeeklyTable').innerHTML = sessLedger.weeklyRows.slice().reverse().map(r => {
     const avgStr = r.avgSteps != null ? Math.round(r.avgSteps).toLocaleString() : '—';
@@ -2861,9 +2883,9 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
 
   document.getElementById('sessionRedemptions').innerHTML = sessLedger.redemptions.length
     ? sessLedger.redemptions.slice().reverse().map(r =>
-        `<div style="font-size:12.5px;padding:4px 0;">${r.date} &mdash; redeemed 1 session${r.note ? ' (' + r.note + ')' : ''}, ${r.sessionsAvailableAfter} available now</div>`
+        `<tr><td>${r.date}</td><td>${r.note || '—'}</td><td>${r.sessionsAvailableAfter}</td></tr>`
       ).join('')
-    : `<p class="sub" style="margin:0;">No sessions redeemed yet.</p>`;
+    : `<tr><td colspan="3" style="color:var(--text-muted);">No sessions redeemed yet.</td></tr>`;
 }
 
 // ---------- reward mechanism (legacy Rs ledger) ----------
@@ -2874,7 +2896,6 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   const balanceStr = b => b >= 0 ? inr(b) : `-${(Math.abs(b) / 1900).toFixed(1)} weeks`;
   const rewardDate = dates[dates.length - 1];
   const ledger = rewardLedger(WORKOUTS, STEPS, EXPENSES, rewardDate, EXMETA);
-  const current = currentWeekRewardProgress(WORKOUTS, STEPS, rewardDate, EXMETA);
 
   // No ceiling on the balance itself anymore — the bar instead tracks progress toward the
   // next 6-clean-week bonus, the one thing left with a natural denominator.
@@ -2892,25 +2913,6 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     ${resetLine}
     <div class="tl-bar" style="margin-top:12px;"><span style="width:${bonusPct}%;background:var(--series-1);"></span></div>`;
 
-  const workoutsOk = current.workoutCount >= current.minWorkouts;
-  const strengthOk = current.strengthCount >= current.minStrengthWorkouts;
-  const stepsOk = current.avgSteps != null && current.avgSteps >= current.minAvgSteps;
-
-  {
-    const workoutsShort = Math.max(0, current.minWorkouts - current.workoutCount);
-    const strengthShort = Math.max(0, current.minStrengthWorkouts - current.strengthCount);
-    const takeawayEl = document.getElementById('rewardTakeaway');
-    if (workoutsShort === 0 && strengthShort === 0 && stepsOk) {
-      takeawayEl.textContent = `On pace — this week's target is already met, ${ledger.bonusStreakWeeks - ledger.cleanStreak} more clean week(s) for the next bonus.`;
-    } else {
-      const needs = [];
-      if (workoutsShort > 0) needs.push(`${workoutsShort} more workout(s)`);
-      if (strengthShort > 0) needs.push(`${strengthShort} more strength day(s)`);
-      if (!stepsOk) needs.push(current.avgSteps == null ? 'steps data' : `steps avg up to ${current.minAvgSteps.toLocaleString()}`);
-      takeawayEl.textContent = `Needs ${needs.join(', ')} this week to hit the target.`;
-    }
-  }
-
   document.getElementById('rewardWeeklyTable').innerHTML = ledger.weeklyRows.slice().reverse().map(r => {
     const avgStr = r.avgSteps != null ? Math.round(r.avgSteps).toLocaleString() : '—';
     const badge = r.earned ? `<span class="badge progress">hit</span>` : `<span class="badge plateau">missed</span>`;
@@ -2920,9 +2922,9 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
 
   document.getElementById('rewardRedemptions').innerHTML = ledger.redemptions.length
     ? ledger.redemptions.slice().reverse().map(r =>
-        `<div style="font-size:12.5px;padding:4px 0;">${r.date} &mdash; spent ${inr(r.amount)}${r.note ? ' (' + r.note + ')' : ''}, balance now ${balanceStr(r.balanceAfter)}</div>`
+        `<tr><td>${r.date}</td><td>${inr(r.amount)}</td><td>${r.note || '—'}</td><td>${balanceStr(r.balanceAfter)}</td></tr>`
       ).join('')
-    : `<p class="sub" style="margin:0;">No redemptions logged yet.</p>`;
+    : `<tr><td colspan="4" style="color:var(--text-muted);">No redemptions logged yet.</td></tr>`;
 }
 
 // ---------- training log card ----------
