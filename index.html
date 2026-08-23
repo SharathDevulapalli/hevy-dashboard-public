@@ -404,17 +404,44 @@
   <div id="tab-reward" class="tabpanel" hidden>
     <header class="top">
       <h1>Rewards</h1>
-      <p class="sub" style="margin:0;">Rs 1,900/week banks toward a massage/spa fund whenever a completed week (Mon&ndash;Sun) hits &ge;4 training sessions (of which &ge;3 must be strength training &mdash; e.g. 2 boxing + 2 lifting days is 4 workouts but only 2 strength days, so it doesn't count) and an average of &ge;12,000 steps/day &mdash; no cap, it keeps accumulating for as long as you keep hitting weeks and not redeeming, plus a further Rs 3,800 bonus every 6 continuous weeks with no redemption. Logging a "recovery" expense (synced automatically from MyFitnessPal's "Session Expense (Rs)" field) redeems it: its actual amount is subtracted from the balance right there (price varies session to session, and more than one in a week is fine as long as it stays in budget) &mdash; spending past what's banked shows as a negative balance in weeks owed, not Rs.</p>
-      <p class="sub" id="rewardTakeaway" style="font-weight:600;margin:8px 0 0;"></p>
+      <p class="sub" style="margin:0;">One recovery session (massage/spa) is banked every 6 <strong>continuous</strong> weeks that each hit the same weekly target as below &mdash; a week that misses it resets the streak back to 0. Starts fresh from zero on Monday 24 Aug; no debt here, spending a session you haven't earned just leaves you at zero rather than negative. Logging a "recovery" expense (synced automatically from MyFitnessPal's "Session Expense (Rs)" field) redeems one.</p>
+      <p class="sub" id="sessionTakeaway" style="font-weight:600;margin:8px 0 0;"></p>
     </header>
     <section style="margin-top:20px;">
-      <div class="card" id="rewardBalanceCard"></div>
+      <div class="card" id="sessionBalanceCard"></div>
+    </section>
+    <section>
+      <h2>This week</h2>
+      <p class="sub">Each completed week checked against the target; the current in-progress week is shown here and isn't scored until it's over.</p>
+      <div class="card">
+        <div id="rewardCurrentWeek"></div>
+      </div>
+    </section>
+    <section>
+      <h2>Session ledger</h2>
+      <div class="card">
+        <table class="tv">
+          <thead><tr><th>Week of</th><th>Workouts</th><th>Avg steps</th><th>Target</th><th>Streak</th><th>Sessions available</th></tr></thead>
+          <tbody id="sessionWeeklyTable"></tbody>
+        </table>
+        <details class="tableview" id="sessionRedemptionsDetails">
+          <summary>Sessions redeemed</summary>
+          <div id="sessionRedemptions"></div>
+        </details>
+      </div>
+    </section>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:32px 0;">
+
+    <section>
+      <h2>Rs ledger (legacy, still running)</h2>
+      <p class="sub" style="margin:0;">Rs 1,900/week banks toward a massage/spa fund whenever a completed week (Mon&ndash;Sun) hits &ge;4 training sessions (of which &ge;3 must be strength training &mdash; e.g. 2 boxing + 2 lifting days is 4 workouts but only 2 strength days, so it doesn't count) and an average of &ge;12,000 steps/day &mdash; no cap, it keeps accumulating for as long as you keep hitting weeks and not redeeming, plus a further Rs 3,800 bonus every 6 continuous weeks with no redemption. The same "recovery" expense that redeems a session above also subtracts its actual amount from this balance (price varies session to session, and more than one in a week is fine as long as it stays in budget) &mdash; spending past what's banked shows as a negative balance in weeks owed, not Rs.</p>
+      <p class="sub" id="rewardTakeaway" style="font-weight:600;margin:8px 0 0;"></p>
+      <div class="card" style="margin-top:12px;" id="rewardBalanceCard"></div>
     </section>
     <section>
       <h2>Weekly ledger</h2>
-      <p class="sub">Each completed week checked against the target; the current in-progress week is shown separately below and isn't scored until it's over.</p>
       <div class="card">
-        <div id="rewardCurrentWeek" style="margin-bottom:14px;"></div>
         <table class="tv">
           <thead><tr><th>Week of</th><th>Workouts</th><th>Avg steps</th><th>Target</th><th>Balance after</th></tr></thead>
           <tbody id="rewardWeeklyTable"></tbody>
@@ -431,6 +458,7 @@
 
 <script>
 const WORKOUTS = [
+{"d": "2026-08-23", "t": "Core & Rowing", "ex": [{"i": "0222DB42", "s": [[0, 0], [0, 0]], "c": {"min": 12, "km": 2.52}}]},
 {"d": "2026-08-22", "t": "Boxing", "ex": [{"i": "023947AB", "s": [[0, 0]], "c": {"min": 10, "km": 0.0}, "n": "Warmup"}, {"i": "A0D8FA1B", "s": [[0, 0]], "c": {"min": 40, "km": 0.0}, "n": "Jab & Cross - Forward"}, {"i": "023947AB", "s": [[0, 0]], "c": {"min": 10, "km": 0.0}, "n": "Cool down"}]},
 {"d": "2026-08-21", "t": "Hamstrings & Calves", "ex": [{"i": "8BEBFED6", "s": [[45, 15], [50, 15], [50, 15]]}, {"i": "F4B4C6EE", "s": [[40, 15], [45, 15], [45, 15]]}, {"i": "D57C2EC7", "s": [[25, 15], [25, 15], [25, 15]]}, {"i": "3D1CDC75", "s": [[15, 15], [30, 15], [30, 15]], "n": "With belt around waist"}, {"i": "72CFFAD5", "s": [[50, 10], [50, 10], [50, 10]]}, {"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 15], [200, 15], [250, 15]]}, {"i": "B8127AD1", "s": [[20, 15], [25, 15], [25, 15]]}]},
 {"d": "2026-08-20", "t": "Back & Biceps", "ex": [{"i": "55E6546F", "s": [[20, 15], [30, 15], [30, 15]]}, {"i": "F1E57334", "s": [[30, 15], [30, 15], [30, 15]], "n": "Eaxh side"}, {"i": "BC3492DA", "s": [[40, 15], [40, 15], [50, 10]], "n": "Two hands together"}, {"i": "D2387AB1", "s": [[25, 15], [30, 15], [30, 8], [25, 8]]}, {"i": "0393F233", "s": [[45, 15], [50, 15], [55, 15]], "n": "Using cable machine"}, {"i": "ADA8623C", "s": [[20, 15], [20, 15], [25, 15]]}, {"i": "8BAB2735", "s": [[10, 15], [10, 15], [15, 15]]}, {"i": "C01F58D1", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "FAB6EB2F", "s": [[15, 15], [15, 15], [20, 12]], "n": "Each side"}, {"i": "0222DB42", "s": [[0, 0]], "c": {"min": 12, "km": 2.41}}]},
@@ -711,6 +739,7 @@ const EXMETA = {
 "D57C2EC7":{"name": "Hip Thrust (Barbell)", "primary": "glutes"}
 };
 const STEPS = [
+{"d": "2026-08-23", "steps": 3826, "goal": 14690},
 {"d": "2026-08-22", "steps": 14028, "goal": 14760},
 {"d": "2026-08-21", "steps": 11781, "goal": 14760},
 {"d": "2026-08-20", "steps": 14958, "goal": 14730},
@@ -756,6 +785,7 @@ const STEPS = [
 {"d": "2026-07-11", "steps": 10238, "goal": 5590}
 ];
 const HEARTRATE = [
+{"d": "2026-08-23", "resting": 60, "min": 59, "max": 143},
 {"d": "2026-08-22", "resting": 60, "min": 53, "max": 146},
 {"d": "2026-08-21", "resting": 59, "min": 56, "max": 122},
 {"d": "2026-08-20", "resting": 55, "min": 50, "max": 154},
@@ -801,6 +831,7 @@ const HEARTRATE = [
 {"d": "2026-07-11", "resting": 60, "min": 53, "max": 118}
 ];
 const NUTRITION = [
+{"d": "2026-08-23", "calories": 158, "goal": 2100, "protein": 4, "proteinGoal": 184, "carbs": 23, "carbsGoal": 210, "fat": 5, "fatGoal": 58},
 {"d": "2026-08-22", "calories": 2357, "goal": 2100, "protein": 169, "proteinGoal": 184, "carbs": 315, "carbsGoal": 210, "fat": 56, "fatGoal": 58},
 {"d": "2026-08-21", "calories": 2036, "goal": 2100, "protein": 126, "proteinGoal": 184, "carbs": 214, "carbsGoal": 210, "fat": 78, "fatGoal": 58},
 {"d": "2026-08-20", "calories": 2126, "goal": 2100, "protein": 170, "proteinGoal": 184, "carbs": 254, "carbsGoal": 210, "fat": 43, "fatGoal": 58},
@@ -838,6 +869,7 @@ const BODYLOG = [
 {"d": "2026-08-14", "weightKg": 69.9, "bodyFatPct": 21.3}
 ];
 const SUPPLEMENTS = [
+{"d": "2026-08-23", "items": ["creatine", "eaa", "isabgol", "preworkout"]},
 {"d": "2026-08-22", "items": ["creatine", "d3_k2", "eaa", "glycine", "magnesium", "preworkout", "tongkat_ali"]}
 ];
 const SUPPLEMENT_META = [
@@ -1251,21 +1283,26 @@ function weeklyMacros(nutritionData) {
   return weeks;
 }
 
-function supplementCalendar(supplementsData, metaItems, refDateStr, totalDays) {
-  // Forward-looking tracker grid: day 0 = refDateStr (normally "today"), running `totalDays`
-  // (default 90) days into the future so the full grid renders upfront rather than growing
-  // one column at a time. Days after refDateStr are marked isFuture and never tick, since
-  // there's nothing to have logged yet. One row per item in metaItems (supplement_meta.json),
-  // each carrying its own tick array aligned 1:1 with `days`, plus adherence over elapsed
-  // (non-future) days only.
+function supplementCalendar(supplementsData, metaItems, startDateStr, totalDays, todayStr) {
+  // Forward-looking tracker grid: day 0 = startDateStr (the fixed date tracking began, so
+  // the grid's left edge never slides), running `totalDays` (default 90) days forward so the
+  // full grid renders upfront rather than growing one column at a time. `todayStr` (defaults
+  // to startDateStr for callers that don't have a separate "today" — e.g. the very first day)
+  // is the actual future cutoff: days after *that* are marked isFuture and never tick, since
+  // there's nothing to have logged yet. These two dates are deliberately separate — using
+  // startDateStr for both would mark every day after tracking began (including today) as
+  // future, freezing elapsedDays at 1 forever. One row per item in metaItems
+  // (supplement_meta.json), each carrying its own tick array aligned 1:1 with `days`, plus
+  // adherence over elapsed (non-future) days only.
   totalDays = totalDays || 90;
+  todayStr = todayStr || startDateStr;
   const byDate = new Map(supplementsData.map(r => [r.d, new Set(r.items || [])]));
-  const ref = new Date(refDateStr + 'T00:00:00Z');
+  const start = new Date(startDateStr + 'T00:00:00Z');
   const days = [];
   for (let i = 0; i < totalDays; i++) {
-    const d = new Date(ref); d.setUTCDate(d.getUTCDate() + i);
+    const d = new Date(start); d.setUTCDate(d.getUTCDate() + i);
     const dateStr = d.toISOString().slice(0, 10);
-    days.push({ date: dateStr, isFuture: dateStr > refDateStr });
+    days.push({ date: dateStr, isFuture: dateStr > todayStr });
   }
   const elapsedDays = days.filter(day => !day.isFuture).length;
   const rows = metaItems.map(item => {
@@ -1497,6 +1534,107 @@ function currentWeekRewardProgress(workouts, stepsData, latestDate, meta) {
   return {
     week: wk, workoutCount: workoutDays.size, strengthCount: strengthDays.size, daysLogged: stepsRows.length, avgSteps,
     minWorkouts: REWARD_MIN_WORKOUTS, minStrengthWorkouts: REWARD_MIN_STRENGTH_WORKOUTS, minAvgSteps: REWARD_MIN_AVG_STEPS,
+  };
+}
+
+// ---------- session-based reward track (added 2026-08-23) ----------
+// A second, independent reward mechanic that runs alongside (not instead of) the Rs ledger
+// above — that one keeps accumulating exactly as before, this one starts fresh from zero.
+// Denominated in recovery sessions (massage/spa), not Rs: 6 CONTINUOUS weeks that each hit
+// the same weekly target as the Rs ledger (see REWARD_MIN_* / isStrengthDay above) earns one
+// session; a week that misses the target resets the streak to 0, same "continuous" rule as
+// the Rs ledger's clean-week bonus streak. Deliberately has no debt concept — a redemption
+// (logging a 'recovery' expense) always just subtracts 1 from whatever's available, clamped
+// at 0, rather than ever going negative like the Rs balance can.
+const SESSION_REWARD_START_DATE = '2026-08-24'; // Monday — itself a week start, so no partial-week rounding needed (unlike REWARD_START_DATE above)
+const SESSION_STREAK_WEEKS = 6;
+
+function sessionRewardLedger(workouts, stepsData, expensesData, latestDate, meta) {
+  meta = meta || {};
+  const startWk = SESSION_REWARD_START_DATE;
+
+  const workoutDaysByWeek = new Map();
+  const strengthDaysByWeek = new Map();
+  for (const w of workouts) {
+    const wk = isoWeekStart(w.d);
+    if (wk < startWk) continue;
+    if (countsTowardWorkoutTotal(w, meta)) {
+      if (!workoutDaysByWeek.has(wk)) workoutDaysByWeek.set(wk, new Set());
+      workoutDaysByWeek.get(wk).add(w.d);
+    }
+    if (isStrengthDay(w, meta)) {
+      if (!strengthDaysByWeek.has(wk)) strengthDaysByWeek.set(wk, new Set());
+      strengthDaysByWeek.get(wk).add(w.d);
+    }
+  }
+
+  const stepsByWeek = new Map();
+  for (const s of stepsData) {
+    if (s.steps == null) continue;
+    const wk = isoWeekStart(s.d);
+    if (wk < startWk) continue;
+    if (!stepsByWeek.has(wk)) stepsByWeek.set(wk, { total: 0, days: 0 });
+    const rec = stepsByWeek.get(wk);
+    rec.total += s.steps; rec.days += 1;
+  }
+
+  const currentWeek = isoWeekStart(latestDate);
+  const weeks = [...new Set([...workoutDaysByWeek.keys(), ...stepsByWeek.keys()])]
+    .filter(wk => wk >= startWk && wk < currentWeek)
+    .sort();
+
+  const redemptionEntries = dailyExpenses(expensesData)
+    .filter(e => e.category === REWARD_REDEEM_CATEGORY && e.date >= SESSION_REWARD_START_DATE);
+
+  // Merge weekly earn-checks (dated at week-end) and redemptions (dated at the expense date)
+  // into one chronological timeline, same convention as rewardLedger above.
+  const events = [];
+  for (const wk of weeks) {
+    const wkEnd = addDaysISO(wk, 6);
+    const workoutCount = (workoutDaysByWeek.get(wk) || new Set()).size;
+    const strengthCount = (strengthDaysByWeek.get(wk) || new Set()).size;
+    const stepsRec = stepsByWeek.get(wk);
+    const avgSteps = stepsRec && stepsRec.days ? stepsRec.total / stepsRec.days : null;
+    const earned = workoutCount >= REWARD_MIN_WORKOUTS && strengthCount >= REWARD_MIN_STRENGTH_WORKOUTS
+      && avgSteps != null && avgSteps >= REWARD_MIN_AVG_STEPS;
+    events.push({ type: 'week', date: wkEnd, week: wk, workoutCount, strengthCount, avgSteps, earned });
+  }
+  for (const r of redemptionEntries) events.push({ type: 'redeem', date: r.date, amount: r.amount, note: r.note });
+  events.sort((a, b) => a.date.localeCompare(b.date) || (a.type === 'week' ? -1 : 1));
+
+  let sessionsAvailable = 0, streak = 0, sessionsEarnedTotal = 0, sessionsRedeemedTotal = 0;
+  const weeklyRows = [];
+  const redemptionLog = [];
+  for (const ev of events) {
+    if (ev.type === 'week') {
+      let sessionAwarded = false;
+      if (ev.earned) {
+        streak++;
+        if (streak >= SESSION_STREAK_WEEKS) {
+          sessionsAvailable++;
+          sessionsEarnedTotal++;
+          sessionAwarded = true;
+          streak = 0;
+        }
+      } else {
+        streak = 0;
+      }
+      weeklyRows.push({
+        week: ev.week, weekEnd: ev.date, workoutCount: ev.workoutCount, strengthCount: ev.strengthCount,
+        avgSteps: ev.avgSteps, earned: ev.earned, streak, sessionAwarded, sessionsAvailableAfter: sessionsAvailable,
+      });
+    } else {
+      sessionsAvailable = Math.max(0, sessionsAvailable - 1);
+      sessionsRedeemedTotal++;
+      redemptionLog.push({ date: ev.date, amount: ev.amount, note: ev.note, sessionsAvailableAfter: sessionsAvailable });
+    }
+  }
+
+  return {
+    startDate: SESSION_REWARD_START_DATE, streakWeeks: SESSION_STREAK_WEEKS,
+    sessionsAvailable, sessionsEarnedTotal, sessionsRedeemedTotal, currentStreak: streak,
+    minWorkouts: REWARD_MIN_WORKOUTS, minStrengthWorkouts: REWARD_MIN_STRENGTH_WORKOUTS, minAvgSteps: REWARD_MIN_AVG_STEPS,
+    weeklyRows, redemptions: redemptionLog,
   };
 }
 
@@ -2619,7 +2757,7 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   const startDate = SUPPLEMENTS.length ? SUPPLEMENTS.map(r => r.d).reduce((a, b) => a < b ? a : b) : todayStr;
   const daysSinceStart = Math.floor((new Date(todayStr + 'T00:00:00Z') - new Date(startDate + 'T00:00:00Z')) / 86400000) + 1;
   const totalDays = Math.max(90, daysSinceStart);
-  const sup = supplementCalendar(SUPPLEMENTS, SUPPLEMENT_META, startDate, totalDays);
+  const sup = supplementCalendar(SUPPLEMENTS, SUPPLEMENT_META, startDate, totalDays, todayStr);
 
   const overallTaken = sup.rows.reduce((s, r) => s + r.takenDays, 0);
   const overallPossible = sup.rows.length * sup.elapsedDays;
@@ -2671,7 +2809,64 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     </table>`;
 }
 
-// ---------- reward mechanism ----------
+// ---------- session-based reward track (headline; see [[hevy_dashboard_weekly_refresh]] memory) ----------
+{
+  const rewardDate = dates[dates.length - 1];
+  const sessLedger = sessionRewardLedger(WORKOUTS, STEPS, EXPENSES, rewardDate, EXMETA);
+  const current = currentWeekRewardProgress(WORKOUTS, STEPS, rewardDate, EXMETA);
+
+  const streakPct = Math.max(0, Math.min(100, Math.round(sessLedger.currentStreak / sessLedger.streakWeeks * 100)));
+  const hasSession = sessLedger.sessionsAvailable > 0;
+  const headline = hasSession
+    ? `${sessLedger.sessionsAvailable} ${sessLedger.sessionsAvailable === 1 ? 'session' : 'sessions'}`
+    : 'NO SESSION AVAILABLE';
+  document.getElementById('sessionBalanceCard').innerHTML = `
+    <div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;">
+      <div style="font-size:${hasSession ? '34px' : '28px'};font-weight:700;color:${hasSession ? 'var(--good)' : 'var(--critical)'};">${headline}</div>
+      <div class="sub" style="margin:0;">available now, tracked since ${sessLedger.startDate} &mdash; 1 session every ${sessLedger.streakWeeks} continuous weeks hitting target (${sessLedger.currentStreak}/${sessLedger.streakWeeks} so far)</div>
+    </div>
+    <div class="tl-bar" style="margin-top:12px;"><span style="width:${streakPct}%;background:${hasSession ? 'var(--good)' : 'var(--series-1)'};"></span></div>`;
+
+  const workoutsOk = current.workoutCount >= current.minWorkouts;
+  const strengthOk = current.strengthCount >= current.minStrengthWorkouts;
+  const stepsOk = current.avgSteps != null && current.avgSteps >= current.minAvgSteps;
+
+  {
+    const workoutsShort = Math.max(0, current.minWorkouts - current.workoutCount);
+    const strengthShort = Math.max(0, current.minStrengthWorkouts - current.strengthCount);
+    const takeawayEl = document.getElementById('sessionTakeaway');
+    if (workoutsShort === 0 && strengthShort === 0 && stepsOk) {
+      takeawayEl.textContent = `On pace — this week's target is already met, ${sessLedger.streakWeeks - sessLedger.currentStreak} more continuous week(s) for the next session.`;
+    } else {
+      const needs = [];
+      if (workoutsShort > 0) needs.push(`${workoutsShort} more workout(s)`);
+      if (strengthShort > 0) needs.push(`${strengthShort} more strength day(s)`);
+      if (!stepsOk) needs.push(current.avgSteps == null ? 'steps data' : `steps avg up to ${current.minAvgSteps.toLocaleString()}`);
+      takeawayEl.textContent = `Needs ${needs.join(', ')} this week to keep the streak alive.`;
+    }
+  }
+  const avgStepsStr = current.avgSteps != null ? Math.round(current.avgSteps).toLocaleString() : '—';
+  document.getElementById('rewardCurrentWeek').innerHTML =
+    `<p class="sub" style="margin:0 0 8px;">In progress, week of ${current.week}:</p>
+     <span class="badge ${workoutsOk ? 'progress' : 'baseline'}">${current.workoutCount}/${current.minWorkouts} workouts</span>
+     <span class="badge ${strengthOk ? 'progress' : 'baseline'}" style="margin-left:6px;">${current.strengthCount}/${current.minStrengthWorkouts} strength</span>
+     <span class="badge ${stepsOk ? 'progress' : 'baseline'}" style="margin-left:6px;">avg ${avgStepsStr} / ${current.minAvgSteps.toLocaleString()} steps</span>`;
+
+  document.getElementById('sessionWeeklyTable').innerHTML = sessLedger.weeklyRows.slice().reverse().map(r => {
+    const avgStr = r.avgSteps != null ? Math.round(r.avgSteps).toLocaleString() : '—';
+    const badge = r.earned ? `<span class="badge progress">hit</span>` : `<span class="badge plateau">missed</span>`;
+    const award = r.sessionAwarded ? ` <span class="badge progress">+1 session</span>` : '';
+    return `<tr><td>${r.week}</td><td>${r.workoutCount} (${r.strengthCount} strength)</td><td>${avgStr}</td><td>${badge}</td><td>${r.streak}/${sessLedger.streakWeeks}</td><td>${r.sessionsAvailableAfter}${award}</td></tr>`;
+  }).join('') || `<tr><td colspan="6" style="color:var(--text-muted);">No completed weeks yet.</td></tr>`;
+
+  document.getElementById('sessionRedemptions').innerHTML = sessLedger.redemptions.length
+    ? sessLedger.redemptions.slice().reverse().map(r =>
+        `<div style="font-size:12.5px;padding:4px 0;">${r.date} &mdash; redeemed 1 session${r.note ? ' (' + r.note + ')' : ''}, ${r.sessionsAvailableAfter} available now</div>`
+      ).join('')
+    : `<p class="sub" style="margin:0;">No sessions redeemed yet.</p>`;
+}
+
+// ---------- reward mechanism (legacy Rs ledger) ----------
 {
   const inr = n => '₹' + Math.round(Math.abs(n)).toLocaleString('en-IN');
   // Positive balance reads as Rs banked; negative reads as weeks owed (spent ahead of what's
@@ -2715,12 +2910,6 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
       takeawayEl.textContent = `Needs ${needs.join(', ')} this week to hit the target.`;
     }
   }
-  const avgStepsStr = current.avgSteps != null ? Math.round(current.avgSteps).toLocaleString() : '—';
-  document.getElementById('rewardCurrentWeek').innerHTML =
-    `<p class="sub" style="margin:0 0 8px;">This week (in progress, week of ${current.week}):</p>
-     <span class="badge ${workoutsOk ? 'progress' : 'baseline'}">${current.workoutCount}/${current.minWorkouts} workouts</span>
-     <span class="badge ${strengthOk ? 'progress' : 'baseline'}" style="margin-left:6px;">${current.strengthCount}/${current.minStrengthWorkouts} strength</span>
-     <span class="badge ${stepsOk ? 'progress' : 'baseline'}" style="margin-left:6px;">avg ${avgStepsStr} / ${current.minAvgSteps.toLocaleString()} steps</span>`;
 
   document.getElementById('rewardWeeklyTable').innerHTML = ledger.weeklyRows.slice().reverse().map(r => {
     const avgStr = r.avgSteps != null ? Math.round(r.avgSteps).toLocaleString() : '—';
