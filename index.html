@@ -1324,16 +1324,16 @@ function expenseCalendarMonth(expensesData, year, month) {
 // ---------- reward mechanism ----------
 // Weekly budget banks toward a massage/spa fund, denominated in Rs: a completed week
 // (Mon-Sun) that hits >=4 logged training days (of which >=3 must be strength-training
-// days — a day with at least one non-cardio exercise; e.g. 2 boxing + 2 lifting days is
-// 4 workouts but only 2 strength days, so it doesn't qualify) AND an average of >=12,000
-// steps/day adds REWARD_WEEKLY_BUDGET to a running balance. No ceiling — it keeps
-// accumulating for as long as you keep hitting weeks and not redeeming. Every 6 continuous
-// scored weeks with no redemption at all earns a bonus of REWARD_BONUS_WEEKS_WORTH weeks'
-// budget on top, then the streak resets. Logging a personal expense in the 'recovery'
-// category (massage/spa spend, synced automatically from MyFitnessPal's "Session Expense
-// (Rs)" measurement field) is the redemption event: its actual logged `amount` (price
-// varies session to session) is subtracted from the balance right then — multiple
-// sessions in a week are fine, each just subtracts its
+// days — a day with at least one exercise that isn't cardio or ab work; e.g. 2 boxing + 2
+// lifting days is 4 workouts but only 2 strength days, so it doesn't qualify) AND an
+// average of >=12,000 steps/day adds REWARD_WEEKLY_BUDGET to a running balance. No ceiling
+// — it keeps accumulating for as long as you keep hitting weeks and not redeeming. Every 6
+// continuous scored weeks with no redemption at all earns a bonus of
+// REWARD_BONUS_WEEKS_WORTH weeks' budget on top, then the streak resets. Logging a personal
+// expense in the 'recovery' category (massage/spa spend, synced automatically from
+// MyFitnessPal's "Session Expense (Rs)" measurement field) is the redemption event: its
+// actual logged `amount` (price varies session to session) is subtracted from the balance
+// right then — multiple sessions in a week are fine, each just subtracts its
 // own cost. If that pushes the balance below zero, it's a real deficit (spent ahead of
 // what's banked) rather than clamping at zero, since the caller displays a negative
 // balance as weeks owed instead of a Rs figure.
@@ -1345,12 +1345,22 @@ const REWARD_MIN_STRENGTH_WORKOUTS = 3;
 const REWARD_MIN_AVG_STEPS = 12000;
 const REWARD_REDEEM_CATEGORY = 'recovery';
 const REWARD_START_DATE = '2026-08-02'; // the mechanism itself started here — weeks/redemptions before it aren't scored
+const ROWING_EXERCISE_ID = '0222DB42'; // Rowing Machine — tracked (see cardioSessions) but, like ab work, doesn't count toward total-workout or reward minimums
+
+function countsTowardWorkoutTotal(workout, meta) {
+  // A day counts toward the total-workout minimum unless every logged exercise is either
+  // Rowing Machine or ab work (exercise_meta primary 'abdominals') — those are tracked
+  // elsewhere but aren't treated as a training day for this purpose. Other cardio (boxing,
+  // treadmill, etc.) still counts toward the total, same as before.
+  return workout.ex.some(e => e.i !== ROWING_EXERCISE_ID && !(meta[e.i] && meta[e.i].primary === 'abdominals'));
+}
 
 function isStrengthDay(workout, meta) {
   // A day counts toward the strength-training minimum if it has at least one exercise
-  // whose exercise_meta primary muscle group isn't 'cardio' (an exercise with no meta
-  // entry at all defaults to counting as strength, same as elsewhere in this file).
-  return workout.ex.some(e => !(meta[e.i] && meta[e.i].primary === 'cardio'));
+  // whose exercise_meta primary muscle group isn't 'cardio' or 'abdominals' (an exercise
+  // with no meta entry at all defaults to counting as strength, same as elsewhere in this
+  // file).
+  return workout.ex.some(e => !(meta[e.i] && (meta[e.i].primary === 'cardio' || meta[e.i].primary === 'abdominals')));
 }
 
 function rewardLedger(workouts, stepsData, expensesData, latestDate, meta) {
@@ -1368,8 +1378,10 @@ function rewardLedger(workouts, stepsData, expensesData, latestDate, meta) {
   const strengthDaysByWeek = new Map();
   for (const w of workouts) {
     const wk = isoWeekStart(w.d);
-    if (!workoutDaysByWeek.has(wk)) workoutDaysByWeek.set(wk, new Set());
-    workoutDaysByWeek.get(wk).add(w.d);
+    if (countsTowardWorkoutTotal(w, meta)) {
+      if (!workoutDaysByWeek.has(wk)) workoutDaysByWeek.set(wk, new Set());
+      workoutDaysByWeek.get(wk).add(w.d);
+    }
     if (isStrengthDay(w, meta)) {
       if (!strengthDaysByWeek.has(wk)) strengthDaysByWeek.set(wk, new Set());
       strengthDaysByWeek.get(wk).add(w.d);
@@ -1478,7 +1490,7 @@ function currentWeekRewardProgress(workouts, stepsData, latestDate, meta) {
   meta = meta || {};
   const wk = isoWeekStart(latestDate);
   const weekWorkouts = workouts.filter(w => isoWeekStart(w.d) === wk);
-  const workoutDays = new Set(weekWorkouts.map(w => w.d));
+  const workoutDays = new Set(weekWorkouts.filter(w => countsTowardWorkoutTotal(w, meta)).map(w => w.d));
   const strengthDays = new Set(weekWorkouts.filter(w => isStrengthDay(w, meta)).map(w => w.d));
   const stepsRows = stepsData.filter(s => s.steps != null && isoWeekStart(s.d) === wk);
   const avgSteps = stepsRows.length ? stepsRows.reduce((a, s) => a + s.steps, 0) / stepsRows.length : null;
@@ -1768,8 +1780,9 @@ function statTile(v, l) { return `<div class="stat-tile"><div class="v">${v}</di
   const totalVol = [...weeklyVol.values()].reduce((a,b)=>a+b,0);
   const activeWeeks = weekKeys.filter(w => weeklyVol.get(w) > 0).length;
   const avgPerActiveWeek = Math.round(totalVol / Math.max(activeWeeks,1));
+  const countableWorkouts = WORKOUTS.filter(w => countsTowardWorkoutTotal(w, EXMETA)).length;
   document.getElementById('statRow').innerHTML =
-    statTile(WORKOUTS.length, 'total workouts') +
+    statTile(countableWorkouts, 'total workouts') +
     statTile(activeWeeks, 'weeks with training') +
     statTile(Math.round(totalVol/1000)+'k', 'lifetime volume (kg·reps)') +
     statTile(avgPerActiveWeek.toLocaleString(), 'avg volume / active week');
@@ -1777,6 +1790,7 @@ function statTile(v, l) { return `<div class="stat-tile"><div class="v">${v}</di
 {
   const currentWeek = weekKeys[weekKeys.length - 1];
   const thisWeekWorkouts = WORKOUTS.filter(w => isoWeekStart(w.d) === currentWeek);
+  const countableThisWeek = thisWeekWorkouts.filter(w => countsTowardWorkoutTotal(w, EXMETA)).length;
   const setsThisWeek = thisWeekWorkouts.reduce((sum, w) => sum + w.ex.reduce((s2, e) => s2 + e.s.length, 0), 0);
   const volThisWeek = weeklyVol.get(currentWeek) || 0;
   const agg = snapshot.reduce((a, s) => ({
@@ -1784,7 +1798,7 @@ function statTile(v, l) { return `<div class="stat-tile"><div class="v">${v}</di
   }), { up: 0, down: 0, flat: 0, new: 0 });
   const hypertrophyStr = `${agg.up} up · ${agg.down} down · ${agg.flat} flat` + (agg.new ? ` · ${agg.new} new` : '');
   document.getElementById('statRowWeek').innerHTML =
-    statTile(thisWeekWorkouts.length, 'workouts this week') +
+    statTile(countableThisWeek, 'workouts this week') +
     statTile(setsThisWeek, 'sets this week') +
     statTile(Math.round(volThisWeek).toLocaleString(), 'volume this week (kg·reps)') +
     statTile(hypertrophyStr, 'exercises vs. last time');
@@ -2086,18 +2100,47 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     return `${best.name} leading (${best.deltaPct >= 0 ? '+' : ''}${best.deltaPct.toFixed(0)}%); ${worst.name} lagging (${worst.deltaPct >= 0 ? '+' : ''}${worst.deltaPct.toFixed(0)}%).`;
   };
 
+  // Rowing has no weight/reps, so it can't join the volume table above — it's surfaced
+  // inside the Core section (rowing is core-adjacent cardio) as its own pace-trend panel,
+  // using the same recent-vs-baseline windows as the strength comparison for consistency.
+  // Lower pace = faster = progress, the opposite sense of the volume badges above.
+  const rowingCoreSessions = cardioSessions(WORKOUTS, ROWING_EXERCISE_ID);
+  const rowingCoreRecent = rowingCoreSessions.filter(r => r.date >= VOL_RECENT_START && r.date <= volRecentEnd);
+  const rowingCoreBase = rowingCoreSessions.filter(r => r.date >= VOL_BASE_START && r.date <= VOL_BASE_END);
+  const avgPace = arr => arr.length ? arr.reduce((a, r) => a + r.paceMinPerKm, 0) / arr.length : null;
+  const rowingRecentAvgPace = avgPace(rowingCoreRecent), rowingBaseAvgPace = avgPace(rowingCoreBase);
+  const rowingPaceDeltaPct = (rowingRecentAvgPace != null && rowingBaseAvgPace != null && rowingBaseAvgPace > 0)
+    ? ((rowingRecentAvgPace - rowingBaseAvgPace) / rowingBaseAvgPace * 100) : null;
+  const fmtPace = n => n == null ? '—' : n.toFixed(2) + ' min/km';
+  let rowingPaceBadge;
+  if (rowingPaceDeltaPct == null) {
+    rowingPaceBadge = `<span class="badge baseline">${rowingBaseAvgPace == null ? 'new' : 'not since ' + VOL_RECENT_START}</span>`;
+  } else if (rowingPaceDeltaPct <= -1) {
+    rowingPaceBadge = `<span class="badge progress">${Math.abs(rowingPaceDeltaPct).toFixed(0)}% faster</span>`;
+  } else if (rowingPaceDeltaPct >= 1) {
+    rowingPaceBadge = `<span class="badge plateau">${rowingPaceDeltaPct.toFixed(0)}% slower</span>`;
+  } else {
+    rowingPaceBadge = `<span class="badge baseline">pace steady</span>`;
+  }
+  const rowingCorePanelHtml = rowingCoreSessions.length === 0
+    ? `<h4 style="font-size:12.5px;margin:14px 0 4px;">Rowing (cardio) <span style="font-weight:400;color:var(--text-muted);">&mdash; pace trend, not volume-based</span></h4><p class="sub">No rowing sessions logged yet.</p>`
+    : `<h4 style="font-size:12.5px;margin:14px 0 4px;">Rowing (cardio) <span style="font-weight:400;color:var(--text-muted);">&mdash; pace trend, not volume-based</span></h4>
+       <table class="tv"><thead><tr><th>Recent avg pace</th><th>N</th><th>Baseline avg pace</th><th>N</th><th>Change</th></tr></thead>
+       <tbody><tr><td>${fmtPace(rowingRecentAvgPace)}</td><td>${rowingCoreRecent.length || '—'}</td><td>${fmtPace(rowingBaseAvgPace)}</td><td>${rowingCoreBase.length || '—'}</td><td>${rowingPaceBadge}</td></tr></tbody></table>`;
+
   const volSections = []; // { key, label, html } — one per rendered muscle-group tab
   const consumedPrimaries = new Set();
   for (const grp of volGroupsRender) {
     if (consumedPrimaries.has(grp)) continue;
     const combined = COMBINED_GROUPS.find(c => c.primaries[0] === grp);
+    const isCoreGroup = !!(combined && combined.label === 'Core');
 
     const rows = (combined
       ? volRows.filter(r => combined.primaries.includes(r.primary || ''))
       : volRows.filter(r => (r.primary || '') === grp)
     ).sort((a, b) => (b.deltaPct ?? -Infinity) - (a.deltaPct ?? -Infinity));
     if (combined) combined.primaries.forEach(p => consumedPrimaries.add(p));
-    if (rows.length === 0) continue;
+    if (rows.length === 0 && !(isCoreGroup && rowingCoreSessions.length > 0)) continue;
 
     const displayLabel = combined ? combined.label : (MUSCLE_LABEL[grp] || grp);
     const insightHtml = `<p class="sub vol-group-insight">${groupInsight(rows)}</p>`;
@@ -2134,6 +2177,7 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
         inner += `<h4 style="font-size:12.5px;margin:14px 0 4px;">Other</h4>${rowsToTable(leftover)}`;
       }
     }
+    if (isCoreGroup) inner += rowingCorePanelHtml;
     volSections.push({ key: sectionKey, label: displayLabel,
       html: `<div class="day-section vol-boxed">
       <div class="vol-box-label">${displayLabel}</div>
@@ -2159,7 +2203,7 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
 
 // ---------- rowing machine cardio trend ----------
 {
-  const rowing = cardioSessions(WORKOUTS, '0222DB42');
+  const rowing = cardioSessions(WORKOUTS, ROWING_EXERCISE_ID);
   if (rowing.length === 0) {
     document.getElementById('rowingChart').innerHTML = '<p class="sub">No distance/duration logged yet.</p>';
   } else {
