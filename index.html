@@ -1581,28 +1581,40 @@ const TRAININGLOG_GROUP_LABEL = {
 };
 
 function trainingLogSession(workout, meta) {
-  // Groups a day's logged exercise entries (merging any duplicate-logged exercise id, in
-  // first-seen order) into the shape the training-log card renders: per-exercise best set
-  // (highest weight, ties broken by higher reps at that weight — same rule as
-  // buildExerciseSessions' topWeight/repsAtTop) plus the full per-set breakdown, and the
-  // day's distinct focus chips in first-seen order. isFirstGroup marks exercises in the
+  // Groups a day's logged exercise entries into the shape the training-log card renders:
+  // per-exercise best set (highest weight, ties broken by higher reps at that weight — same
+  // rule as buildExerciseSessions' topWeight/repsAtTop) plus the full per-set breakdown, and
+  // the day's distinct focus chips in first-seen order. isFirstGroup marks exercises in the
   // session's first (primary) focus group, for the highlighted checkmark.
+  //
+  // Strength entries sharing an exercise id ARE merged (in first-seen order) since a
+  // duplicate-logged strength exercise is usually one continuous block split across two log
+  // entries by mistake. Cardio entries are never merged, even when the same exercise id
+  // repeats — e.g. a Boxing session bookended by two separate HIIT blocks (warm-up and
+  // cool-down) logs "HIIT" twice with distinct durations, and collapsing them into one row
+  // would silently drop a whole block instead of just losing a formatting nicety.
   const order = [];
-  const byId = new Map();
+  const byKey = new Map();
+  let cardioSeq = 0;
   for (const e of workout.ex) {
-    if (!byId.has(e.i)) { byId.set(e.i, { sets: [], cardio: null }); order.push(e.i); }
-    const entry = byId.get(e.i);
-    entry.sets.push(...e.s);
-    if (e.c) entry.cardio = e.c;
+    if (e.c) {
+      const key = `${e.i}__cardio${cardioSeq++}`;
+      byKey.set(key, { exId: e.i, sets: [], cardio: e.c });
+      order.push(key);
+      continue;
+    }
+    if (!byKey.has(e.i)) { byKey.set(e.i, { exId: e.i, sets: [], cardio: null }); order.push(e.i); }
+    byKey.get(e.i).sets.push(...e.s);
   }
   const groupsSeen = [];
-  for (const id of order) {
-    const label = meta[id] && meta[id].primary ? (TRAININGLOG_GROUP_LABEL[meta[id].primary] || meta[id].primary.toUpperCase()) : null;
+  for (const key of order) {
+    const exId = byKey.get(key).exId;
+    const label = meta[exId] && meta[exId].primary ? (TRAININGLOG_GROUP_LABEL[meta[exId].primary] || meta[exId].primary.toUpperCase()) : null;
     if (label && !groupsSeen.includes(label)) groupsSeen.push(label);
   }
   const firstGroup = groupsSeen[0] || null;
-  const exercises = order.map(id => {
-    const { sets, cardio } = byId.get(id);
+  const exercises = order.map(key => {
+    const { exId: id, sets, cardio } = byKey.get(key);
     const m = meta[id] || {};
     const bodyweight = !!m.bodyweight;
     const label = m.primary ? (TRAININGLOG_GROUP_LABEL[m.primary] || m.primary.toUpperCase()) : null;
