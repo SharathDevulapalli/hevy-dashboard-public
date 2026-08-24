@@ -454,20 +454,16 @@
     <hr style="border:none;border-top:1px solid var(--border);margin:32px 0;">
 
     <section>
-      <h2>Rs ledger (legacy, still running)</h2>
+      <h2>Recovery Expenses</h2>
       <div class="card" id="rewardBalanceCard"></div>
     </section>
     <section>
-      <h2>Weekly ledger</h2>
+      <h2>Expense history</h2>
       <div class="card">
         <table class="tv">
-          <thead><tr><th>Week of</th><th>Workouts</th><th>Avg steps</th><th>Target</th><th>Balance after</th></tr></thead>
+          <thead><tr><th>Date</th><th>Amount</th><th>Note</th></tr></thead>
           <tbody id="rewardWeeklyTable"></tbody>
         </table>
-        <details class="tableview" id="rewardRedemptionsDetails">
-          <summary>Redemption history</summary>
-          <table class="tv"><thead><tr><th>Date</th><th>Amount</th><th>Note</th><th>Balance after</th></tr></thead><tbody id="rewardRedemptions"></tbody></table>
-        </details>
       </div>
     </section>
   </div>
@@ -849,6 +845,7 @@ const HEARTRATE = [
 {"d": "2026-07-11", "resting": 60, "min": 53, "max": 118}
 ];
 const NUTRITION = [
+{"d": "2026-08-24", "calories": 457, "goal": 2100, "protein": 34, "proteinGoal": 184, "carbs": 68, "carbsGoal": 210, "fat": 7, "fatGoal": 58},
 {"d": "2026-08-23", "calories": 1721, "goal": 2100, "protein": 98, "proteinGoal": 184, "carbs": 242, "carbsGoal": 210, "fat": 45, "fatGoal": 58},
 {"d": "2026-08-22", "calories": 2357, "goal": 2100, "protein": 169, "proteinGoal": 184, "carbs": 315, "carbsGoal": 210, "fat": 56, "fatGoal": 58},
 {"d": "2026-08-21", "calories": 2036, "goal": 2100, "protein": 126, "proteinGoal": 184, "carbs": 214, "carbsGoal": 210, "fat": 78, "fatGoal": 58},
@@ -869,13 +866,15 @@ const NUTRITION = [
 {"d": "2026-08-01", "calories": 1727, "goal": 2099, "protein": 222, "proteinGoal": 183, "carbs": 355, "carbsGoal": 158, "fat": 61, "fatGoal": 82}
 ];
 const EXPENSES = [
-{"d": "2026-08-22", "category": "recovery", "amount": 25000.0},
-{"d": "2026-08-20", "category": "recovery", "amount": 3800, "note": "massage"},
-{"d": "2026-08-16", "category": "recovery", "amount": 1900, "note": "massage"},
-{"d": "2026-08-09", "category": "recovery", "amount": 1000, "note": "massage"},
-{"d": "2026-08-08", "category": "recovery", "amount": 1000, "note": "massage"}
+{"d": "2026-08-23", "category": "recovery", "amount": 9600.0, "note": "Apple - Tina"},
+{"d": "2026-08-22", "category": "recovery", "amount": 25000.0, "note": "Lavish - Priya"},
+{"d": "2026-08-20", "category": "recovery", "amount": 3800, "note": "Spa Nation - Unknown"},
+{"d": "2026-08-16", "category": "recovery", "amount": 1900, "note": "Foot Relief - Kim"},
+{"d": "2026-08-09", "category": "recovery", "amount": 1000, "note": "Foot Relief - Kim"},
+{"d": "2026-08-08", "category": "recovery", "amount": 1000, "note": "Foot Relief - Kim"}
 ];
 const BODYLOG = [
+{"d": "2026-08-24", "sleepMin": 457, "weightKg": 70.1, "bodyFatPct": 20.5},
 {"d": "2026-08-23", "sleepMin": 450, "weightKg": 69.8, "bodyFatPct": 21.2},
 {"d": "2026-08-22", "sleepMin": 319, "weightKg": 69.8, "bodyFatPct": 20.7},
 {"d": "2026-08-20", "sleepMin": 352, "weightKg": 69.55, "bodyFatPct": 21.1},
@@ -887,6 +886,7 @@ const BODYLOG = [
 {"d": "2026-08-14", "weightKg": 69.9, "bodyFatPct": 21.3}
 ];
 const SUPPLEMENTS = [
+{"d": "2026-08-24", "items": ["isabgol"]},
 {"d": "2026-08-23", "items": ["creatine", "d3_k2", "eaa", "glycine", "isabgol", "magnesium", "preworkout", "tongkat_ali"]},
 {"d": "2026-08-22", "items": ["creatine", "d3_k2", "eaa", "glycine", "magnesium", "preworkout", "tongkat_ali"]}
 ];
@@ -1822,29 +1822,41 @@ function sleepGoalMin(bodyDays, date) {
   return earned ? BUMPED : BASE;
 }
 
-function trainingLogCard(workouts, meta, bodyLogData, stepsData, date) {
-  // Assembles everything the "Training Log" tab needs for one day: falls back to null/—
-  // fields gracefully when that day has no matching workout, or no manual body-log entry
-  // yet (e.g. the popup hasn't been answered for the latest day).
-  const workout = workouts.find(w => w.d === date);
-  const { dayNumber } = programDayInfo(workouts, date);
+function trainingLogCard(workouts, meta, bodyLogData, stepsData, today) {
+  // Assembles everything the Accountability tab needs, deliberately split across two
+  // different reference dates rather than one:
+  //
+  // - Workouts/steps use `workoutDate` = today - 1 day. Hevy/Garmin data for the literal
+  //   current day is either not synced yet (the morning sync only ever pulls "yesterday" —
+  //   see the morning-report-date convention) or, even if it has been (an evening re-sync),
+  //   this card is meant to review the last fully-completed day, not a still-in-progress one.
+  // - Weight/body-fat/sleep use `today` directly. These come from MFP measurements logged
+  //   same-day (a morning weigh-in, or a sleep entry logged this morning) — there's no sync
+  //   lag to wait out, so they shouldn't be held back a day like the workout is. The sleep
+  //   entry logged under `today`'s date specifically reports the sleep session that started
+  //   the night before (last night = the night ending `workoutDate`/starting into `today`),
+  //   which is exactly the night relevant to reviewing `workoutDate` as a day — it just lives
+  //   under tomorrow's date in MFP's own convention, not `workoutDate`'s.
+  //
+  // Falls back to null/— fields gracefully when `workoutDate` has no matching workout, or
+  // `today` has no body-log entry yet.
+  const workoutDate = addDaysISO(today, -1);
+  const workout = workouts.find(w => w.d === workoutDate);
+  // dayNumber tracks workoutDate, not today — the badge should match the day actually shown
+  // on the card (e.g. "day 42" alongside the day-42 session), not run a day ahead of it.
+  const { dayNumber } = programDayInfo(workouts, workoutDate);
   const bodyDays = dailyBodyLog(bodyLogData);
-  // Sleep/weight/body-fat come from a separately-timed source (the Google Form) than the
-  // workout day shown here, and can arrive same-day (e.g. this morning's weigh-in) rather
-  // than lagging like Hevy does — so always reflect the latest logged body entry, even when
-  // it's newer than `date`, rather than only entries up to the workout day.
-  const latestBodyDate = bodyDays.length ? bodyDays[bodyDays.length - 1].date : null;
-  const bodyDate = latestBodyDate && latestBodyDate > date ? latestBodyDate : date;
-  const prevBodyDate = new Date(new Date(bodyDate + "T00:00:00Z").getTime() - 86400000).toISOString().slice(0, 10);
+  const bodyDate = today;
+  const prevBodyDate = addDaysISO(bodyDate, -1);
   const weightAvg = trailingAvg(bodyDays, 'weightKg', bodyDate, 7);
   const weightAvgPrev = trailingAvg(bodyDays, 'weightKg', prevBodyDate, 7);
   const fatAvg = trailingAvg(bodyDays, 'bodyFatPct', bodyDate, 7);
   const fatAvgPrev = trailingAvg(bodyDays, 'bodyFatPct', prevBodyDate, 7);
   const latest = bodyDays.find(d => d.date === bodyDate) || null;
-  const stepsRow = (stepsData || []).find(s => s.d === date) || null;
+  const stepsRow = (stepsData || []).find(s => s.d === workoutDate) || null;
   const session = workout ? trainingLogSession(workout, meta) : null;
   return {
-    date, dayNumber, session,
+    date: workoutDate, bodyDate, dayNumber, session,
     weightAvg, weightDelta: (weightAvg != null && weightAvgPrev != null) ? weightAvg - weightAvgPrev : null,
     fatAvg, fatDelta: (fatAvg != null && fatAvgPrev != null) ? fatAvg - fatAvgPrev : null,
     sleepMin: latest ? latest.sleepMin : null,
@@ -1928,6 +1940,16 @@ const snapshot = weeklySnapshot(WORKOUTS, EXMETA);
 
 // ---------- header stats ----------
 const dates = WORKOUTS.map(w => w.d).sort();
+// "Now" for anything that needs to know the actual current sync day (reward week cutoffs,
+// the supplement tracker's future/elapsed line) — the max date across every synced source,
+// not just WORKOUTS. Workouts alone go stale on a rest day (no new date logged) while steps/
+// HR keep syncing daily via Garmin regardless, so anchoring to WORKOUTS-only would freeze
+// "today" at the last workout day during any gap. Deliberately not the viewer's browser
+// clock either (see the old supplement-tracker bug this replaced) — a static published page
+// has no reliable client "now" that matches actual data freshness.
+const latestSyncedDate = [WORKOUTS, STEPS, HEARTRATE, NUTRITION, BODYLOG, EXPENSES, SUPPLEMENTS]
+  .reduce((max, arr) => { for (const r of (arr || [])) if (r.d && (!max || r.d > max)) max = r.d; return max; }, null)
+  || dates[dates.length - 1];
 document.getElementById('dateRangeLabel').textContent =
   `${WORKOUTS.length} workouts logged · ${dates[0]} to ${dates[dates.length-1]}`;
 
@@ -2771,7 +2793,11 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   // SUPPLEMENT_TRACKING_START in mfp_sync.py) rather than sliding with "today", so the
   // start column stays fixed as time passes; it just grows past 90 columns once more than
   // 90 days have elapsed since then, instead of ever dropping the earliest days off the left.
-  const todayStr = new Date().toISOString().slice(0, 10);
+  // todayStr uses latestSyncedDate (actual data freshness), not the viewer's browser clock —
+  // a client-side `new Date()` on a static published page (a) reads UTC, which skews a half
+  // day off IST, and (b) would mark today "elapsed" and tick it as a miss even when today's
+  // sync just hasn't run yet, rather than leaving it correctly outside tracked coverage.
+  const todayStr = latestSyncedDate;
   const startDate = SUPPLEMENTS.length ? SUPPLEMENTS.map(r => r.d).reduce((a, b) => a < b ? a : b) : todayStr;
   const daysSinceStart = Math.floor((new Date(todayStr + 'T00:00:00Z') - new Date(startDate + 'T00:00:00Z')) / 86400000) + 1;
   const totalDays = Math.max(90, daysSinceStart);
@@ -2829,9 +2855,11 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
 
 // ---------- session-based reward track (headline; see [[hevy_dashboard_weekly_refresh]] memory) ----------
 {
-  const rewardDate = dates[dates.length - 1];
-  const sessLedger = sessionRewardLedger(WORKOUTS, STEPS, EXPENSES, rewardDate, EXMETA);
-  const current = currentWeekRewardProgress(WORKOUTS, STEPS, rewardDate, EXMETA);
+  // Anchored to latestSyncedDate, not the latest workout date — a rest-day gap in WORKOUTS
+  // shouldn't freeze "current week" on a stale past week (see the comment where
+  // latestSyncedDate is defined).
+  const sessLedger = sessionRewardLedger(WORKOUTS, STEPS, EXPENSES, latestSyncedDate, EXMETA);
+  const current = currentWeekRewardProgress(WORKOUTS, STEPS, latestSyncedDate, EXMETA);
 
   const streakPct = Math.max(0, Math.min(100, Math.round(sessLedger.currentStreak / sessLedger.streakWeeks * 100)));
   const hasSession = sessLedger.sessionsAvailable > 0;
@@ -2888,49 +2916,34 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     : `<tr><td colspan="3" style="color:var(--text-muted);">No sessions redeemed yet.</td></tr>`;
 }
 
-// ---------- reward mechanism (legacy Rs ledger) ----------
+// ---------- recovery expenses (was the legacy Rs reward ledger; simplified 2026-08-24 to a
+// plain spend tracker — the session-based track above is the one actually scoring targets
+// now, this is just "how much have I spent on massage/spa recovery total") ----------
 {
   const inr = n => '₹' + Math.round(Math.abs(n)).toLocaleString('en-IN');
-  // Positive balance reads as Rs banked; negative reads as weeks owed (spent ahead of what's
-  // banked — sessions cost real, varying amounts, so a deficit rarely lands on a whole week).
-  const balanceStr = b => b >= 0 ? inr(b) : `-${(Math.abs(b) / 1900).toFixed(1)} weeks`;
-  const rewardDate = dates[dates.length - 1];
-  const ledger = rewardLedger(WORKOUTS, STEPS, EXPENSES, rewardDate, EXMETA);
+  const recoveryExpenses = dailyExpenses(EXPENSES).filter(e => e.category === REWARD_REDEEM_CATEGORY);
+  const totalSpent = recoveryExpenses.reduce((s, e) => s + e.amount, 0);
 
-  // No ceiling on the balance itself anymore — the bar instead tracks progress toward the
-  // next 6-clean-week bonus, the one thing left with a natural denominator.
-  const bonusPct = Math.max(0, Math.min(100, Math.round(ledger.cleanStreak / ledger.bonusStreakWeeks * 100)));
-  const resetLine = ledger.balance < 0
-    ? (ledger.projectedZeroWeek
-        ? `<div class="sub" style="margin:4px 0 0;color:var(--serious);">at ${inr(ledger.weeklyBudget)}/week (plus bonuses), back to Rs 0 by week of ${ledger.projectedZeroWeek} &mdash; ${ledger.projectedZeroWeeksNeeded} clean week(s) away, best case if every week from here hits target</div>`
-        : `<div class="sub" style="margin:4px 0 0;color:var(--serious);">too far in deficit to project a payoff week</div>`)
-    : '';
   document.getElementById('rewardBalanceCard').innerHTML = `
     <div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;">
-      <div style="font-size:34px;font-weight:700;${ledger.balance < 0 ? 'color:var(--serious);' : ''}">${balanceStr(ledger.balance)}</div>
-      <div class="sub" style="margin:0;">current reward balance, no cap &mdash; +${inr(ledger.bonusAmount)} bonus every ${ledger.bonusStreakWeeks} clean weeks (${ledger.cleanStreak}/${ledger.bonusStreakWeeks} so far)</div>
-    </div>
-    ${resetLine}
-    <div class="tl-bar" style="margin-top:12px;"><span style="width:${bonusPct}%;background:var(--series-1);"></span></div>`;
+      <div style="font-size:34px;font-weight:700;">${inr(totalSpent)}</div>
+      <div class="sub" style="margin:0;">total spent on recovery (massage/spa) so far, across ${recoveryExpenses.length} session${recoveryExpenses.length === 1 ? '' : 's'}</div>
+    </div>`;
 
-  document.getElementById('rewardWeeklyTable').innerHTML = ledger.weeklyRows.slice().reverse().map(r => {
-    const avgStr = r.avgSteps != null ? Math.round(r.avgSteps).toLocaleString() : '—';
-    const badge = r.earned ? `<span class="badge progress">hit</span>` : `<span class="badge plateau">missed</span>`;
-    const bonus = r.bonusAwarded ? ` <span class="badge progress">+${inr(r.bonusAwarded)} bonus</span>` : '';
-    return `<tr><td>${r.week}</td><td>${r.workoutCount} (${r.strengthCount} strength)</td><td>${avgStr}</td><td>${badge}</td><td>${balanceStr(r.balanceAfter)}${bonus}</td></tr>`;
-  }).join('') || `<tr><td colspan="5" style="color:var(--text-muted);">No completed weeks yet.</td></tr>`;
-
-  document.getElementById('rewardRedemptions').innerHTML = ledger.redemptions.length
-    ? ledger.redemptions.slice().reverse().map(r =>
-        `<tr><td>${r.date}</td><td>${inr(r.amount)}</td><td>${r.note || '—'}</td><td>${balanceStr(r.balanceAfter)}</td></tr>`
+  document.getElementById('rewardWeeklyTable').innerHTML = recoveryExpenses.length
+    ? recoveryExpenses.slice().reverse().map(e =>
+        `<tr><td>${e.date}</td><td>${inr(e.amount)}</td><td>${e.note || '—'}</td></tr>`
       ).join('')
-    : `<tr><td colspan="4" style="color:var(--text-muted);">No redemptions logged yet.</td></tr>`;
+    : `<tr><td colspan="3" style="color:var(--text-muted);">No recovery expenses logged yet.</td></tr>`;
 }
 
 // ---------- training log card ----------
 {
-  const tlDate = dates[dates.length - 1];
-  const tl = trainingLogCard(WORKOUTS, EXMETA, BODYLOG, STEPS, tlDate);
+  // trainingLogCard splits "today" (latestSyncedDate) into two dates internally: workouts/
+  // steps review yesterday (the last fully-completed day), weight/fat/sleep read today's own
+  // entry (no sync lag to wait out — see the function's own comment for why). tl.date is the
+  // workout day (yesterday); tl.bodyDate is today.
+  const tl = trainingLogCard(WORKOUTS, EXMETA, BODYLOG, STEPS, latestSyncedDate);
   const el = document.getElementById('trainingLogCard');
   const saveBtn = document.getElementById('tlSaveImgBtn');
 
@@ -2954,7 +2967,7 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   }
 
   if (!tl.session) {
-    el.innerHTML = `<p class="sub">No workout logged for ${tlDate} yet.</p>`;
+    el.innerHTML = `<p class="sub">No workout logged for ${tl.date} yet.</p>`;
     saveBtn.style.display = 'none';
   } else {
     const trendHtml = (delta) => {
@@ -2989,7 +3002,7 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
         <div class="tl-head">
           <div class="tl-daybadge"><div class="n">${tl.dayNumber ?? '—'}</div><div class="streak">⚡ ${tl.dayNumber ?? '—'}</div></div>
           <div>
-            <div class="tl-focus">Today's focus &mdash; ${tl.date}</div>
+            <div class="tl-focus">${tl.date}</div>
             <div class="tl-title">${tl.session.title}</div>
             <div>${chips}</div>
           </div>
