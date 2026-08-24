@@ -279,26 +279,14 @@
     <p class="sub">🏃 Not counted toward strength volume or muscle-group set targets — tracked and scored separately.</p>
     <div class="grid-2">
       <div>
-        <h3 style="font-size:14px;margin:0 0 8px;">Rowing Machine</h3>
-        <p class="sub" id="rowingTakeaway" style="font-weight:600;"></p>
+        <h3 style="font-size:14px;margin:0 0 8px;">Bodyweight Routine</h3>
+        <p class="sub" id="bwRoutineTakeaway" style="font-weight:600;"></p>
         <div class="card">
-          <div id="rowingSummary" style="margin-bottom:12px;"></div>
-          <div id="rowingChart"></div>
+          <div id="bwRoutineSummary" style="margin-bottom:12px;"></div>
+          <div id="bwRoutineChart"></div>
           <table class="tv" style="margin-top:12px;">
-            <thead><tr><th>Date</th><th>Duration</th><th>Distance</th><th>Pace (min/km)</th><th>Verdict</th></tr></thead>
-            <tbody id="rowingTable"></tbody>
-          </table>
-        </div>
-      </div>
-      <div>
-        <h3 style="font-size:14px;margin:0 0 8px;">Boxing</h3>
-        <p class="sub" id="boxingTakeaway" style="font-weight:600;"></p>
-        <div class="card">
-          <div id="boxingSummary" style="margin-bottom:12px;"></div>
-          <div id="boxingChart"></div>
-          <table class="tv" style="margin-top:12px;">
-            <thead><tr><th>Date</th><th>Duration</th><th>Notes</th></tr></thead>
-            <tbody id="boxingTable"></tbody>
+            <thead><tr><th>Date</th><th>Total reps</th><th>Breakdown</th><th>Verdict</th></tr></thead>
+            <tbody id="bwRoutineTable"></tbody>
           </table>
         </div>
       </div>
@@ -317,17 +305,27 @@
         </div>
       </div>
       <div>
-        <h3 style="font-size:14px;margin:0 0 8px;">Resting Heart Rate</h3>
-        <p class="sub" id="hrTakeaway" style="font-weight:600;"></p>
+        <h3 style="font-size:14px;margin:0 0 8px;">Boxing</h3>
+        <p class="sub" id="boxingTakeaway" style="font-weight:600;"></p>
         <div class="card">
-          <div id="hrSummary" style="margin-bottom:12px;"></div>
-          <div id="hrChart"></div>
-          <details class="tableview"><summary>Table view</summary>
-            <table class="tv">
-              <thead><tr><th>Date</th><th>Resting</th><th>Min</th><th>Max</th><th>Verdict</th></tr></thead>
-              <tbody id="hrTable"></tbody>
-            </table>
-          </details>
+          <div id="boxingSummary" style="margin-bottom:12px;"></div>
+          <div id="boxingChart"></div>
+          <table class="tv" style="margin-top:12px;">
+            <thead><tr><th>Date</th><th>Duration</th><th>Notes</th></tr></thead>
+            <tbody id="boxingTable"></tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:14px;margin:0 0 8px;">Rowing Machine</h3>
+        <p class="sub" id="rowingTakeaway" style="font-weight:600;"></p>
+        <div class="card">
+          <div id="rowingSummary" style="margin-bottom:12px;"></div>
+          <div id="rowingChart"></div>
+          <table class="tv" style="margin-top:12px;">
+            <thead><tr><th>Date</th><th>Duration</th><th>Distance</th><th>Pace (min/km)</th><th>Verdict</th></tr></thead>
+            <tbody id="rowingTable"></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -472,6 +470,7 @@
 
 <script>
 const WORKOUTS = [
+{"d": "2026-08-24", "t": "Morning Routine", "ex": [{"i": "392887AA", "s": [[0, 10], [0, 10], [0, 10], [0, 8]]}, {"i": "991833C2", "s": [[0, 50]]}, {"i": "A01BE509", "s": [[0, 20]]}]},
 {"d": "2026-08-23", "t": "Core & Rowing", "ex": [{"i": "0222DB42", "s": [[0, 0], [0, 0]], "c": {"min": 12, "km": 2.52}}]},
 {"d": "2026-08-22", "t": "Boxing", "ex": [{"i": "023947AB", "s": [[0, 0]], "c": {"min": 10, "km": 0.0}, "n": "Warmup"}, {"i": "A0D8FA1B", "s": [[0, 0]], "c": {"min": 40, "km": 0.0}, "n": "Jab & Cross - Forward"}, {"i": "023947AB", "s": [[0, 0]], "c": {"min": 10, "km": 0.0}, "n": "Cool down"}]},
 {"d": "2026-08-21", "t": "Hamstrings & Calves", "ex": [{"i": "8BEBFED6", "s": [[45, 15], [50, 15], [50, 15]]}, {"i": "F4B4C6EE", "s": [[40, 15], [45, 15], [45, 15]]}, {"i": "D57C2EC7", "s": [[25, 15], [25, 15], [25, 15]]}, {"i": "3D1CDC75", "s": [[15, 15], [30, 15], [30, 15]], "n": "With belt around waist"}, {"i": "72CFFAD5", "s": [[50, 10], [50, 10], [50, 10]]}, {"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 15], [200, 15], [250, 15]]}, {"i": "B8127AD1", "s": [[20, 15], [25, 15], [25, 15]]}]},
@@ -750,7 +749,9 @@ const EXMETA = {
 "18487FA7":{"name": "Decline Bench Press (Dumbbell)", "primary": "chest"},
 "023947AB":{"name": "HIIT", "primary": "cardio"},
 "A0D8FA1B":{"name": "Boxing", "primary": "cardio"},
-"D57C2EC7":{"name": "Hip Thrust (Barbell)", "primary": "glutes"}
+"D57C2EC7":{"name": "Hip Thrust (Barbell)", "primary": "glutes"},
+"991833C2":{"name": "Jumping Jack", "primary": "full_body", "bodyweight": true},
+"A01BE509":{"name": "Elbow to Knee", "primary": "abdominals", "bodyweight": true}
 };
 const STEPS = [
 {"d": "2026-08-23", "steps": 13385, "goal": 14690},
@@ -866,7 +867,8 @@ const NUTRITION = [
 {"d": "2026-08-01", "calories": 1727, "goal": 2099, "protein": 222, "proteinGoal": 183, "carbs": 355, "carbsGoal": 158, "fat": 61, "fatGoal": 82}
 ];
 const EXPENSES = [
-{"d": "2026-08-23", "category": "recovery", "amount": 9600.0, "note": "Apple - Tina"},
+{"d": "2026-08-23", "category": "recovery", "amount": 3000, "note": "Vara - Unknown"},
+{"d": "2026-08-23", "category": "recovery", "amount": 6600, "note": "Apple - Tina"},
 {"d": "2026-08-22", "category": "recovery", "amount": 25000.0, "note": "Lavish - Priya"},
 {"d": "2026-08-20", "category": "recovery", "amount": 3800, "note": "Spa Nation - Unknown"},
 {"d": "2026-08-16", "category": "recovery", "amount": 1900, "note": "Foot Relief - Kim"},
@@ -1153,6 +1155,38 @@ function cardioDurationSessions(workouts, id) {
   return sessions;
 }
 
+function bodyweightRoutineSessions(workouts, ids, meta) {
+  // date-ascending {date, totalReps, exercises: [{id, name, reps}], verdict} — cardio-style
+  // tracking (like cardioDurationSessions above) for the Bodyweight Routine exercises in
+  // `ids` (see BODYWEIGHT_ROUTINE_EXERCISE_IDS): every logged instance of these exercise ids
+  // counts here, on ANY day they appear — not just a day titled "Morning Routine" in Hevy
+  // (that's just what the user happens to name the session). E.g. Push Up logged inside a
+  // real Chest & Shoulders day counts toward both this AND its normal Chest Exercise
+  // Progress tracking; the two are additive, not exclusive. Progress reads as "more total
+  // reps than the prior logged day", same more-is-better convention as duration-based cardio.
+  meta = meta || {};
+  const byDate = new Map();
+  for (const w of workouts) {
+    for (const e of w.ex) {
+      if (!ids.has(e.i)) continue;
+      const reps = (e.s || []).reduce((sum, [, r]) => sum + (r || 0), 0);
+      if (!byDate.has(w.d)) byDate.set(w.d, { date: w.d, totalReps: 0, exercises: [] });
+      const day = byDate.get(w.d);
+      day.totalReps += reps;
+      day.exercises.push({ id: e.i, name: (meta[e.i] && meta[e.i].name) || e.i, reps });
+    }
+  }
+  const sessions = [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+  for (let i = 0; i < sessions.length; i++) {
+    const prev = i > 0 ? sessions[i - 1] : null;
+    if (!prev) sessions[i].verdict = 'baseline';
+    else if (sessions[i].totalReps > prev.totalReps) sessions[i].verdict = 'more';
+    else if (sessions[i].totalReps < prev.totalReps) sessions[i].verdict = 'less';
+    else sessions[i].verdict = 'same';
+  }
+  return sessions;
+}
+
 function dailySteps(stepsData) {
   // date-ascending {date, steps, goal, hitGoal} from the daily step-count log (steps.json).
   // Skips rows with a null/missing steps value (e.g. an in-progress "today" from Garmin) —
@@ -1402,20 +1436,38 @@ const REWARD_REDEEM_CATEGORY = 'recovery';
 const REWARD_START_DATE = '2026-08-02'; // the mechanism itself started here — weeks/redemptions before it aren't scored
 const ROWING_EXERCISE_ID = '0222DB42'; // Rowing Machine — tracked (see cardioSessions) but, like ab work, doesn't count toward total-workout or reward minimums
 
+// Exercise ids for the "Bodyweight Routine" warm-up/mobility work (added 2026-08-24; Hevy
+// session titled "Morning Routine" is just what the user happens to name it there — the
+// dashboard's own name for this category is "Bodyweight Routine"). Single source of truth
+// for two separate purposes:
+// (1) countsTowardWorkoutTotal/isStrengthDay below — like Rowing/ab work, these don't count
+//     toward the total-workout/reward minimums (a real strength day that happens to include
+//     one as an accessory, e.g. Push Up inside a real Chest & Shoulders day, still counts
+//     fully, since `.some()` only excludes a day when EVERY exercise on it is excluded).
+// (2) bodyweightRoutineSessions' Cardio Trend card — EVERY logged instance of these ids
+//     counts toward that daily rep total, on any day they appear, not just a day literally
+//     titled "Morning Routine" — additive to, not instead of, their normal per-exercise
+//     Exercise Progress tracking (Push Up still shows under Chest there too).
+const BODYWEIGHT_ROUTINE_EXERCISE_IDS = new Set([
+  '392887AA', // Push Up
+  '991833C2', // Jumping Jack
+  'A01BE509', // Elbow to Knee
+]);
+
 function countsTowardWorkoutTotal(workout, meta) {
-  // A day counts toward the total-workout minimum unless every logged exercise is either
-  // Rowing Machine or ab work (exercise_meta primary 'abdominals') — those are tracked
-  // elsewhere but aren't treated as a training day for this purpose. Other cardio (boxing,
-  // treadmill, etc.) still counts toward the total, same as before.
-  return workout.ex.some(e => e.i !== ROWING_EXERCISE_ID && !(meta[e.i] && meta[e.i].primary === 'abdominals'));
+  // A day counts toward the total-workout minimum unless every logged exercise is Rowing
+  // Machine, Bodyweight Routine work, or ab work (exercise_meta primary 'abdominals') —
+  // those are tracked elsewhere but aren't treated as a training day for this purpose. Other
+  // cardio (boxing, treadmill, etc.) still counts toward the total, same as before.
+  return workout.ex.some(e => e.i !== ROWING_EXERCISE_ID && !BODYWEIGHT_ROUTINE_EXERCISE_IDS.has(e.i) && !(meta[e.i] && meta[e.i].primary === 'abdominals'));
 }
 
 function isStrengthDay(workout, meta) {
-  // A day counts toward the strength-training minimum if it has at least one exercise
-  // whose exercise_meta primary muscle group isn't 'cardio' or 'abdominals' (an exercise
-  // with no meta entry at all defaults to counting as strength, same as elsewhere in this
-  // file).
-  return workout.ex.some(e => !(meta[e.i] && (meta[e.i].primary === 'cardio' || meta[e.i].primary === 'abdominals')));
+  // A day counts toward the strength-training minimum if it has at least one exercise that
+  // isn't Bodyweight Routine work and whose exercise_meta primary muscle group isn't
+  // 'cardio' or 'abdominals' (an exercise with no meta entry at all defaults to counting as
+  // strength, same as elsewhere in this file).
+  return workout.ex.some(e => !BODYWEIGHT_ROUTINE_EXERCISE_IDS.has(e.i) && !(meta[e.i] && (meta[e.i].primary === 'cardio' || meta[e.i].primary === 'abdominals')));
 }
 
 function rewardLedger(workouts, stepsData, expensesData, latestDate, meta) {
@@ -1745,7 +1797,7 @@ const TRAININGLOG_GROUP_LABEL = {
   chest: 'CHEST', shoulders: 'SHOULDERS', lats: 'BACK', upper_back: 'BACK', traps: 'BACK',
   biceps: 'BICEPS', triceps: 'TRICEPS', forearms: 'FOREARMS', abdominals: 'ABS',
   quadriceps: 'LEGS', hamstrings: 'LEGS', glutes: 'LEGS', calves: 'LEGS',
-  adductors: 'LEGS', abductors: 'LEGS', cardio: 'CARDIO',
+  adductors: 'LEGS', abductors: 'LEGS', cardio: 'CARDIO', full_body: 'BODYWEIGHT',
 };
 
 function trainingLogSession(workout, meta) {
@@ -1883,6 +1935,7 @@ function weeklySnapshot(workouts, meta) {
     let up = 0, down = 0, flat = 0, isNew = 0;
     for (const [id, sets] of merged) {
       if (meta[id] && meta[id].primary === 'cardio') continue; // tracked separately (see cardioSessions), not via volume/reps
+      if (BODYWEIGHT_ROUTINE_EXERCISE_IDS.has(id)) continue; // tracked separately (see bodyweightRoutineSessions) — not real strength progress
       const bodyweight = isBodyweight(id, meta);
       const vol = metricOf(sets, id, meta);
       const sessions = byEx.get(id) || [];
@@ -2082,7 +2135,7 @@ document.getElementById('weeklyVolumeChart').appendChild(weeklyVolumeBarChart())
 }
 
 // ---------- muscle labels (used by the Volume Log tab) ----------
-const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_back:'Upper back', biceps:'Biceps', triceps:'Triceps', quadriceps:'Quads', hamstrings:'Hamstrings', glutes:'Glutes', calves:'Calves', traps:'Traps', abdominals:'Abs', forearms:'Forearms', adductors:'Adductors', abductors:'Abductors' };
+const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_back:'Upper back', biceps:'Biceps', triceps:'Triceps', quadriceps:'Quads', hamstrings:'Hamstrings', glutes:'Glutes', calves:'Calves', traps:'Traps', abdominals:'Abs', forearms:'Forearms', adductors:'Adductors', abductors:'Abductors', full_body:'Bodyweight' };
 
 // ---------- volume log: per-exercise recent vs. baseline avg volume ----------
 {
@@ -2229,7 +2282,7 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     // Core and Hip Complex have no movement-pattern subgroups yet (no `subgroups` key) —
     // they just relabel/merge their primary-muscle tag(s) into one section, ready to take a
     // subgroup breakdown later the same way the groups above did.
-    { label: 'Core', primaries: ['abdominals'] },
+    { label: 'Core & Bodyweight', primaries: ['abdominals', 'full_body'] },
     { label: 'Hip Complex', primaries: ['adductors', 'abductors', 'glutes'] },
     {
       label: 'Hamstrings & Calves', primaries: ['hamstrings', 'calves'],
@@ -2311,10 +2364,15 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   for (const grp of volGroupsRender) {
     if (consumedPrimaries.has(grp)) continue;
     const combined = COMBINED_GROUPS.find(c => c.primaries[0] === grp);
-    const isCoreGroup = !!(combined && combined.label === 'Core');
+    const isCoreGroup = !!(combined && combined.label === 'Core & Bodyweight');
 
+    // Core & Bodyweight also pulls in every Bodyweight Routine exercise by id (e.g. Push Up,
+    // primary 'chest') regardless of which primary muscle it's tagged with or which specific
+    // workout it was logged in — additive to that exercise's normal muscle-group section
+    // (Push Up still renders under Chest too), same "counts everywhere it's logged"
+    // principle as the Cardio Trend Bodyweight Routine card above.
     const rows = (combined
-      ? volRows.filter(r => combined.primaries.includes(r.primary || ''))
+      ? volRows.filter(r => combined.primaries.includes(r.primary || '') || (isCoreGroup && BODYWEIGHT_ROUTINE_EXERCISE_IDS.has(r.id)))
       : volRows.filter(r => (r.primary || '') === grp)
     ).sort((a, b) => (b.deltaPct ?? -Infinity) - (a.deltaPct ?? -Infinity));
     if (combined) combined.primaries.forEach(p => consumedPrimaries.add(p));
@@ -2555,72 +2613,63 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   }
 }
 
-// ---------- resting heart rate trend ----------
+// ---------- bodyweight routine cardio trend ----------
+// Every logged instance of BODYWEIGHT_ROUTINE_EXERCISE_IDS counts here, any day it appears —
+// including e.g. Push Up inside a real Chest & Shoulders day — additive to, not instead of,
+// that exercise's normal per-muscle Exercise Progress tracking. See calc.js's
+// bodyweightRoutineSessions/BODYWEIGHT_ROUTINE_EXERCISE_IDS for the full rationale.
 {
-  const hrDays = dailyRestingHR(HEARTRATE);
-  if (hrDays.length === 0) {
-    document.getElementById('hrChart').innerHTML = '<p class="sub">No heart rate data logged yet.</p>';
+  const bwRoutine = bodyweightRoutineSessions(WORKOUTS, BODYWEIGHT_ROUTINE_EXERCISE_IDS, EXMETA);
+  if (bwRoutine.length === 0) {
+    document.getElementById('bwRoutineChart').innerHTML = '<p class="sub">No bodyweight routine logged yet.</p>';
   } else {
-    const hrWeeks = weeklyRestingHR(HEARTRATE);
-    const hrWeekKeys = [...hrWeeks.keys()].sort();
-    const curWk = hrWeekKeys[hrWeekKeys.length - 1];
-    const prevWk = hrWeekKeys.length >= 2 ? hrWeekKeys[hrWeekKeys.length - 2] : null;
-    const curAvg = hrWeeks.get(curWk);
-    const prevAvg = prevWk ? hrWeeks.get(prevWk) : null;
-    let summaryBadge;
-    if (!prevAvg) {
-      summaryBadge = `<span class="badge baseline">first tracked week</span>`;
-    } else if (curAvg.avg < prevAvg.avg) {
-      summaryBadge = `<span class="badge progress">↑ progress — resting HR down</span>`;
-    } else if (curAvg.avg > prevAvg.avg) {
-      summaryBadge = `<span class="badge plateau">resting HR up</span>`;
+    const latest = bwRoutine[bwRoutine.length - 1];
+    const verdictBadge = latest.verdict === 'more' ? `<span class="badge progress">↑ progress — more reps than last time</span>`
+      : latest.verdict === 'less' ? `<span class="badge plateau">fewer reps than last time</span>`
+      : latest.verdict === 'same' ? `<span class="badge baseline">same as last time</span>`
+      : `<span class="badge baseline">first logged session</span>`;
+    document.getElementById('bwRoutineSummary').innerHTML = `${verdictBadge}<span style="color:var(--text-muted);font-size:12px;margin-left:8px;">${latest.date} &middot; ${latest.totalReps} reps</span>`;
+    const bwRoutineTakeawayEl = document.getElementById('bwRoutineTakeaway');
+    const prev = bwRoutine.length >= 2 ? bwRoutine[bwRoutine.length - 2] : null;
+    if (!prev) {
+      bwRoutineTakeawayEl.textContent = `🤸 First logged session — ${latest.totalReps} total reps.`;
+    } else if (latest.verdict === 'more') {
+      bwRoutineTakeawayEl.textContent = `🤸 Up to ${latest.totalReps} total reps, from ${prev.totalReps} last time.`;
+    } else if (latest.verdict === 'less') {
+      bwRoutineTakeawayEl.textContent = `🤸 Down to ${latest.totalReps} total reps, from ${prev.totalReps} last time.`;
     } else {
-      summaryBadge = `<span class="badge baseline">resting HR unchanged</span>`;
-    }
-    const prevHrStr = prevAvg ? ` (${curAvg.avg.toFixed(1)} vs ${prevAvg.avg.toFixed(1)} bpm avg last week)` : ` (${curAvg.avg.toFixed(1)} bpm avg this week)`;
-    document.getElementById('hrSummary').innerHTML = `${summaryBadge}<span style="color:var(--text-muted);font-size:12px;margin-left:8px;">${prevHrStr}</span>`;
-    const hrTakeawayEl = document.getElementById('hrTakeaway');
-    if (!prevAvg) {
-      hrTakeawayEl.textContent = `❤️ First tracked week — averaging ${curAvg.avg.toFixed(1)} bpm resting.`;
-    } else if (curAvg.avg < prevAvg.avg) {
-      hrTakeawayEl.textContent = `❤️ Resting HR down to ${curAvg.avg.toFixed(1)} bpm avg, from ${prevAvg.avg.toFixed(1)} last week — fitness improving.`;
-    } else if (curAvg.avg > prevAvg.avg) {
-      hrTakeawayEl.textContent = `❤️ Resting HR up to ${curAvg.avg.toFixed(1)} bpm avg, from ${prevAvg.avg.toFixed(1)} last week.`;
-    } else {
-      hrTakeawayEl.textContent = `❤️ Resting HR unchanged at ${curAvg.avg.toFixed(1)} bpm avg.`;
+      bwRoutineTakeawayEl.textContent = `🤸 Steady at ${latest.totalReps} total reps.`;
     }
 
     const w = 1000, h = 140, pad = 28;
     const svg = svgEl('svg', { width: '100%', height: h, viewBox: `0 0 ${w} ${h}`, preserveAspectRatio: 'none' });
-    const vals = hrDays.map(d => d.resting);
-    const valMin = Math.min(...vals), valMax = Math.max(...vals);
-    const range = (valMax - valMin) || 1;
-    const scaleMin = valMin - range * 0.15, scaleMax = valMax + range * 0.15;
-    const bw = (w - 2*pad) / hrDays.length;
+    const vals = bwRoutine.map(r => r.totalReps);
+    const max = Math.max(...vals, 1);
+    const bw = (w - 2*pad) / bwRoutine.length;
     for (let g = 0; g <= 4; g++) {
       const gy = pad + (h - 2*pad) * (1 - g/4);
       svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: gy, y2: gy, class: 'gridline' }));
     }
-    hrDays.forEach((d, i) => {
-      const bh = ((d.resting - scaleMin) / (scaleMax - scaleMin)) * (h - 2*pad);
+    bwRoutine.forEach((r, i) => {
+      const bh = (r.totalReps / max) * (h - 2*pad);
       const x = pad + i*bw;
       const y = h - pad - bh;
-      const color = d.verdict === 'improved' ? 'var(--good)' : d.verdict === 'higher' ? 'var(--warning)' : 'var(--series-1)';
-      const rect = svgEl('rect', { x: x+1, y, width: Math.max(bw-2,1), height: Math.max(bh,0), fill: color, rx: 2 });
+      const rect = svgEl('rect', { x: x+1, y, width: Math.max(bw-2,1), height: Math.max(bh,0), fill: 'var(--series-1)', rx: 2 });
       const title = svgEl('title', {});
-      title.textContent = `${d.date}: ${d.resting} bpm resting (${d.min}-${d.max} range)`;
+      title.textContent = `${r.date}: ${r.totalReps} reps — ${r.exercises.map(e => `${e.name} ${e.reps}`).join(', ')}`;
       rect.appendChild(title);
       svg.appendChild(rect);
     });
     svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: h-pad, y2: h-pad, class: 'axisline' }));
-    document.getElementById('hrChart').appendChild(svg);
+    document.getElementById('bwRoutineChart').appendChild(svg);
 
-    document.getElementById('hrTable').innerHTML = hrDays.slice().reverse().map(d => {
-      const badge = d.verdict === 'improved' ? `<span class="badge progress">improved</span>`
-        : d.verdict === 'higher' ? `<span class="badge plateau">higher</span>`
-        : d.verdict === 'same' ? `<span class="badge baseline">same</span>`
+    document.getElementById('bwRoutineTable').innerHTML = bwRoutine.slice().reverse().map(r => {
+      const badge = r.verdict === 'more' ? `<span class="badge progress">more</span>`
+        : r.verdict === 'less' ? `<span class="badge plateau">fewer</span>`
+        : r.verdict === 'same' ? `<span class="badge baseline">same</span>`
         : `<span class="badge baseline">baseline</span>`;
-      return `<tr><td>${d.date}</td><td>${d.resting} bpm</td><td>${d.min}</td><td>${d.max}</td><td>${badge}</td></tr>`;
+      const breakdown = r.exercises.map(e => `${e.name} ${e.reps}`).join(' &middot; ');
+      return `<tr><td>${r.date}</td><td>${r.totalReps}</td><td>${breakdown}</td><td>${badge}</td></tr>`;
     }).join('');
   }
 }
