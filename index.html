@@ -1909,15 +1909,15 @@ function trainingLogCard(workouts, meta, bodyLogData, stepsData, today) {
   // (see hevy_sync.py's (date, title) keying), so this must collect ALL of that day's
   // workouts, not just the first match, or a real logged session would silently vanish from
   // the card exactly the way it silently vanished from workouts.json before that fix.
-  // A pure Bodyweight Routine session (every exercise in BODYWEIGHT_ROUTINE_EXERCISE_IDS) is
-  // excluded here — it's not meant to be featured as "the day's training" on this card.
-  // Deliberately narrower than countsTowardWorkoutTotal: a Rowing/abs-only day (e.g. "Core &
-  // Rowing") still shows here, since that's real cardio training, not the bodyweight-routine
-  // warm-up this exclusion is specifically about. It's still fully tracked elsewhere (the
-  // Bodyweight Routine Cardio Trend card, Core & Bodyweight/Chest in Exercise Progress) —
-  // this only hides it from this one card. A mixed session (e.g. Push Up inside a real Chest
-  // & Shoulders day) still shows in full, since not every exercise in it is excluded.
-  const dayWorkouts = workouts.filter(w => w.d === workoutDate && !w.ex.every(e => BODYWEIGHT_ROUTINE_EXERCISE_IDS.has(e.i)));
+  // A session where every exercise is Bodyweight Routine work or Rowing Machine is excluded
+  // here — neither is meant to be featured as "the day's training" on this card (e.g. "Core
+  // & Rowing", which turned out to be Rowing Machine alone, or a standalone Bodyweight
+  // Routine day). Both are still fully tracked elsewhere (the Bodyweight Routine/Rowing
+  // Cardio Trend cards, Core & Bodyweight/Chest in Exercise Progress) — this only hides them
+  // from this one card. A mixed session (e.g. Push Up inside a real Chest & Shoulders day, or
+  // real ab work alongside Rowing) still shows in full, since not every exercise in it is
+  // excluded.
+  const dayWorkouts = workouts.filter(w => w.d === workoutDate && !w.ex.every(e => BODYWEIGHT_ROUTINE_EXERCISE_IDS.has(e.i) || e.i === ROWING_EXERCISE_ID));
   // dayNumber tracks workoutDate, not today — the badge should match the day actually shown
   // on the card (e.g. "day 42" alongside the day-42 session), not run a day ahead of it.
   const { dayNumber } = programDayInfo(workouts, workoutDate);
