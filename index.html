@@ -881,6 +881,7 @@ const EXPENSES = [
 {"d": "2026-08-08", "category": "recovery", "amount": 1000, "note": "Foot Relief - Kim"}
 ];
 const BODYLOG = [
+{"d": "2026-08-25", "sleepMin": 422, "weightKg": 69.7, "bodyFatPct": 21.2},
 {"d": "2026-08-24", "sleepMin": 457, "weightKg": 70.1, "bodyFatPct": 20.5},
 {"d": "2026-08-23", "sleepMin": 450, "weightKg": 69.8, "bodyFatPct": 21.2},
 {"d": "2026-08-22", "sleepMin": 319, "weightKg": 69.8, "bodyFatPct": 20.7},
@@ -1856,7 +1857,11 @@ function trainingLogSession(workout, meta) {
       }
       best = bodyweight ? `${repsAtTop} REPS` : `${topWeight} KG × ${repsAtTop}`;
     }
-    const setsStr = cardio ? null : sets.map(([wt, r]) => `${wt}×${r}`).join(' · ') + (bodyweight ? '' : ' kg');
+    // Bodyweight sets are always logged at weight 0, so "0×10 · 0×10" reads as nonsensical
+    // noise — show just the rep counts instead, same convention as `best`'s "N REPS".
+    const setsStr = cardio ? null
+      : bodyweight ? sets.map(([, r]) => r).join(' · ') + ' reps'
+      : sets.map(([wt, r]) => `${wt}×${r}`).join(' · ') + ' kg';
     return { id, name: m.name || id, group: label, isFirstGroup: label === firstGroup, best, setsStr, cardio: !!cardio };
   });
   return { title: workout.t, groups: groupsSeen, exercises };
