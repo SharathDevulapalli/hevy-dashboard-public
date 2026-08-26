@@ -899,7 +899,7 @@ const BODYLOG = [
 ];
 const SUPPLEMENTS = [
 {"d": "2026-08-26", "items": ["isabgol"]},
-{"d": "2026-08-25", "items": ["beta_alanine", "citrulline", "creatine", "d3_k2", "eaa", "isabgol", "preworkout", "tongkat_ali"]},
+{"d": "2026-08-25", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "isabgol", "magnesium", "preworkout", "tongkat_ali"]},
 {"d": "2026-08-24", "items": ["beta_alanine", "calm", "citrulline", "d3_k2", "glycine", "isabgol", "magnesium", "tongkat_ali"]},
 {"d": "2026-08-23", "items": ["creatine", "d3_k2", "eaa", "glycine", "isabgol", "magnesium", "preworkout", "tongkat_ali"]},
 {"d": "2026-08-22", "items": ["creatine", "d3_k2", "eaa", "glycine", "magnesium", "preworkout", "tongkat_ali"]}
@@ -3300,6 +3300,18 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.querySelectorAll('.tabpanel').forEach(p => p.hidden = true);
     btn.classList.add('active');
     document.getElementById('tab-' + btn.dataset.tab).hidden = false;
+
+    // The supplement grid is 90+ columns wide from whenever tracking began, running well
+    // into the future — a scrollIntoView attempted while this tab was still hidden can't
+    // compute a scroll position (offsetLeft/scrollWidth collapse on hidden elements), so it
+    // has to happen here, on reveal, not at initial render time. Without this the grid opens
+    // showing early history instead of today/yesterday, which reads as "yesterday's
+    // supplements aren't showing" when they're just off-screen to the right.
+    if (btn.dataset.tab === 'nutrition') {
+      const supGridEl = document.getElementById('supplementsGrid');
+      const todayCell = supGridEl && supGridEl.querySelector(`[title="${latestSyncedDate}"]`);
+      if (todayCell) todayCell.scrollIntoView({ inline: 'end', block: 'nearest' });
+    }
   });
 });
 
