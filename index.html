@@ -889,6 +889,7 @@ const EXPENSES = [
 {"d": "2026-08-08", "category": "recovery", "amount": 1000, "note": "Foot Relief - Kim"}
 ];
 const BODYLOG = [
+{"d": "2026-08-27", "sleepMin": 440, "weightKg": 69.5, "bodyFatPct": 21.0},
 {"d": "2026-08-26", "sleepMin": 368, "weightKg": 69.6, "bodyFatPct": 20.6},
 {"d": "2026-08-25", "sleepMin": 422, "weightKg": 69.7, "bodyFatPct": 21.2},
 {"d": "2026-08-24", "sleepMin": 457, "weightKg": 70.1, "bodyFatPct": 20.5},
@@ -1913,7 +1914,19 @@ function trainingLogCard(workouts, meta, bodyLogData, stepsData, today) {
   //
   // Falls back to null/— fields gracefully when `workoutDate` has no matching workout, or
   // `today` has no body-log entry yet.
-  const workoutDate = addDaysISO(today, -1);
+  //
+  // workoutDate is derived from the actual max date logged in workouts/steps, NOT from
+  // `today - 1`. `today` (latestSyncedDate) is the max date across every source including
+  // body-log, which normally sits a day ahead of workouts/steps since it's entered same-day
+  // — that's what makes `today - 1` line up with the real workout day on a normal morning.
+  // But when the body-log sync stalls (e.g. an expired MFP session) on a day that also has
+  // a workout, `today` collapses down to the same date as the workout, and `today - 1` then
+  // undershoots by one extra day, hiding that day's real session. Reading the date straight
+  // from workouts/steps themselves has no such dependency on another source's freshness.
+  const workoutDate = [workouts, stepsData].reduce((max, arr) => {
+    for (const r of (arr || [])) if (r.d && (!max || r.d > max)) max = r.d;
+    return max;
+  }, null) || addDaysISO(today, -1);
   // A day can carry more than one distinct Hevy session (e.g. a "Bodyweight Routine" in the
   // morning and "Chest & Shoulders" later) — workouts.json now keeps both as separate rows
   // (see hevy_sync.py's (date, title) keying), so this must collect ALL of that day's
