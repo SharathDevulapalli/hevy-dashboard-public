@@ -470,7 +470,7 @@
 
 <script>
 const WORKOUTS = [
-{"d": "2026-08-29", "t": "Bodyweight routine", "ex": [{"i": "392887AA", "s": [[0, 10], [0, 10], [0, 20], [0, 20], [0, 20]]}, {"i": "DCF3B31B", "s": [[0, 20]], "n": "Half"}, {"i": "F49E31D6", "s": [[0, 30]]}, {"i": "DCF3B31B", "s": [[0, 20]], "n": "seated Leg tuck"}]},
+{"d": "2026-08-29", "t": "Bodyweight routine", "ex": [{"i": "392887AA", "s": [[0, 10], [0, 10], [0, 20], [0, 20], [0, 20]]}, {"i": "DCF3B31B", "s": [[0, 20], [0, 20]], "n": "Half and leg tuck in"}, {"i": "F49E31D6", "s": [[0, 30]]}]},
 {"d": "2026-08-29", "t": "Boxing", "ex": [{"i": "023947AB", "s": [[0, 0]], "c": {"min": 20, "km": 0.0}, "n": "Warm Up"}, {"i": "A0D8FA1B", "s": [[0, 0]], "c": {"min": 30, "km": 0.0}, "n": "Jab & Cross - 4 way"}, {"i": "023947AB", "s": [[0, 0]], "c": {"min": 20, "km": 0.0}, "n": "Cool down"}]},
 {"d": "2026-08-28", "t": "Bodyweight routine", "ex": [{"i": "392887AA", "s": [[0, 25], [0, 20], [0, 15], [0, 15], [0, 25]]}, {"i": "991833C2", "s": [[0, 50], [0, 50]]}, {"i": "A01BE509", "s": [[0, 20], [0, 20]], "n": "Standing"}]},
 {"d": "2026-08-28", "t": "Hamstrings & Calves", "ex": [{"i": "8BEBFED6", "s": [[50, 10], [50, 15], [50, 15]]}, {"i": "F4B4C6EE", "s": [[45, 10], [45, 15], [45, 15]]}, {"i": "D04AC939", "s": [[80, 10], [120, 10], [120, 10]], "n": "With squat machine for hamstring"}, {"i": "05293BCA", "s": [[60, 10], [70, 15], [80, 10]]}, {"i": "72CFFAD5", "s": [[35, 15], [40, 15], [60, 10]]}, {"i": "B8127AD1", "s": [[25, 15], [25, 15], [25, 10], [20, 5]]}, {"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 20], [200, 20], [250, 20]], "n": "10 slow and 10 fast"}, {"i": "0222DB42", "s": [[0, 0]], "c": {"min": 6, "km": 1.0}}]},
@@ -1494,6 +1494,8 @@ const BODYWEIGHT_ROUTINE_EXERCISE_IDS = new Set([
   '392887AA', // Push Up
   '991833C2', // Jumping Jack
   'A01BE509', // Elbow to Knee
+  'DCF3B31B', // Crunch (added 2026-08-30)
+  'F49E31D6', // Mountain Climber (added 2026-08-30)
 ]);
 
 function countsTowardWorkoutTotal(workout, meta) {
