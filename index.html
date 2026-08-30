@@ -149,6 +149,15 @@
   .tab-btn:hover { color: var(--text-primary); }
   .tab-btn.active { color: var(--text-primary); border-bottom-color: var(--series-1); }
   .tabpanel[hidden] { display: none; }
+  .subtabs { display: flex; gap: 4px; margin: 4px 0 24px; border-bottom: 1px solid var(--border); }
+  .subtab-btn {
+    appearance: none; background: none; border: none; cursor: pointer; font: inherit;
+    font-size: 13px; font-weight: 600; color: var(--text-muted);
+    padding: 8px 12px; border-bottom: 2px solid transparent; margin-bottom: -1px;
+  }
+  .subtab-btn:hover { color: var(--text-primary); }
+  .subtab-btn.active { color: var(--text-primary); border-bottom-color: var(--series-1); }
+  .subtabpanel[hidden] { display: none; }
   .cal-nav { display: flex; align-items: center; gap: 10px; margin: 4px 0 14px; }
   .cal-nav button {
     appearance: none; background: var(--surface-1); border: 1px solid var(--border); border-radius: 6px;
@@ -228,29 +237,30 @@
   .tl-exrow .sets { color: var(--tlc-faint); font-size: 11.5px; margin-top: 2px; }
   .tl-exrow .best { flex: 0 0 auto; font-weight: 800; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; color: var(--tlc-fg); }
 
-  /* PDF export (see pdfExportBtn below): each tab printed on its own page, auto-scaled via
-     JS-set zoom (not transform - zoom affects layout size, so pagination respects the
-     shrunk height; transform alone wouldn't). This block only applies while body carries
-     .pdf-export-mode, which the export handler adds/removes around window.print(). */
+  /* PDF export (see pdfExportBtn below): each .pdf-page (a top-level tab, or a subtab within
+     Training) printed on its own page, auto-scaled via JS-set zoom (not transform - zoom
+     affects layout size, so pagination respects the shrunk height; transform alone wouldn't).
+     This block only applies while body carries .pdf-export-mode, which the export handler
+     adds/removes around window.print(). */
   @page { size: A4 landscape; margin: 10mm; }
   @media print {
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    body.pdf-export-mode .tabs, body.pdf-export-mode #tlSaveImgBtn { display: none !important; }
-    body.pdf-export-mode .tabpanel { display: block !important; break-after: page; }
+    body.pdf-export-mode .tabs, body.pdf-export-mode .subtabs, body.pdf-export-mode #tlSaveImgBtn { display: none !important; }
+    body.pdf-export-mode .tabpanel, body.pdf-export-mode .subtabpanel { display: block !important; }
+    body.pdf-export-mode .pdf-page { break-after: page; }
   }
 </style>
 
 <div class="wrap viz-root">
   <div class="tabs" role="tablist">
     <button class="tab-btn active" data-tab="overview" type="button">Overview</button>
+    <button class="tab-btn" data-tab="training" type="button">Training</button>
     <button class="tab-btn" data-tab="nutrition" type="button">Nutrition</button>
-    <button class="tab-btn" data-tab="volumelog" type="button">Exercise Progress</button>
-    <button class="tab-btn" data-tab="traininglog" type="button">Accountability</button>
-    <button class="tab-btn" data-tab="reward" type="button">Rewards</button>
+    
     <button id="pdfExportBtn" type="button" style="margin-left:auto;appearance:none;background:var(--surface-1);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);cursor:pointer;font:inherit;font-size:13px;padding:7px 14px;align-self:center;">&darr; Download as PDF</button>
   </div>
 
-  <div id="tab-overview" class="tabpanel">
+  <div id="tab-overview" class="tabpanel pdf-page">
   <header class="top">
     <h1>Training Dashboard</h1>
     <p id="dateRangeLabel">—</p>
@@ -258,6 +268,21 @@
     <p class="sub" style="margin:16px 0 0;">This week</p>
     <div class="stat-row" id="statRowWeek"></div>
   </header>
+
+  <section>
+    <h2>Weekly Review</h2>
+    <p class="sub" id="weeklyReviewLabel">—</p>
+    <div class="grid-2">
+      <div>
+        <h3 style="font-size:14px;margin:0 0 8px;">✅ Went well</h3>
+        <div class="card" id="weeklyReviewWentWell"></div>
+      </div>
+      <div>
+        <h3 style="font-size:14px;margin:0 0 8px;">⚠️ Needs attention</h3>
+        <div class="card" id="weeklyReviewNeedsAttention"></div>
+      </div>
+    </div>
+  </section>
 
   <section>
     <h2>Weekly training volume</h2>
@@ -268,71 +293,119 @@
     </div>
   </section>
 
-  <section>
-    <h2>Strength Training Trend</h2>
-    <p class="sub" id="hypertrophyTakeaway" style="font-weight:600;"></p>
-    <div id="weeklySnapshot"></div>
-  </section>
-
-  <section>
-    <h2>Cardio Trend</h2>
-    <p class="sub">🏃 Not counted toward strength volume or muscle-group set targets — tracked and scored separately.</p>
-    <div class="grid-2">
-      <div>
-        <h3 style="font-size:14px;margin:0 0 8px;">Bodyweight Routine</h3>
-        <p class="sub" id="bwRoutineTakeaway" style="font-weight:600;"></p>
-        <div class="card">
-          <div id="bwRoutineSummary" style="margin-bottom:12px;"></div>
-          <div id="bwRoutineChart"></div>
-          <table class="tv" style="margin-top:12px;">
-            <thead><tr><th>Date</th><th>Total reps</th><th>Breakdown</th><th>Verdict</th></tr></thead>
-            <tbody id="bwRoutineTable"></tbody>
-          </table>
-        </div>
-      </div>
-      <div>
-        <h3 style="font-size:14px;margin:0 0 8px;">Steps Count</h3>
-        <p class="sub" id="stepsTakeaway" style="font-weight:600;"></p>
-        <div class="card">
-          <div id="stepsSummary" style="margin-bottom:12px;"></div>
-          <div id="stepsChart"></div>
-          <details class="tableview"><summary>Table view</summary>
-            <table class="tv">
-              <thead><tr><th>Date</th><th>Steps</th><th>Goal</th><th>Verdict</th></tr></thead>
-              <tbody id="stepsTable"></tbody>
-            </table>
-          </details>
-        </div>
-      </div>
-      <div>
-        <h3 style="font-size:14px;margin:0 0 8px;">Boxing</h3>
-        <p class="sub" id="boxingTakeaway" style="font-weight:600;"></p>
-        <div class="card">
-          <div id="boxingSummary" style="margin-bottom:12px;"></div>
-          <div id="boxingChart"></div>
-          <table class="tv" style="margin-top:12px;">
-            <thead><tr><th>Date</th><th>Duration</th><th>Notes</th></tr></thead>
-            <tbody id="boxingTable"></tbody>
-          </table>
-        </div>
-      </div>
-      <div>
-        <h3 style="font-size:14px;margin:0 0 8px;">Rowing Machine</h3>
-        <p class="sub" id="rowingTakeaway" style="font-weight:600;"></p>
-        <div class="card">
-          <div id="rowingSummary" style="margin-bottom:12px;"></div>
-          <div id="rowingChart"></div>
-          <table class="tv" style="margin-top:12px;">
-            <thead><tr><th>Date</th><th>Duration</th><th>Distance</th><th>Pace (min/km)</th><th>Verdict</th></tr></thead>
-            <tbody id="rowingTable"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </section>
   </div>
 
-  <div id="tab-nutrition" class="tabpanel" hidden>
+  <div id="tab-training" class="tabpanel" hidden>
+    <div class="subtabs" role="tablist">
+      <button class="subtab-btn active" data-subtab="strength" type="button">Strength</button>
+      <button class="subtab-btn" data-subtab="cardio" type="button">Cardio</button>
+      <button class="subtab-btn" data-subtab="volumelog" type="button">Progress</button>
+      <button class="subtab-btn" data-subtab="traininglog" type="button">Accountability</button>
+    </div>
+
+    <div id="subtab-strength" class="subtabpanel pdf-page">
+      <header class="top">
+        <h1>Strength</h1>
+      </header>
+
+      <section>
+        <h2>Strength Training Trend</h2>
+        <p class="sub" id="hypertrophyTakeaway" style="font-weight:600;"></p>
+        <div id="weeklySnapshot"></div>
+      </section>
+    </div>
+
+    <div id="subtab-cardio" class="subtabpanel pdf-page" hidden>
+      <header class="top">
+        <h1>Cardio</h1>
+      </header>
+
+      <section>
+        <h2>Cardio Trend</h2>
+        <p class="sub">🏃 Not counted toward strength volume or muscle-group set targets — tracked and scored separately.</p>
+        <div class="grid-2">
+          <div>
+            <h3 style="font-size:14px;margin:0 0 8px;">Bodyweight Routine</h3>
+            <p class="sub" id="bwRoutineTakeaway" style="font-weight:600;"></p>
+            <div class="card">
+              <div id="bwRoutineSummary" style="margin-bottom:12px;"></div>
+              <div id="bwRoutineChart"></div>
+              <table class="tv" style="margin-top:12px;">
+                <thead><tr><th>Date</th><th>Total reps</th><th>Breakdown</th><th>Verdict</th></tr></thead>
+                <tbody id="bwRoutineTable"></tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <h3 style="font-size:14px;margin:0 0 8px;">Steps Count</h3>
+            <p class="sub" id="stepsTakeaway" style="font-weight:600;"></p>
+            <div class="card">
+              <div id="stepsSummary" style="margin-bottom:12px;"></div>
+              <div id="stepsChart"></div>
+              <details class="tableview"><summary>Table view</summary>
+                <table class="tv">
+                  <thead><tr><th>Date</th><th>Steps</th><th>Goal</th><th>Verdict</th></tr></thead>
+                  <tbody id="stepsTable"></tbody>
+                </table>
+              </details>
+            </div>
+          </div>
+          <div>
+            <h3 style="font-size:14px;margin:0 0 8px;">Boxing</h3>
+            <p class="sub" id="boxingTakeaway" style="font-weight:600;"></p>
+            <div class="card">
+              <div id="boxingSummary" style="margin-bottom:12px;"></div>
+              <div id="boxingChart"></div>
+              <table class="tv" style="margin-top:12px;">
+                <thead><tr><th>Date</th><th>Duration</th><th>Notes</th></tr></thead>
+                <tbody id="boxingTable"></tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <h3 style="font-size:14px;margin:0 0 8px;">Rowing Machine</h3>
+            <p class="sub" id="rowingTakeaway" style="font-weight:600;"></p>
+            <div class="card">
+              <div id="rowingSummary" style="margin-bottom:12px;"></div>
+              <div id="rowingChart"></div>
+              <table class="tv" style="margin-top:12px;">
+                <thead><tr><th>Date</th><th>Duration</th><th>Distance</th><th>Pace (min/km)</th><th>Verdict</th></tr></thead>
+                <tbody id="rowingTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div id="subtab-volumelog" class="subtabpanel pdf-page" hidden>
+      <header class="top">
+        <h1>Exercise Progress</h1>
+        <p id="volRangeLabel">—</p>
+        <div class="stat-row" id="volStatRow"></div>
+      </header>
+      <section>
+        <p class="sub" id="volumeLogTakeaway" style="font-weight:600;"></p>
+        <div class="vol-tabs" id="volTabs"></div>
+        <div id="volumeLogTables"></div>
+      </section>
+    </div>
+
+    <div id="subtab-traininglog" class="subtabpanel pdf-page" hidden>
+      <header class="top">
+        <h1>Accountability</h1>
+        <p class="sub" id="accountabilityTakeaway" style="font-weight:600;margin:0;"></p>
+      </header>
+      <section style="margin-top:20px;">
+        <div id="trainingLogCard"></div>
+        <div class="tl-wrap" style="margin-top:12px;text-align:center;">
+          <button id="tlSaveImgBtn" type="button" style="appearance:none;background:var(--surface-1);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);cursor:pointer;font:inherit;font-size:13px;padding:8px 16px;">&darr; Save as image</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div id="tab-nutrition" class="tabpanel pdf-page" hidden>
     <header class="top">
       <h1>Nutrition</h1>
       <p class="sub" style="margin:0;">🍽️ Daily calorie/macro log from MyFitnessPal. Not counted toward strength or cardio scoring — tracked separately.</p>
@@ -379,92 +452,7 @@
     </section>
   </div>
 
-  <div id="tab-volumelog" class="tabpanel" hidden>
-    <header class="top">
-      <h1>Exercise Progress</h1>
-      <p id="volRangeLabel">—</p>
-      <div class="stat-row" id="volStatRow"></div>
-    </header>
-    <section>
-      <p class="sub" id="volumeLogTakeaway" style="font-weight:600;"></p>
-      <div class="vol-tabs" id="volTabs"></div>
-      <div id="volumeLogTables"></div>
-    </section>
-  </div>
-
-  <div id="tab-traininglog" class="tabpanel" hidden>
-    <header class="top">
-      <h1>Accountability</h1>
-      <p class="sub" id="accountabilityTakeaway" style="font-weight:600;margin:0;"></p>
-    </header>
-    <section style="margin-top:20px;">
-      <div id="trainingLogCard"></div>
-      <div class="tl-wrap" style="margin-top:12px;text-align:center;">
-        <button id="tlSaveImgBtn" type="button" style="appearance:none;background:var(--surface-1);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);cursor:pointer;font:inherit;font-size:13px;padding:8px 16px;">&darr; Save as image</button>
-      </div>
-    </section>
-  </div>
-
-  <div id="tab-reward" class="tabpanel" hidden>
-    <header class="top">
-      <h1>Rewards</h1>
-    </header>
-
-    <section style="margin-top:20px;">
-      <div class="card" id="sessionBalanceCard"></div>
-    </section>
-
-    <section>
-      <h2>Target</h2>
-      <table class="tv">
-        <thead><tr><th>Metric</th><th>Threshold</th></tr></thead>
-        <tbody>
-          <tr><td>Workouts / week</td><td>&ge; 4 <span style="color:var(--text-muted);font-size:11px;">(core/rowing-only days don't count)</span></td></tr>
-          <tr><td>Strength days / week</td><td>&ge; 3</td></tr>
-          <tr><td>Avg steps / day</td><td>&ge; 12,000</td></tr>
-          <tr><td>Continuous weeks &rarr; 1 session</td><td>6</td></tr>
-        </tbody>
-      </table>
-    </section>
-
-    <section>
-      <h2>This week</h2>
-      <div class="card">
-        <div class="callout" id="sessionTakeaway" style="margin-bottom:12px;"></div>
-        <div id="rewardCurrentWeek"></div>
-      </div>
-    </section>
-
-    <section>
-      <h2>Session ledger</h2>
-      <div class="card">
-        <table class="tv">
-          <thead><tr><th>Week of</th><th>Workouts</th><th>Avg steps</th><th>Target</th><th>Streak</th><th>Sessions available</th></tr></thead>
-          <tbody id="sessionWeeklyTable"></tbody>
-        </table>
-        <details class="tableview" id="sessionRedemptionsDetails">
-          <summary>Sessions redeemed</summary>
-          <table class="tv"><thead><tr><th>Date</th><th>Note</th><th>Sessions available after</th></tr></thead><tbody id="sessionRedemptions"></tbody></table>
-        </details>
-      </div>
-    </section>
-
-    <hr style="border:none;border-top:1px solid var(--border);margin:32px 0;">
-
-    <section>
-      <h2>Recovery Expenses</h2>
-      <div class="card" id="rewardBalanceCard"></div>
-    </section>
-    <section>
-      <h2>Expense history</h2>
-      <div class="card">
-        <table class="tv">
-          <thead><tr><th>Date</th><th>Amount</th><th>Note</th></tr></thead>
-          <tbody id="rewardWeeklyTable"></tbody>
-        </table>
-      </div>
-    </section>
-  </div>
+  
 
 </div>
 
@@ -896,16 +884,7 @@ const NUTRITION = [
 {"d": "2026-08-02", "calories": 663, "goal": 2094, "protein": 31, "proteinGoal": 183, "carbs": 89, "carbsGoal": 158, "fat": 18, "fatGoal": 82},
 {"d": "2026-08-01", "calories": 1727, "goal": 2099, "protein": 222, "proteinGoal": 183, "carbs": 355, "carbsGoal": 158, "fat": 61, "fatGoal": 82}
 ];
-const EXPENSES = [
-{"d": "2026-08-28", "category": "recovery", "amount": 1900.0, "note": "Foot Relief - Sezo"},
-{"d": "2026-08-23", "category": "recovery", "amount": 3000, "note": "Vara - Unknown"},
-{"d": "2026-08-23", "category": "recovery", "amount": 6600, "note": "Apple - Tina"},
-{"d": "2026-08-22", "category": "recovery", "amount": 25000.0, "note": "Lavish - Priya"},
-{"d": "2026-08-20", "category": "recovery", "amount": 3800, "note": "Spa Nation - Unknown"},
-{"d": "2026-08-16", "category": "recovery", "amount": 1900, "note": "Foot Relief - Kim"},
-{"d": "2026-08-09", "category": "recovery", "amount": 1000, "note": "Foot Relief - Kim"},
-{"d": "2026-08-08", "category": "recovery", "amount": 1000, "note": "Foot Relief - Kim"}
-];
+const EXPENSES = [];
 const BODYLOG = [
 {"d": "2026-08-30", "sleepMin": 415, "weightKg": 70.3, "bodyFatPct": 21.3},
 {"d": "2026-08-29", "sleepMin": 320, "weightKg": 70.3, "bodyFatPct": 21.4},
@@ -1651,6 +1630,68 @@ function currentWeekRewardProgress(workouts, stepsData, latestDate, meta) {
   };
 }
 
+// ---------- weekly review (added 2026-08-30) ----------
+// Rule-based "what went well" / "what needs attention" facts for one ISO week, built from
+// the same underlying data/helpers as the rest of the dashboard (reward minimums, the
+// hypertrophy check, resting HR, sleep, steps, nutrition) rather than any new scoring logic
+// of its own. Deliberately stays objective/per-metric — no cross-metric causal claims (e.g.
+// "low sleep caused the weak session"), since those are judgment calls for the reader, not
+// something safe to assert automatically week over week. Returns facts only; the template
+// turns them into bullet text (same split as calc.js/template elsewhere — see weeklySnapshot
+// vs. its badge rendering).
+const SLEEP_LOW_THRESHOLD_MIN = 360; // 6h — below this, a night gets flagged
+const CALORIE_TOLERANCE_PCT = 0.10; // >10% off the calorie goal counts as "off target"
+
+function weeklyReview(workouts, meta, stepsData, hrData, nutritionData, bodyLogData, latestDate) {
+  meta = meta || {};
+  const weekStart = isoWeekStart(latestDate);
+  const weekEnd = addDaysISO(weekStart, 6);
+  const inWeek = d => d >= weekStart && d <= weekEnd;
+
+  const weekWorkouts = workouts.filter(w => inWeek(w.d));
+  const workoutDays = new Set(weekWorkouts.filter(w => countsTowardWorkoutTotal(w, meta)).map(w => w.d));
+  const strengthDays = new Set(weekWorkouts.filter(w => isStrengthDay(w, meta)).map(w => w.d));
+
+  const stepsRows = dailySteps(stepsData).filter(s => inWeek(s.date));
+  const avgSteps = stepsRows.length ? stepsRows.reduce((a, s) => a + s.steps, 0) / stepsRows.length : null;
+  const stepsHitDays = stepsRows.filter(s => s.hitGoal).length;
+
+  const hrRows = dailyRestingHR(hrData).filter(h => inWeek(h.date));
+  const hrTrendDelta = hrRows.length >= 2 ? hrRows[hrRows.length - 1].resting - hrRows[0].resting : null;
+
+  const sleepRows = dailyBodyLog(bodyLogData).filter(b => inWeek(b.date) && b.sleepMin != null);
+  const lowSleepNights = sleepRows.filter(b => b.sleepMin < SLEEP_LOW_THRESHOLD_MIN);
+
+  const nutritionRows = dailyNutrition(nutritionData).filter(n => inWeek(n.date));
+  const proteinRows = nutritionRows.filter(n => n.proteinGoal != null);
+  const proteinHitDays = proteinRows.filter(n => n.protein >= n.proteinGoal).length;
+  const calorieOffDays = nutritionRows.filter(n => Math.abs(n.calories - n.goal) > n.goal * CALORIE_TOLERANCE_PCT);
+
+  // weeklySnapshot's own "current week" is derived from the latest logged workout date, which
+  // usually — but not always (e.g. a rest day at the tail of the week with no new workout) —
+  // matches weekStart here, so this filters its results by date directly rather than trusting
+  // that the two "current week" derivations agree.
+  const sessions = weeklySnapshot(workouts, meta).filter(s => inWeek(s.date));
+  const strongSessions = sessions.filter(s => s.overall === 'up');
+  const weakSessions = sessions.filter(s => s.overall === 'no-hypertrophy');
+
+  const rewardMinimumsMet = workoutDays.size >= REWARD_MIN_WORKOUTS
+    && strengthDays.size >= REWARD_MIN_STRENGTH_WORKOUTS
+    && (avgSteps == null || avgSteps >= REWARD_MIN_AVG_STEPS);
+
+  return {
+    weekStart, weekEnd,
+    workoutCount: workoutDays.size, strengthCount: strengthDays.size,
+    minWorkouts: REWARD_MIN_WORKOUTS, minStrengthWorkouts: REWARD_MIN_STRENGTH_WORKOUTS, minAvgSteps: REWARD_MIN_AVG_STEPS,
+    rewardMinimumsMet,
+    avgSteps, stepsHitDays, stepsLoggedDays: stepsRows.length,
+    hrTrendDelta, hrFirstResting: hrRows.length ? hrRows[0].resting : null, hrLastResting: hrRows.length ? hrRows[hrRows.length - 1].resting : null,
+    lowSleepNights, sleepLoggedDays: sleepRows.length,
+    proteinHitDays, proteinLoggedDays: proteinRows.length, calorieOffDays,
+    strongSessions, weakSessions, sessionsLogged: sessions.length,
+  };
+}
+
 // ---------- session-based reward track (added 2026-08-23) ----------
 // A second, independent reward mechanic that runs alongside (not instead of) the Rs ledger
 // above — that one keeps accumulating exactly as before, this one starts fresh from zero.
@@ -2106,6 +2147,66 @@ function statTile(v, l) { return `<div class="stat-tile"><div class="v">${v}</di
     statTile(setsThisWeek, 'sets this week') +
     statTile(Math.round(volThisWeek).toLocaleString(), 'volume this week (kg·reps)') +
     statTile(hypertrophyStr, 'exercises vs. last time');
+}
+
+// ---------- Weekly Review ----------
+{
+  const review = weeklyReview(WORKOUTS, EXMETA, STEPS, HEARTRATE, NUTRITION, BODYLOG, latestSyncedDate);
+  document.getElementById('weeklyReviewLabel').textContent = `${review.weekStart} to ${review.weekEnd}`;
+
+  const wentWell = [], needsAttention = [];
+
+  if (review.workoutCount > 0) {
+    wentWell.push(`${review.workoutCount} training day${review.workoutCount === 1 ? '' : 's'} logged (min ${review.minWorkouts}), ${review.strengthCount} of them strength (min ${review.minStrengthWorkouts})${review.rewardMinimumsMet ? ' — reward minimums cleared' : ''}.`);
+  }
+  if (!review.rewardMinimumsMet) {
+    const gaps = [];
+    if (review.workoutCount < review.minWorkouts) gaps.push(`${review.workoutCount}/${review.minWorkouts} workout days`);
+    if (review.strengthCount < review.minStrengthWorkouts) gaps.push(`${review.strengthCount}/${review.minStrengthWorkouts} strength days`);
+    if (review.avgSteps != null && review.avgSteps < review.minAvgSteps) gaps.push(`${Math.round(review.avgSteps).toLocaleString()}/${review.minAvgSteps.toLocaleString()} avg steps`);
+    if (gaps.length) needsAttention.push(`Reward minimums not yet cleared this week — ${gaps.join(', ')}.`);
+  }
+
+  if (review.strongSessions.length) {
+    wentWell.push(`${review.strongSessions.length} of ${review.sessionsLogged} strength session${review.sessionsLogged === 1 ? '' : 's'} trending up: ${review.strongSessions.map(s => s.title).join(', ')}.`);
+  }
+  if (review.weakSessions.length) {
+    needsAttention.push(`${review.weakSessions.length === 1 ? 'One session showed' : 'Sessions showing'} no net hypertrophy: ${review.weakSessions.map(s => `${s.title} (${s.summary.up} up / ${s.summary.down} down)`).join(', ')}.`);
+  }
+
+  if (review.hrTrendDelta != null && review.hrTrendDelta < 0) {
+    wentWell.push(`Resting heart rate trended down this week (${review.hrFirstResting} → ${review.hrLastResting} bpm).`);
+  } else if (review.hrTrendDelta != null && review.hrTrendDelta > 0) {
+    needsAttention.push(`Resting heart rate trended up this week (${review.hrFirstResting} → ${review.hrLastResting} bpm).`);
+  }
+
+  if (review.stepsLoggedDays > 0 && review.avgSteps != null && review.avgSteps >= review.minAvgSteps) {
+    wentWell.push(`Averaged ${Math.round(review.avgSteps).toLocaleString()} steps/day, above the ${review.minAvgSteps.toLocaleString()} floor (daily goal hit ${review.stepsHitDays}/${review.stepsLoggedDays} days).`);
+  }
+  if (review.stepsLoggedDays > 0 && review.stepsHitDays < review.stepsLoggedDays) {
+    needsAttention.push(`Daily step goal missed ${review.stepsLoggedDays - review.stepsHitDays} of ${review.stepsLoggedDays} logged days.`);
+  }
+
+  if (review.lowSleepNights.length) {
+    needsAttention.push(`${review.lowSleepNights.length} night${review.lowSleepNights.length === 1 ? '' : 's'} under 6h sleep: ${review.lowSleepNights.map(b => `${b.date} (${Math.floor(b.sleepMin / 60)}h${String(b.sleepMin % 60).padStart(2, '0')}m)`).join(', ')}.`);
+  } else if (review.sleepLoggedDays > 0) {
+    wentWell.push(`No nights under 6h sleep this week (${review.sleepLoggedDays} logged).`);
+  }
+
+  if (review.proteinLoggedDays > 0) {
+    if (review.proteinHitDays === review.proteinLoggedDays) wentWell.push(`Protein goal hit every logged day (${review.proteinHitDays}/${review.proteinLoggedDays}).`);
+    else if (review.proteinHitDays >= review.proteinLoggedDays / 2) wentWell.push(`Protein goal hit ${review.proteinHitDays}/${review.proteinLoggedDays} days.`);
+    else needsAttention.push(`Protein goal only hit ${review.proteinHitDays}/${review.proteinLoggedDays} days.`);
+  }
+  if (review.calorieOffDays.length) {
+    needsAttention.push(`Calories off target (>10%) on ${review.calorieOffDays.length} day${review.calorieOffDays.length === 1 ? '' : 's'}: ${review.calorieOffDays.map(n => n.date).join(', ')}.`);
+  }
+
+  const reviewList = (items, emptyMsg) => items.length
+    ? `<ul style="margin:0;padding-left:18px;">${items.map(t => `<li style="margin-bottom:6px;">${t}</li>`).join('')}</ul>`
+    : `<p class="sub" style="margin:0;">${emptyMsg}</p>`;
+  document.getElementById('weeklyReviewWentWell').innerHTML = reviewList(wentWell, 'Nothing notable yet this week.');
+  document.getElementById('weeklyReviewNeedsAttention').innerHTML = reviewList(needsAttention, 'Nothing flagged this week.');
 }
 
 // ---------- SVG helpers ----------
@@ -2976,7 +3077,11 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
 }
 
 // ---------- session-based reward track (headline; see [[hevy_dashboard_weekly_refresh]] memory) ----------
-{
+// Guarded on #tab-reward existing: the public build (see build-dashboard.js's PUBLIC:EXCLUDE
+// stripping) removes the whole Rewards tab from the HTML but reuses this same script
+// unmodified, so this and the recovery-expenses block below would otherwise throw on the
+// first getElementById('...').innerHTML = ... against a null element.
+if (document.getElementById('tab-reward')) {
   // Anchored to latestSyncedDate, not the latest workout date — a rest-day gap in WORKOUTS
   // shouldn't freeze "current week" on a stale past week (see the comment where
   // latestSyncedDate is defined).
@@ -3041,7 +3146,7 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
 // ---------- recovery expenses (was the legacy Rs reward ledger; simplified 2026-08-24 to a
 // plain spend tracker — the session-based track above is the one actually scoring targets
 // now, this is just "how much have I spent on massage/spa recovery total") ----------
-{
+if (document.getElementById('tab-reward')) { // see the guard comment on the block above
   const inr = n => '₹' + Math.round(Math.abs(n)).toLocaleString('en-IN');
   const recoveryExpenses = dailyExpenses(EXPENSES).filter(e => e.category === REWARD_REDEEM_CATEGORY);
   const totalSpent = recoveryExpenses.reduce((s, e) => s + e.amount, 0);
@@ -3359,10 +3464,25 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-// ---------- PDF export: every tab on its own page, scaled to fit ----------
+// ---------- subtab switching (Training tab: Training / Exercise Progress / Accountability) ----------
+document.querySelectorAll('.subtab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.subtabpanel').forEach(p => p.hidden = true);
+    btn.classList.add('active');
+    document.getElementById('subtab-' + btn.dataset.subtab).hidden = false;
+  });
+});
+
+// ---------- PDF export: every leaf tab/subtab on its own page, scaled to fit ----------
 document.getElementById('pdfExportBtn').addEventListener('click', () => {
-  const panels = [...document.querySelectorAll('.tabpanel')];
-  const wasHidden = panels.map(p => p.hidden);
+  // .tabpanel/.subtabpanel are just show/hide containers (a subtabpanel's parent tabpanel,
+  // e.g. #tab-training, has to be unhidden too or its children never render regardless of
+  // their own hidden state) — the actual one-page-per-print-page units are .pdf-page, a
+  // separate class so this pagination logic stays decoupled from tab-nesting depth.
+  const containers = [...document.querySelectorAll('.tabpanel, .subtabpanel')];
+  const wasHidden = containers.map(p => p.hidden);
+  const panels = [...document.querySelectorAll('.pdf-page')];
 
   // A4 landscape minus the @page margin, in css px (96px/in; 297x210mm page, 10mm margins).
   const pageWidthPx = ((297 - 20) / 25.4) * 96;
@@ -3371,7 +3491,8 @@ document.getElementById('pdfExportBtn').addEventListener('click', () => {
                           // (e.g. Exercise Progress with a lot of history) may still spill
                           // onto a second page past this floor, which is the honest tradeoff.
 
-  panels.forEach(p => { p.hidden = false; p.style.zoom = ''; });
+  containers.forEach(p => { p.hidden = false; });
+  panels.forEach(p => { p.style.zoom = ''; });
   document.body.classList.add('pdf-export-mode');
 
   // Measure at natural size (zoom reset above) before scaling any of them down.
@@ -3383,7 +3504,8 @@ document.getElementById('pdfExportBtn').addEventListener('click', () => {
 
   const cleanup = () => {
     document.body.classList.remove('pdf-export-mode');
-    panels.forEach((p, i) => { p.style.zoom = ''; p.hidden = wasHidden[i]; });
+    panels.forEach(p => { p.style.zoom = ''; });
+    containers.forEach((p, i) => { p.hidden = wasHidden[i]; });
     window.removeEventListener('afterprint', cleanup);
   };
   window.addEventListener('afterprint', cleanup);
