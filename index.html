@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>Training Dashboard</title>
 <style>
   :root, .viz-root {
@@ -256,7 +257,7 @@
     <button class="tab-btn active" data-tab="overview" type="button">Overview</button>
     <button class="tab-btn" data-tab="training" type="button">Training</button>
     <button class="tab-btn" data-tab="nutrition" type="button">Nutrition</button>
-    
+    <!-- PUBLIC:EXCLUDE:START --><button class="tab-btn" data-tab="reward" type="button">Rewards</button><!-- PUBLIC:EXCLUDE:END -->
     <button id="pdfExportBtn" type="button" style="margin-left:auto;appearance:none;background:var(--surface-1);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);cursor:pointer;font:inherit;font-size:13px;padding:7px 14px;align-self:center;">&darr; Download as PDF</button>
   </div>
 
@@ -452,7 +453,67 @@
     </section>
   </div>
 
-  
+  <!-- PUBLIC:EXCLUDE:START -->
+  <div id="tab-reward" class="tabpanel pdf-page" hidden>
+    <header class="top">
+      <h1>Rewards</h1>
+    </header>
+
+    <section style="margin-top:20px;">
+      <div class="card" id="sessionBalanceCard"></div>
+    </section>
+
+    <section>
+      <h2>Target</h2>
+      <div class="card" id="fatTargetCard"></div>
+      <details class="tableview" id="fatScheduleDetails" style="margin-top:10px;">
+        <summary>Full 16-week schedule</summary>
+        <table class="tv">
+          <thead><tr><th>Week</th><th>Week of</th><th>Target weight</th><th>Target body fat</th><th>Daily cal</th><th>Weekly cal</th><th>Daily protein</th></tr></thead>
+          <tbody id="fatScheduleTable"></tbody>
+        </table>
+      </details>
+    </section>
+
+    <section>
+      <h2>This week</h2>
+      <div class="card">
+        <div class="callout" id="sessionTakeaway" style="margin-bottom:12px;"></div>
+        <div id="rewardCurrentWeek"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Session ledger</h2>
+      <div class="card">
+        <table class="tv">
+          <thead><tr><th>Week of</th><th>7d avg body fat</th><th>Target</th><th>Result</th><th>Streak</th><th>Sessions available</th></tr></thead>
+          <tbody id="sessionWeeklyTable"></tbody>
+        </table>
+        <details class="tableview" id="sessionRedemptionsDetails">
+          <summary>Sessions redeemed</summary>
+          <table class="tv"><thead><tr><th>Date</th><th>Note</th><th>Sessions available after</th></tr></thead><tbody id="sessionRedemptions"></tbody></table>
+        </details>
+      </div>
+    </section>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:32px 0;">
+
+    <section>
+      <h2>Recovery Expenses</h2>
+      <div class="card" id="rewardBalanceCard"></div>
+    </section>
+    <section>
+      <h2>Expense history</h2>
+      <div class="card">
+        <table class="tv">
+          <thead><tr><th>Date</th><th>Amount</th><th>Note</th></tr></thead>
+          <tbody id="rewardWeeklyTable"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+  <!-- PUBLIC:EXCLUDE:END -->
 
 </div>
 
@@ -756,6 +817,7 @@ const EXMETA = {
 "F49E31D6":{"name": "Mountain Climber", "primary": "full_body", "bodyweight": true}
 };
 const STEPS = [
+{"d": "2026-08-31", "steps": 5781, "goal": 13650},
 {"d": "2026-08-30", "steps": 10909, "goal": 13950},
 {"d": "2026-08-29", "steps": 16711, "goal": 13640},
 {"d": "2026-08-28", "steps": 13460, "goal": 13680},
@@ -809,6 +871,7 @@ const STEPS = [
 {"d": "2026-07-11", "steps": 10238, "goal": 5590}
 ];
 const HEARTRATE = [
+{"d": "2026-08-31", "resting": 57, "min": 51, "max": 133},
 {"d": "2026-08-30", "resting": 47, "min": 47, "max": 99},
 {"d": "2026-08-29", "resting": 54, "min": 51, "max": 153},
 {"d": "2026-08-28", "resting": 56, "min": 53, "max": 133},
@@ -888,7 +951,16 @@ const NUTRITION = [
 {"d": "2026-08-02", "calories": 663, "goal": 2094, "protein": 31, "proteinGoal": 183, "carbs": 89, "carbsGoal": 158, "fat": 18, "fatGoal": 82},
 {"d": "2026-08-01", "calories": 1727, "goal": 2099, "protein": 222, "proteinGoal": 183, "carbs": 355, "carbsGoal": 158, "fat": 61, "fatGoal": 82}
 ];
-const EXPENSES = [];
+const EXPENSES = [
+{"d": "2026-08-28", "category": "recovery", "amount": 1900.0, "note": "Foot Relief - Sezo"},
+{"d": "2026-08-23", "category": "recovery", "amount": 3000, "note": "Vara - Unknown"},
+{"d": "2026-08-23", "category": "recovery", "amount": 6600, "note": "Apple - Tina"},
+{"d": "2026-08-22", "category": "recovery", "amount": 25000.0, "note": "Lavish - Priya"},
+{"d": "2026-08-20", "category": "recovery", "amount": 3800, "note": "Spa Nation - Unknown"},
+{"d": "2026-08-16", "category": "recovery", "amount": 1900, "note": "Foot Relief - Kim"},
+{"d": "2026-08-09", "category": "recovery", "amount": 1000, "note": "Foot Relief - Kim"},
+{"d": "2026-08-08", "category": "recovery", "amount": 1000, "note": "Foot Relief - Kim"}
+];
 const BODYLOG = [
 {"d": "2026-08-31", "sleepMin": 466, "weightKg": 70.5, "bodyFatPct": 21.4},
 {"d": "2026-08-30", "sleepMin": 415, "weightKg": 70.3, "bodyFatPct": 21.3},
@@ -1698,19 +1770,22 @@ function weeklyReview(workouts, meta, stepsData, hrData, nutritionData, bodyLogD
   };
 }
 
-// ---------- session-based reward track (added 2026-08-23) ----------
-// A second, independent reward mechanic that runs alongside (not instead of) the Rs ledger
-// above — that one keeps accumulating exactly as before, this one starts fresh from zero.
-// Denominated in recovery sessions (massage/spa), not Rs: 6 CONTINUOUS weeks that each hit
-// the same weekly target as the Rs ledger (see REWARD_MIN_* / isStrengthDay above) earns one
-// session; a week that misses the target resets the streak to 0, same "continuous" rule as
-// the Rs ledger's clean-week bonus streak. Deliberately has no debt concept — a redemption
-// (logging a 'recovery' expense) always just subtracts 1 from whatever's available, clamped
-// at 0, rather than ever going negative like the Rs balance can.
+// ---------- session-based reward track: legacy workout/steps rule (2026-08-23 to 2026-08-30)
+// ----------
+// Originally a second, independent reward mechanic running alongside the Rs ledger above:
+// 6 CONTINUOUS weeks each hitting the same weekly target as the Rs ledger (REWARD_MIN_* /
+// isStrengthDay above) earned one recovery session; a missed week reset the streak to 0.
+// Frozen at FAT_START_DATE (2026-08-31) when the mechanic switched to the body-fat-%
+// schedule below (user request, 2026-08-31) — this function now only ever scores the fixed
+// window [SESSION_REWARD_START_DATE, FAT_START_DATE), and fatRewardLedger reads its final
+// sessionsAvailable as a starting balance so nothing already banked is lost. The STREAK does
+// NOT carry over — fatRewardLedger always starts its own streak at 0, since a streak earned
+// under a completely different rule (workouts/steps, not body fat %) shouldn't count toward
+// the new one (user decision, 2026-08-31).
 const SESSION_REWARD_START_DATE = '2026-08-24'; // Monday — itself a week start, so no partial-week rounding needed (unlike REWARD_START_DATE above)
 const SESSION_STREAK_WEEKS = 6;
 
-function sessionRewardLedger(workouts, stepsData, expensesData, latestDate, meta) {
+function legacySessionLedger(workouts, stepsData, expensesData, meta) {
   meta = meta || {};
   const startWk = SESSION_REWARD_START_DATE;
 
@@ -1718,7 +1793,7 @@ function sessionRewardLedger(workouts, stepsData, expensesData, latestDate, meta
   const strengthDaysByWeek = new Map();
   for (const w of workouts) {
     const wk = isoWeekStart(w.d);
-    if (wk < startWk) continue;
+    if (wk < startWk || wk >= FAT_START_DATE) continue;
     if (countsTowardWorkoutTotal(w, meta)) {
       if (!workoutDaysByWeek.has(wk)) workoutDaysByWeek.set(wk, new Set());
       workoutDaysByWeek.get(wk).add(w.d);
@@ -1733,19 +1808,18 @@ function sessionRewardLedger(workouts, stepsData, expensesData, latestDate, meta
   for (const s of stepsData) {
     if (s.steps == null) continue;
     const wk = isoWeekStart(s.d);
-    if (wk < startWk) continue;
+    if (wk < startWk || wk >= FAT_START_DATE) continue;
     if (!stepsByWeek.has(wk)) stepsByWeek.set(wk, { total: 0, days: 0 });
     const rec = stepsByWeek.get(wk);
     rec.total += s.steps; rec.days += 1;
   }
 
-  const currentWeek = isoWeekStart(latestDate);
   const weeks = [...new Set([...workoutDaysByWeek.keys(), ...stepsByWeek.keys()])]
-    .filter(wk => wk >= startWk && wk < currentWeek)
+    .filter(wk => wk >= startWk && wk < FAT_START_DATE)
     .sort();
 
   const redemptionEntries = dailyExpenses(expensesData)
-    .filter(e => e.category === REWARD_REDEEM_CATEGORY && e.date >= SESSION_REWARD_START_DATE);
+    .filter(e => e.category === REWARD_REDEEM_CATEGORY && e.date >= SESSION_REWARD_START_DATE && e.date < FAT_START_DATE);
 
   // Merge weekly earn-checks (dated at week-end) and redemptions (dated at the expense date)
   // into one chronological timeline, same convention as rewardLedger above.
@@ -1796,6 +1870,125 @@ function sessionRewardLedger(workouts, stepsData, expensesData, latestDate, meta
     sessionsAvailable, sessionsEarnedTotal, sessionsRedeemedTotal, currentStreak: streak,
     minWorkouts: REWARD_MIN_WORKOUTS, minStrengthWorkouts: REWARD_MIN_STRENGTH_WORKOUTS, minAvgSteps: REWARD_MIN_AVG_STEPS,
     weeklyRows, redemptions: redemptionLog,
+  };
+}
+
+// ---------- body-fat-% reward schedule (replaces the workout/steps rule above, 2026-08-31)
+// ----------
+// A 16-week body-recomposition plan: each week has its own target body-fat % (plus weight/
+// calorie/protein targets, kept for display even though only body fat % drives scoring). A
+// week "hits" when the 7-day trailing average body fat % on that week's LAST day is <= that
+// week's target — FAT_STREAK_WEEKS (4) continuous hit weeks earns 1 recovery session, same
+// continuous-streak/redemption mechanics as the legacy rule above (a miss resets the streak
+// to 0; redeeming a 'recovery' expense subtracts 1, clamped at 0, never goes negative). Weeks
+// past the schedule's end (after Week 16, 2026-12-14) hold at Week 16's target indefinitely
+// as a maintenance goal, rather than going unscored (user decision, 2026-08-31).
+const FAT_START_DATE = '2026-08-31'; // Monday — Week 1 of the schedule, itself a week start
+const FAT_STREAK_WEEKS = 4;
+const FAT_BASELINE = { date: '2026-08-31', weightKg: 70.55, fatPct: 21.4 };
+const FAT_TARGET_SCHEDULE = [
+  { week: 1, weekStart: '2026-08-31', targetWeightKg: 70.5, targetFatPct: 21.0, dailyCalorieGoal: 2150, weeklyCalorieGoal: 15050, dailyProteinG: 155 },
+  { week: 2, weekStart: '2026-09-07', targetWeightKg: 70.4, targetFatPct: 20.6, dailyCalorieGoal: 2150, weeklyCalorieGoal: 15050, dailyProteinG: 155 },
+  { week: 3, weekStart: '2026-09-14', targetWeightKg: 70.4, targetFatPct: 20.2, dailyCalorieGoal: 2150, weeklyCalorieGoal: 15050, dailyProteinG: 155 },
+  { week: 4, weekStart: '2026-09-21', targetWeightKg: 70.3, targetFatPct: 19.8, dailyCalorieGoal: 2150, weeklyCalorieGoal: 15050, dailyProteinG: 155 },
+  { week: 5, weekStart: '2026-09-28', targetWeightKg: 70.3, targetFatPct: 19.4, dailyCalorieGoal: 2150, weeklyCalorieGoal: 15050, dailyProteinG: 155 },
+  { week: 6, weekStart: '2026-10-05', targetWeightKg: 70.2, targetFatPct: 19.0, dailyCalorieGoal: 2150, weeklyCalorieGoal: 15050, dailyProteinG: 155 },
+  { week: 7, weekStart: '2026-10-12', targetWeightKg: 70.2, targetFatPct: 18.6, dailyCalorieGoal: 2150, weeklyCalorieGoal: 15050, dailyProteinG: 155 },
+  { week: 8, weekStart: '2026-10-19', targetWeightKg: 70.2, targetFatPct: 18.2, dailyCalorieGoal: 2150, weeklyCalorieGoal: 15050, dailyProteinG: 155 },
+  { week: 9, weekStart: '2026-10-26', targetWeightKg: 70.1, targetFatPct: 17.8, dailyCalorieGoal: 2150, weeklyCalorieGoal: 15050, dailyProteinG: 155 },
+  { week: 10, weekStart: '2026-11-02', targetWeightKg: 70.1, targetFatPct: 17.4, dailyCalorieGoal: 2150, weeklyCalorieGoal: 15050, dailyProteinG: 155 },
+  { week: 11, weekStart: '2026-11-09', targetWeightKg: 70.1, targetFatPct: 17.0, dailyCalorieGoal: 2150, weeklyCalorieGoal: 15050, dailyProteinG: 155 },
+  { week: 12, weekStart: '2026-11-16', targetWeightKg: 70.0, targetFatPct: 16.6, dailyCalorieGoal: 2150, weeklyCalorieGoal: 15050, dailyProteinG: 155 },
+  { week: 13, weekStart: '2026-11-23', targetWeightKg: 70.0, targetFatPct: 16.3, dailyCalorieGoal: 2150, weeklyCalorieGoal: 15050, dailyProteinG: 155 },
+  { week: 14, weekStart: '2026-11-30', targetWeightKg: 70.0, targetFatPct: 16.0, dailyCalorieGoal: 2150, weeklyCalorieGoal: 15050, dailyProteinG: 155 },
+  { week: 15, weekStart: '2026-12-07', targetWeightKg: 70.0, targetFatPct: 15.7, dailyCalorieGoal: 2150, weeklyCalorieGoal: 15050, dailyProteinG: 155 },
+  { week: 16, weekStart: '2026-12-14', targetWeightKg: 70.0, targetFatPct: 15.4, dailyCalorieGoal: 2150, weeklyCalorieGoal: 15050, dailyProteinG: 155 },
+];
+
+function fatTargetForWeek(weekStart) {
+  // Schedule is sorted ascending by weekStart, so the last row whose weekStart is <= the
+  // queried week is always either its own exact entry or (past Week 16) the hold-at-Week-16
+  // maintenance target described above.
+  let target = null;
+  for (const row of FAT_TARGET_SCHEDULE) {
+    if (row.weekStart <= weekStart) target = row; else break;
+  }
+  return target; // null only if weekStart is before Week 1 (2026-08-31)
+}
+
+function fatRewardLedger(workouts, stepsData, bodyLogData, expensesData, latestDate, meta) {
+  // startingBalance carries over whatever legacySessionLedger banked before the cutover (user
+  // decision, 2026-08-31) — the streak below always starts at 0 regardless of the legacy
+  // ledger's own streak.
+  const startingBalance = legacySessionLedger(workouts, stepsData, expensesData, meta).sessionsAvailable;
+  const bodyDays = dailyBodyLog(bodyLogData);
+  const currentWeek = isoWeekStart(latestDate);
+
+  // Only fully-elapsed weeks are scored; the in-progress week is reported separately by
+  // currentWeekFatProgress instead of being scored early.
+  const weeks = [];
+  for (let wk = FAT_START_DATE; wk < currentWeek; wk = addDaysISO(wk, 7)) weeks.push(wk);
+
+  const redemptionEntries = dailyExpenses(expensesData)
+    .filter(e => e.category === REWARD_REDEEM_CATEGORY && e.date >= FAT_START_DATE);
+
+  const events = [];
+  for (const wk of weeks) {
+    const wkEnd = addDaysISO(wk, 6);
+    const target = fatTargetForWeek(wk);
+    const avgFat = trailingAvg(bodyDays, 'bodyFatPct', wkEnd, 7);
+    const earned = target != null && avgFat != null && avgFat <= target.targetFatPct;
+    events.push({ type: 'week', date: wkEnd, week: wk, avgFat, target, earned });
+  }
+  for (const r of redemptionEntries) events.push({ type: 'redeem', date: r.date, amount: r.amount, note: r.note });
+  events.sort((a, b) => a.date.localeCompare(b.date) || (a.type === 'week' ? -1 : 1));
+
+  let sessionsAvailable = startingBalance, streak = 0, sessionsEarnedTotal = 0, sessionsRedeemedTotal = 0;
+  const weeklyRows = [];
+  const redemptionLog = [];
+  for (const ev of events) {
+    if (ev.type === 'week') {
+      let sessionAwarded = false;
+      if (ev.earned) {
+        streak++;
+        if (streak >= FAT_STREAK_WEEKS) {
+          sessionsAvailable++;
+          sessionsEarnedTotal++;
+          sessionAwarded = true;
+          streak = 0;
+        }
+      } else {
+        streak = 0;
+      }
+      weeklyRows.push({
+        week: ev.week, weekEnd: ev.date, avgFat: ev.avgFat,
+        targetFatPct: ev.target ? ev.target.targetFatPct : null,
+        earned: ev.earned, streak, sessionAwarded, sessionsAvailableAfter: sessionsAvailable,
+      });
+    } else {
+      sessionsAvailable = Math.max(0, sessionsAvailable - 1);
+      sessionsRedeemedTotal++;
+      redemptionLog.push({ date: ev.date, amount: ev.amount, note: ev.note, sessionsAvailableAfter: sessionsAvailable });
+    }
+  }
+
+  return {
+    startDate: FAT_START_DATE, streakWeeks: FAT_STREAK_WEEKS, startingBalance,
+    sessionsAvailable, sessionsEarnedTotal, sessionsRedeemedTotal, currentStreak: streak,
+    weeklyRows, redemptions: redemptionLog,
+  };
+}
+
+function currentWeekFatProgress(bodyLogData, latestDate) {
+  // Read-only snapshot of the in-progress week's 7-day trailing body-fat average against
+  // that week's target — not scored into the ledger until the week is over.
+  const bodyDays = dailyBodyLog(bodyLogData);
+  const wk = isoWeekStart(latestDate);
+  const target = fatTargetForWeek(wk);
+  const avgFat = trailingAvg(bodyDays, 'bodyFatPct', latestDate, 7);
+  return {
+    week: wk, targetFatPct: target ? target.targetFatPct : null, avgFat,
+    onTarget: target != null && avgFat != null && avgFat <= target.targetFatPct,
   };
 }
 
@@ -2139,7 +2332,11 @@ function statTile(v, l) { return `<div class="stat-tile"><div class="v">${v}</di
     statTile(avgPerActiveWeek.toLocaleString(), 'avg volume / active week');
 }
 {
-  const currentWeek = weekKeys[weekKeys.length - 1];
+  // currentWeek must track latestSyncedDate, not weekKeys[weekKeys.length-1] (the week of
+  // the last logged WORKOUT) — on a rest day/gap the latter freezes "this week" on the
+  // previous week even after a new week has actually started, same bug class as the old
+  // Rewards-ledger anchor (see hevy_dashboard_latest_synced_date memory).
+  const currentWeek = isoWeekStart(latestSyncedDate);
   const thisWeekWorkouts = WORKOUTS.filter(w => isoWeekStart(w.d) === currentWeek);
   const countableThisWeek = thisWeekWorkouts.filter(w => countsTowardWorkoutTotal(w, EXMETA)).length;
   const setsThisWeek = thisWeekWorkouts.reduce((sum, w) => sum + w.ex.reduce((s2, e) => s2 + e.s.length, 0), 0);
@@ -2965,7 +3162,11 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
       document.getElementById('macrosGoalBars').innerHTML =
         `<p class="sub" style="margin:0;">No per-macro goal synced yet for ${latest.date}.</p>`;
     } else {
-      document.getElementById('macrosGoalBars').innerHTML = goalBars.map(([label, grams, goal, color]) => {
+      // Labeled "today", not a weekly average, to distinguish it from the "this week avg"
+      // line above — this bar deliberately tracks the latest logged day against its own
+      // goal (more actionable than an average), see hevy_dashboard_mfp_nutrition memory.
+      const todayLabel = `<p class="sub" style="margin:0 0 6px;">today — ${latest.date}</p>`;
+      document.getElementById('macrosGoalBars').innerHTML = todayLabel + goalBars.map(([label, grams, goal, color]) => {
         if (goal == null) return '';
         const pct = Math.min(grams / goal, 1) * 100;
         const onTarget = Math.abs(grams - goal) <= goal * 0.1;
@@ -3091,8 +3292,9 @@ if (document.getElementById('tab-reward')) {
   // Anchored to latestSyncedDate, not the latest workout date — a rest-day gap in WORKOUTS
   // shouldn't freeze "current week" on a stale past week (see the comment where
   // latestSyncedDate is defined).
-  const sessLedger = sessionRewardLedger(WORKOUTS, STEPS, EXPENSES, latestSyncedDate, EXMETA);
-  const current = currentWeekRewardProgress(WORKOUTS, STEPS, latestSyncedDate, EXMETA);
+  const sessLedger = fatRewardLedger(WORKOUTS, STEPS, BODYLOG, EXPENSES, latestSyncedDate, EXMETA);
+  const current = currentWeekFatProgress(BODYLOG, latestSyncedDate);
+  const fatStr = v => v != null ? `${v.toFixed(1)}%` : '—';
 
   const streakPct = Math.max(0, Math.min(100, Math.round(sessLedger.currentStreak / sessLedger.streakWeeks * 100)));
   const hasSession = sessLedger.sessionsAvailable > 0;
@@ -3102,44 +3304,46 @@ if (document.getElementById('tab-reward')) {
   document.getElementById('sessionBalanceCard').innerHTML = `
     <div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;">
       <div style="font-size:${hasSession ? '34px' : '28px'};font-weight:700;color:${hasSession ? 'var(--good)' : 'var(--critical)'};">${headline}</div>
-      <div class="sub" style="margin:0;">available now, tracked since ${sessLedger.startDate} &mdash; 1 session every ${sessLedger.streakWeeks} continuous weeks hitting target (${sessLedger.currentStreak}/${sessLedger.streakWeeks} so far)</div>
+      <div class="sub" style="margin:0;">available now, tracked since ${sessLedger.startDate} &mdash; 1 session every ${sessLedger.streakWeeks} continuous weeks hitting your body-fat % target (${sessLedger.currentStreak}/${sessLedger.streakWeeks} so far)</div>
     </div>
     <div class="tl-bar" style="margin-top:12px;"><span style="width:${streakPct}%;background:${hasSession ? 'var(--good)' : 'var(--series-1)'};"></span></div>`;
 
-  const workoutsOk = current.workoutCount >= current.minWorkouts;
-  const strengthOk = current.strengthCount >= current.minStrengthWorkouts;
-  const stepsOk = current.avgSteps != null && current.avgSteps >= current.minAvgSteps;
+  document.getElementById('fatTargetCard').innerHTML = `
+    <div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;">
+      <div style="font-size:28px;font-weight:700;">${fatStr(current.targetFatPct)}</div>
+      <div class="sub" style="margin:0;">target 7-day avg body fat % for the week of ${current.week}${current.targetFatPct == null ? ' (no schedule yet)' : ''}</div>
+    </div>
+    <div class="sub" style="margin-top:6px;">Baseline ${FAT_BASELINE.date}: ${FAT_BASELINE.weightKg}kg / ${FAT_BASELINE.fatPct}% body fat. 1 session every ${FAT_STREAK_WEEKS} continuous weeks hitting target.</div>`;
+
+  document.getElementById('fatScheduleTable').innerHTML = FAT_TARGET_SCHEDULE.map(r =>
+    `<tr><td>Week ${r.week}</td><td>${r.weekStart}</td><td>${r.targetWeightKg}kg</td><td>${r.targetFatPct}%</td><td>${r.dailyCalorieGoal.toLocaleString()}</td><td>${r.weeklyCalorieGoal.toLocaleString()}</td><td>${r.dailyProteinG}g</td></tr>`
+  ).join('');
 
   {
-    const workoutsShort = Math.max(0, current.minWorkouts - current.workoutCount);
-    const strengthShort = Math.max(0, current.minStrengthWorkouts - current.strengthCount);
     const takeawayEl = document.getElementById('sessionTakeaway');
-    const onPace = workoutsShort === 0 && strengthShort === 0 && stepsOk;
+    const onPace = current.onTarget;
     takeawayEl.classList.add('callout', onPace ? 'good' : 'critical');
     if (onPace) {
-      takeawayEl.textContent = `On pace — target already met, ${sessLedger.streakWeeks - sessLedger.currentStreak} more continuous week(s) for the next session.`;
+      takeawayEl.textContent = `On pace — 7-day avg body fat already at or under target, ${sessLedger.streakWeeks - sessLedger.currentStreak} more continuous week(s) for the next session.`;
+    } else if (current.avgFat == null) {
+      takeawayEl.textContent = 'No body-fat data logged yet this week.';
+    } else if (current.targetFatPct == null) {
+      takeawayEl.textContent = 'No schedule target defined for this week yet.';
     } else {
-      const needs = [];
-      if (workoutsShort > 0) needs.push(`${workoutsShort} more workout(s)`);
-      if (strengthShort > 0) needs.push(`${strengthShort} more strength day(s)`);
-      if (!stepsOk) needs.push(current.avgSteps == null ? 'steps data' : `steps avg up to ${current.minAvgSteps.toLocaleString()}`);
-      takeawayEl.textContent = `Needs ${needs.join(', ')} to keep the streak alive.`;
+      takeawayEl.textContent = `${(current.avgFat - current.targetFatPct).toFixed(1)}% above target — needs to come down to keep the streak alive.`;
     }
   }
-  const avgStepsStr = current.avgSteps != null ? Math.round(current.avgSteps).toLocaleString() : '—';
   document.getElementById('rewardCurrentWeek').innerHTML =
-    `<table class="tv"><thead><tr><th>Week of</th><th>Workouts</th><th>Strength</th><th>Avg steps</th></tr></thead>
+    `<table class="tv"><thead><tr><th>Week of</th><th>7d avg body fat</th><th>Target</th></tr></thead>
      <tbody><tr><td>${current.week} (in progress)</td>
-       <td><span class="badge ${workoutsOk ? 'progress' : 'baseline'}">${current.workoutCount}/${current.minWorkouts}</span></td>
-       <td><span class="badge ${strengthOk ? 'progress' : 'baseline'}">${current.strengthCount}/${current.minStrengthWorkouts}</span></td>
-       <td><span class="badge ${stepsOk ? 'progress' : 'baseline'}">${avgStepsStr}/${current.minAvgSteps.toLocaleString()}</span></td>
+       <td><span class="badge ${current.onTarget ? 'progress' : 'baseline'}">${fatStr(current.avgFat)}</span></td>
+       <td>${fatStr(current.targetFatPct)}</td>
      </tr></tbody></table>`;
 
   document.getElementById('sessionWeeklyTable').innerHTML = sessLedger.weeklyRows.slice().reverse().map(r => {
-    const avgStr = r.avgSteps != null ? Math.round(r.avgSteps).toLocaleString() : '—';
     const badge = r.earned ? `<span class="badge progress">hit</span>` : `<span class="badge plateau">missed</span>`;
     const award = r.sessionAwarded ? ` <span class="badge progress">+1 session</span>` : '';
-    return `<tr><td>${r.week}</td><td>${r.workoutCount} (${r.strengthCount} strength)</td><td>${avgStr}</td><td>${badge}</td><td>${r.streak}/${sessLedger.streakWeeks}</td><td>${r.sessionsAvailableAfter}${award}</td></tr>`;
+    return `<tr><td>${r.week}</td><td>${fatStr(r.avgFat)}</td><td>${fatStr(r.targetFatPct)}</td><td>${badge}</td><td>${r.streak}/${sessLedger.streakWeeks}</td><td>${r.sessionsAvailableAfter}${award}</td></tr>`;
   }).join('') || `<tr><td colspan="6" style="color:var(--text-muted);">No completed weeks yet.</td></tr>`;
 
   document.getElementById('sessionRedemptions').innerHTML = sessLedger.redemptions.length
@@ -3208,12 +3412,10 @@ if (document.getElementById('tab-reward')) { // see the guard comment on the blo
     title: tl.sessions.map(s => s.title).join(' + '),
     groups: [...new Set(tl.sessions.flatMap(s => s.groups))],
     exercises: tl.sessions.flatMap(s => s.exercises),
-  } : null;
+  } : { title: 'Rest day', groups: [], exercises: [] };
 
-  if (!tlSession) {
-    el.innerHTML = `<p class="sub">No workout logged for ${tl.date} yet.</p>`;
-    saveBtn.style.display = 'none';
-  } else {
+  {
+    saveBtn.style.display = '';
     const trendHtml = (delta) => {
       if (delta == null || Math.abs(delta) < 0.005) return '';
       const down = delta < 0;
@@ -3228,7 +3430,7 @@ if (document.getElementById('tab-reward')) { // see the guard comment on the blo
     const stepsPct = (tl.steps != null && tl.stepsGoal) ? Math.min(100, Math.round(tl.steps / tl.stepsGoal * 100)) : 0;
 
     const chips = tlSession.groups.map(g => `<span class="tl-chip"><span class="ck">✓</span>${g}</span>`).join('');
-    const rows = tlSession.exercises.map(e => `
+    const rows = tlSession.exercises.length ? tlSession.exercises.map(e => `
       <div class="tl-exrow">
         <div class="dot ${e.isFirstGroup ? 'primary' : 'secondary'}">✓</div>
         <div class="body">
@@ -3236,7 +3438,7 @@ if (document.getElementById('tab-reward')) { // see the guard comment on the blo
           ${e.setsStr ? `<div class="sets">${e.setsStr}</div>` : ''}
         </div>
         <div class="best">${e.best}</div>
-      </div>`).join('');
+      </div>`).join('') : `<p class="sub">No workout logged for ${tl.date}.</p>`;
 
     el.innerHTML = `
       <div class="tl-wrap">
