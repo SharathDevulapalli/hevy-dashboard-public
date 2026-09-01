@@ -257,7 +257,7 @@
     <button class="tab-btn active" data-tab="overview" type="button">Overview</button>
     <button class="tab-btn" data-tab="training" type="button">Training</button>
     <button class="tab-btn" data-tab="nutrition" type="button">Nutrition</button>
-    <!-- PUBLIC:EXCLUDE:START --><button class="tab-btn" data-tab="reward" type="button">Rewards</button><!-- PUBLIC:EXCLUDE:END -->
+    
     <button id="pdfExportBtn" type="button" style="margin-left:auto;appearance:none;background:var(--surface-1);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);cursor:pointer;font:inherit;font-size:13px;padding:7px 14px;align-self:center;">&darr; Download as PDF</button>
   </div>
 
@@ -453,72 +453,14 @@
     </section>
   </div>
 
-  <!-- PUBLIC:EXCLUDE:START -->
-  <div id="tab-reward" class="tabpanel pdf-page" hidden>
-    <header class="top">
-      <h1>Rewards</h1>
-    </header>
-
-    <section style="margin-top:20px;">
-      <div class="card" id="sessionBalanceCard"></div>
-    </section>
-
-    <section>
-      <h2>Target</h2>
-      <div class="card" id="fatTargetCard"></div>
-      <details class="tableview" id="fatScheduleDetails" style="margin-top:10px;">
-        <summary>Full 16-week schedule</summary>
-        <table class="tv">
-          <thead><tr><th>Week</th><th>Week of</th><th>Target weight</th><th>Target body fat</th><th>Daily cal</th><th>Weekly cal</th><th>Daily protein</th></tr></thead>
-          <tbody id="fatScheduleTable"></tbody>
-        </table>
-      </details>
-    </section>
-
-    <section>
-      <h2>This week</h2>
-      <div class="card">
-        <div class="callout" id="sessionTakeaway" style="margin-bottom:12px;"></div>
-        <div id="rewardCurrentWeek"></div>
-      </div>
-    </section>
-
-    <section>
-      <h2>Session ledger</h2>
-      <div class="card">
-        <table class="tv">
-          <thead><tr><th>Week of</th><th>7d avg body fat</th><th>Target</th><th>Result</th><th>Streak</th><th>Sessions available</th></tr></thead>
-          <tbody id="sessionWeeklyTable"></tbody>
-        </table>
-        <details class="tableview" id="sessionRedemptionsDetails">
-          <summary>Sessions redeemed</summary>
-          <table class="tv"><thead><tr><th>Date</th><th>Note</th><th>Sessions available after</th></tr></thead><tbody id="sessionRedemptions"></tbody></table>
-        </details>
-      </div>
-    </section>
-
-    <hr style="border:none;border-top:1px solid var(--border);margin:32px 0;">
-
-    <section>
-      <h2>Recovery Expenses</h2>
-      <div class="card" id="rewardBalanceCard"></div>
-    </section>
-    <section>
-      <h2>Expense history</h2>
-      <div class="card">
-        <table class="tv">
-          <thead><tr><th>Date</th><th>Amount</th><th>Note</th></tr></thead>
-          <tbody id="rewardWeeklyTable"></tbody>
-        </table>
-      </div>
-    </section>
-  </div>
-  <!-- PUBLIC:EXCLUDE:END -->
+  
 
 </div>
 
 <script>
 const WORKOUTS = [
+{"d": "2026-08-31", "t": "Bodyweight routine", "ex": [{"i": "392887AA", "s": [[0, 20], [0, 20], [0, 20], [0, 20], [0, 20]]}]},
+{"d": "2026-08-31", "t": "Chest & Shoulders", "ex": [{"i": "79D0BB3A", "s": [[10, 30], [20, 30], [20, 22]], "n": "With 20 kg last 10 is with support"}, {"i": "07B38369", "s": [[30, 10], [30, 10], [35, 10], [35, 10], [40, 7], [40, 5]]}, {"i": "651F844C", "s": [[18, 20], [21, 20], [24, 10], [24, 10]], "n": "24 is with spot"}, {"i": "67280085", "s": [[40, 15], [50, 15], [60, 10]]}, {"i": "878CD1D0", "s": [[20, 10], [30, 10], [25, 7], [25, 7], [25, 7]]}, {"i": "8293E554", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "422B08F1", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "E5988A0A", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "19A38071", "s": [[10, 20], [10, 20], [10, 20]], "n": "Each side"}]},
 {"d": "2026-08-30", "t": "Bodyweight routine", "ex": [{"i": "392887AA", "s": [[0, 20], [0, 20]]}]},
 {"d": "2026-08-29", "t": "Bodyweight routine", "ex": [{"i": "392887AA", "s": [[0, 10], [0, 10], [0, 20], [0, 20], [0, 20]]}, {"i": "DCF3B31B", "s": [[0, 20], [0, 20]], "n": "Half and leg tuck in"}, {"i": "F49E31D6", "s": [[0, 30]]}]},
 {"d": "2026-08-29", "t": "Boxing", "ex": [{"i": "023947AB", "s": [[0, 0]], "c": {"min": 20, "km": 0.0}, "n": "Warm Up"}, {"i": "A0D8FA1B", "s": [[0, 0]], "c": {"min": 30, "km": 0.0}, "n": "Jab & Cross - 4 way"}, {"i": "023947AB", "s": [[0, 0]], "c": {"min": 20, "km": 0.0}, "n": "Cool down"}]},
@@ -817,7 +759,7 @@ const EXMETA = {
 "F49E31D6":{"name": "Mountain Climber", "primary": "full_body", "bodyweight": true}
 };
 const STEPS = [
-{"d": "2026-08-31", "steps": 5781, "goal": 13650},
+{"d": "2026-08-31", "steps": 12345, "goal": 13650},
 {"d": "2026-08-30", "steps": 10909, "goal": 13950},
 {"d": "2026-08-29", "steps": 16711, "goal": 13640},
 {"d": "2026-08-28", "steps": 13460, "goal": 13680},
@@ -925,6 +867,7 @@ const HEARTRATE = [
 {"d": "2026-07-11", "resting": 60, "min": 53, "max": 118}
 ];
 const NUTRITION = [
+{"d": "2026-08-31", "calories": 2141, "goal": 2100, "protein": 115, "proteinGoal": 184, "carbs": 261, "carbsGoal": 210, "fat": 72, "fatGoal": 58},
 {"d": "2026-08-30", "calories": 1892, "goal": 2100, "protein": 68, "proteinGoal": 184, "carbs": 246, "carbsGoal": 210, "fat": 61, "fatGoal": 58},
 {"d": "2026-08-29", "calories": 1942, "goal": 2100, "protein": 123, "proteinGoal": 184, "carbs": 204, "carbsGoal": 210, "fat": 63, "fatGoal": 58},
 {"d": "2026-08-28", "calories": 2295, "goal": 2100, "protein": 178, "proteinGoal": 184, "carbs": 182, "carbsGoal": 210, "fat": 87, "fatGoal": 58},
@@ -951,17 +894,9 @@ const NUTRITION = [
 {"d": "2026-08-02", "calories": 663, "goal": 2094, "protein": 31, "proteinGoal": 183, "carbs": 89, "carbsGoal": 158, "fat": 18, "fatGoal": 82},
 {"d": "2026-08-01", "calories": 1727, "goal": 2099, "protein": 222, "proteinGoal": 183, "carbs": 355, "carbsGoal": 158, "fat": 61, "fatGoal": 82}
 ];
-const EXPENSES = [
-{"d": "2026-08-28", "category": "recovery", "amount": 1900.0, "note": "Foot Relief - Sezo"},
-{"d": "2026-08-23", "category": "recovery", "amount": 3000, "note": "Vara - Unknown"},
-{"d": "2026-08-23", "category": "recovery", "amount": 6600, "note": "Apple - Tina"},
-{"d": "2026-08-22", "category": "recovery", "amount": 25000.0, "note": "Lavish - Priya"},
-{"d": "2026-08-20", "category": "recovery", "amount": 3800, "note": "Spa Nation - Unknown"},
-{"d": "2026-08-16", "category": "recovery", "amount": 1900, "note": "Foot Relief - Kim"},
-{"d": "2026-08-09", "category": "recovery", "amount": 1000, "note": "Foot Relief - Kim"},
-{"d": "2026-08-08", "category": "recovery", "amount": 1000, "note": "Foot Relief - Kim"}
-];
+const EXPENSES = [];
 const BODYLOG = [
+{"d": "2026-09-01", "sleepMin": 261, "weightKg": 70.1, "bodyFatPct": 20.5},
 {"d": "2026-08-31", "sleepMin": 466, "weightKg": 70.5, "bodyFatPct": 21.4},
 {"d": "2026-08-30", "sleepMin": 415, "weightKg": 70.3, "bodyFatPct": 21.3},
 {"d": "2026-08-29", "sleepMin": 320, "weightKg": 70.3, "bodyFatPct": 21.4},
@@ -981,6 +916,7 @@ const BODYLOG = [
 {"d": "2026-08-14", "weightKg": 69.9, "bodyFatPct": 21.3}
 ];
 const SUPPLEMENTS = [
+{"d": "2026-08-31", "items": ["calm", "d3_k2", "tongkat_ali"]},
 {"d": "2026-08-30", "items": ["calm", "d3_k2", "isabgol", "tongkat_ali"]},
 {"d": "2026-08-29", "items": ["calm", "creatine", "d3_k2", "eaa", "glycine", "magnesium", "tongkat_ali"]},
 {"d": "2026-08-28", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "magnesium", "preworkout", "tongkat_ali"]},
