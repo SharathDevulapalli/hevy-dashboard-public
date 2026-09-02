@@ -257,7 +257,7 @@
     <button class="tab-btn active" data-tab="overview" type="button">Overview</button>
     <button class="tab-btn" data-tab="training" type="button">Training</button>
     <button class="tab-btn" data-tab="nutrition" type="button">Nutrition</button>
-    <!-- PUBLIC:EXCLUDE:START --><button class="tab-btn" data-tab="reward" type="button">Rewards</button><!-- PUBLIC:EXCLUDE:END -->
+    
     <button id="pdfExportBtn" type="button" style="margin-left:auto;appearance:none;background:var(--surface-1);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);cursor:pointer;font:inherit;font-size:13px;padding:7px 14px;align-self:center;">&darr; Download as PDF</button>
   </div>
 
@@ -453,67 +453,7 @@
     </section>
   </div>
 
-  <!-- PUBLIC:EXCLUDE:START -->
-  <div id="tab-reward" class="tabpanel pdf-page" hidden>
-    <header class="top">
-      <h1>Rewards</h1>
-    </header>
-
-    <section style="margin-top:20px;">
-      <div class="card" id="sessionBalanceCard"></div>
-    </section>
-
-    <section>
-      <h2>Target</h2>
-      <div class="card" id="fatTargetCard"></div>
-      <details class="tableview" id="fatScheduleDetails" style="margin-top:10px;">
-        <summary>Full 16-week schedule</summary>
-        <table class="tv">
-          <thead><tr><th>Week</th><th>Week of</th><th>Target weight</th><th>Target body fat</th><th>Daily cal</th><th>Weekly cal</th><th>Daily protein</th></tr></thead>
-          <tbody id="fatScheduleTable"></tbody>
-        </table>
-      </details>
-    </section>
-
-    <section>
-      <h2>This week</h2>
-      <div class="card">
-        <div class="callout" id="sessionTakeaway" style="margin-bottom:12px;"></div>
-        <div id="rewardCurrentWeek"></div>
-      </div>
-    </section>
-
-    <section>
-      <h2>Session ledger</h2>
-      <div class="card">
-        <table class="tv">
-          <thead><tr><th>Week of</th><th>7d avg body fat</th><th>Target</th><th>Result</th><th>Streak</th><th>Sessions available</th></tr></thead>
-          <tbody id="sessionWeeklyTable"></tbody>
-        </table>
-        <details class="tableview" id="sessionRedemptionsDetails">
-          <summary>Sessions redeemed</summary>
-          <table class="tv"><thead><tr><th>Date</th><th>Note</th><th>Sessions available after</th></tr></thead><tbody id="sessionRedemptions"></tbody></table>
-        </details>
-      </div>
-    </section>
-
-    <hr style="border:none;border-top:1px solid var(--border);margin:32px 0;">
-
-    <section>
-      <h2>Recovery Expenses</h2>
-      <div class="card" id="rewardBalanceCard"></div>
-    </section>
-    <section>
-      <h2>Expense history</h2>
-      <div class="card">
-        <table class="tv">
-          <thead><tr><th>Date</th><th>Amount</th><th>Note</th></tr></thead>
-          <tbody id="rewardWeeklyTable"></tbody>
-        </table>
-      </div>
-    </section>
-  </div>
-  <!-- PUBLIC:EXCLUDE:END -->
+  
 
 </div>
 
@@ -821,7 +761,7 @@ const EXMETA = {
 "F49E31D6":{"name": "Mountain Climber", "primary": "full_body", "bodyweight": true}
 };
 const STEPS = [
-{"d": "2026-09-01", "steps": 4146, "goal": 13440},
+{"d": "2026-09-01", "steps": 4928, "goal": 13440},
 {"d": "2026-08-31", "steps": 12345, "goal": 13650},
 {"d": "2026-08-30", "steps": 10909, "goal": 13950},
 {"d": "2026-08-29", "steps": 16711, "goal": 13640},
@@ -931,7 +871,7 @@ const HEARTRATE = [
 {"d": "2026-07-11", "resting": 60, "min": 53, "max": 118}
 ];
 const NUTRITION = [
-{"d": "2026-09-01", "calories": 1399, "goal": 2100, "protein": 98, "proteinGoal": 184, "carbs": 148, "carbsGoal": 210, "fat": 48, "fatGoal": 58},
+{"d": "2026-09-01", "calories": 2049, "goal": 2100, "protein": 163, "proteinGoal": 184, "carbs": 189, "carbsGoal": 210, "fat": 73, "fatGoal": 58},
 {"d": "2026-08-31", "calories": 2141, "goal": 2100, "protein": 115, "proteinGoal": 184, "carbs": 261, "carbsGoal": 210, "fat": 72, "fatGoal": 58},
 {"d": "2026-08-30", "calories": 1892, "goal": 2100, "protein": 68, "proteinGoal": 184, "carbs": 246, "carbsGoal": 210, "fat": 61, "fatGoal": 58},
 {"d": "2026-08-29", "calories": 1942, "goal": 2100, "protein": 123, "proteinGoal": 184, "carbs": 204, "carbsGoal": 210, "fat": 63, "fatGoal": 58},
@@ -959,17 +899,9 @@ const NUTRITION = [
 {"d": "2026-08-02", "calories": 663, "goal": 2094, "protein": 31, "proteinGoal": 183, "carbs": 89, "carbsGoal": 158, "fat": 18, "fatGoal": 82},
 {"d": "2026-08-01", "calories": 1727, "goal": 2099, "protein": 222, "proteinGoal": 183, "carbs": 355, "carbsGoal": 158, "fat": 61, "fatGoal": 82}
 ];
-const EXPENSES = [
-{"d": "2026-08-28", "category": "recovery", "amount": 1900.0, "note": "Foot Relief - Sezo"},
-{"d": "2026-08-23", "category": "recovery", "amount": 3000, "note": "Vara - Unknown"},
-{"d": "2026-08-23", "category": "recovery", "amount": 6600, "note": "Apple - Tina"},
-{"d": "2026-08-22", "category": "recovery", "amount": 25000.0, "note": "Lavish - Priya"},
-{"d": "2026-08-20", "category": "recovery", "amount": 3800, "note": "Spa Nation - Unknown"},
-{"d": "2026-08-16", "category": "recovery", "amount": 1900, "note": "Foot Relief - Kim"},
-{"d": "2026-08-09", "category": "recovery", "amount": 1000, "note": "Foot Relief - Kim"},
-{"d": "2026-08-08", "category": "recovery", "amount": 1000, "note": "Foot Relief - Kim"}
-];
+const EXPENSES = [];
 const BODYLOG = [
+{"d": "2026-09-02", "sleepMin": 336, "weightKg": 70.1, "bodyFatPct": 21.5},
 {"d": "2026-09-01", "sleepMin": 261, "weightKg": 70.1, "bodyFatPct": 20.5},
 {"d": "2026-08-31", "sleepMin": 466, "weightKg": 70.5, "bodyFatPct": 21.4},
 {"d": "2026-08-30", "sleepMin": 415, "weightKg": 70.3, "bodyFatPct": 21.3},
