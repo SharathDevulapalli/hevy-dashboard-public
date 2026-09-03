@@ -1,5 +1,7 @@
 <meta charset="utf-8">
 <title>Training Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root, .viz-root {
     color-scheme: light;
@@ -62,7 +64,7 @@
     margin: 0;
     background: var(--page);
     color: var(--text-primary);
-    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-family: 'IBM Plex Sans', system-ui, -apple-system, "Segoe UI", sans-serif;
     font-size: 14px;
     line-height: 1.45;
   }
@@ -70,6 +72,18 @@
   header.top { margin-bottom: 28px; }
   header.top h1 { font-size: 22px; margin: 0 0 4px; }
   header.top p { color: var(--text-secondary); margin: 0; }
+  .masthead-row { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px; }
+  .page-masthead { padding-bottom: 18px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .page-masthead h1 { font-family: 'IBM Plex Serif', serif; font-weight: 500; font-size: 30px; margin: 4px 0 0; }
+  .mark {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px; letter-spacing: 0.06em; color: var(--series-2); margin-bottom: 4px;
+  }
+  .masthead-date {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px; color: var(--text-secondary); text-align: right;
+  }
+  .masthead-date .day { font-size: 20px; color: var(--series-2); display: block; }
   .stat-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
   .stat-tile {
     background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px;
@@ -253,6 +267,17 @@
 </style>
 
 <div class="wrap viz-root">
+  <header class="masthead-row page-masthead">
+    <div>
+      <div class="mark">PROOF XXXVIII — TRACK 01</div>
+      <h1>Physical Health</h1>
+    </div>
+    <div class="masthead-date">
+      as of
+      <span class="day" id="mastheadDay"></span>
+    </div>
+  </header>
+
   <div class="tabs" role="tablist">
     <button class="tab-btn active" data-tab="overview" type="button">Overview</button>
     <button class="tab-btn" data-tab="training" type="button">Training</button>
@@ -263,7 +288,6 @@
 
   <div id="tab-overview" class="tabpanel pdf-page">
   <header class="top">
-    <h1>Training Dashboard</h1>
     <p id="dateRangeLabel">—</p>
     <div class="stat-row" id="statRow"></div>
     <p class="sub" style="margin:16px 0 0;">This week</p>
@@ -459,6 +483,7 @@
 
 <script>
 const WORKOUTS = [
+{"d": "2026-09-02", "t": "Bodyweight routine", "ex": [{"i": "392887AA", "s": [[0, 20], [0, 20], [0, 20]]}]},
 {"d": "2026-09-01", "t": "Quads", "ex": [{"i": "6E6EE645", "s": [[15, 20], [20, 20], [20, 20]], "n": "Bag -15 kg"}, {"i": "C7973E0E", "s": [[150, 15], [200, 15], [280, 10], [280, 10]]}, {"i": "75A4F6C4", "s": [[20, 20], [30, 20], [30, 20]]}, {"i": "CC35A01F", "s": [[80, 15], [120, 15], [160, 15]]}, {"i": "0222DB42", "s": [[0, 0]], "c": {"min": 12, "km": 2.52}}]},
 {"d": "2026-09-01", "t": "Bodyweight routine", "ex": [{"i": "392887AA", "s": [[0, 25], [0, 25], [0, 20], [0, 15], [0, 15]]}]},
 {"d": "2026-08-31", "t": "Bodyweight routine", "ex": [{"i": "392887AA", "s": [[0, 20], [0, 20], [0, 20], [0, 20], [0, 20]]}]},
@@ -761,6 +786,7 @@ const EXMETA = {
 "F49E31D6":{"name": "Mountain Climber", "primary": "full_body", "bodyweight": true}
 };
 const STEPS = [
+{"d": "2026-09-02", "steps": 13561, "goal": 11740},
 {"d": "2026-09-01", "steps": 4928, "goal": 13440},
 {"d": "2026-08-31", "steps": 12345, "goal": 13650},
 {"d": "2026-08-30", "steps": 10909, "goal": 13950},
@@ -816,6 +842,7 @@ const STEPS = [
 {"d": "2026-07-11", "steps": 10238, "goal": 5590}
 ];
 const HEARTRATE = [
+{"d": "2026-09-02", "resting": 53, "min": 47, "max": 94},
 {"d": "2026-09-01", "resting": 59, "min": 56, "max": 141},
 {"d": "2026-08-31", "resting": 57, "min": 51, "max": 133},
 {"d": "2026-08-30", "resting": 47, "min": 47, "max": 99},
@@ -871,6 +898,7 @@ const HEARTRATE = [
 {"d": "2026-07-11", "resting": 60, "min": 53, "max": 118}
 ];
 const NUTRITION = [
+{"d": "2026-09-02", "calories": 1909, "goal": 2100, "protein": 204, "proteinGoal": 184, "carbs": 146, "carbsGoal": 210, "fat": 49, "fatGoal": 58},
 {"d": "2026-09-01", "calories": 2049, "goal": 2100, "protein": 163, "proteinGoal": 184, "carbs": 189, "carbsGoal": 210, "fat": 73, "fatGoal": 58},
 {"d": "2026-08-31", "calories": 2141, "goal": 2100, "protein": 115, "proteinGoal": 184, "carbs": 261, "carbsGoal": 210, "fat": 72, "fatGoal": 58},
 {"d": "2026-08-30", "calories": 1892, "goal": 2100, "protein": 68, "proteinGoal": 184, "carbs": 246, "carbsGoal": 210, "fat": 61, "fatGoal": 58},
@@ -901,6 +929,7 @@ const NUTRITION = [
 ];
 const EXPENSES = [];
 const BODYLOG = [
+{"d": "2026-09-03", "sleepMin": 471, "weightKg": 70.5, "bodyFatPct": 21.7},
 {"d": "2026-09-02", "sleepMin": 336, "weightKg": 70.1, "bodyFatPct": 21.5},
 {"d": "2026-09-01", "sleepMin": 261, "weightKg": 70.1, "bodyFatPct": 20.5},
 {"d": "2026-08-31", "sleepMin": 466, "weightKg": 70.5, "bodyFatPct": 21.4},
@@ -922,6 +951,7 @@ const BODYLOG = [
 {"d": "2026-08-14", "weightKg": 69.9, "bodyFatPct": 21.3}
 ];
 const SUPPLEMENTS = [
+{"d": "2026-09-02", "items": ["calm", "d3_k2", "glycine", "magnesium", "tongkat_ali"]},
 {"d": "2026-09-01", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "preworkout", "tongkat_ali"]},
 {"d": "2026-08-31", "items": ["calm", "d3_k2", "tongkat_ali"]},
 {"d": "2026-08-30", "items": ["calm", "d3_k2", "isabgol", "tongkat_ali"]},
@@ -2261,6 +2291,8 @@ const latestSyncedDate = [WORKOUTS, STEPS, HEARTRATE, NUTRITION, BODYLOG, EXPENS
   || dates[dates.length - 1];
 document.getElementById('dateRangeLabel').textContent =
   `${WORKOUTS.length} workouts logged · ${dates[0]} to ${dates[dates.length-1]}`;
+document.getElementById('mastheadDay').textContent =
+  new Date(latestSyncedDate + 'T00:00:00').toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
 
 function statTile(v, l) { return `<div class="stat-tile"><div class="v">${v}</div><div class="l">${l}</div></div>`; }
 {
