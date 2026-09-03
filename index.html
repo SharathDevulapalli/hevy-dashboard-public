@@ -318,6 +318,24 @@
     </div>
   </section>
 
+  <section>
+    <h2>Weekly body fat % trend</h2>
+    <p class="sub">📉 Average of logged daily readings per calendar week, dashed line is that week's reward-schedule target.</p>
+    <p class="sub" id="weeklyFatTakeaway" style="font-weight:600;"></p>
+    <div class="card"><div id="weeklyFatChart"></div>
+      <details class="tableview"><summary>Table view</summary><div id="weeklyFatTable"></div></details>
+    </div>
+  </section>
+
+  <section>
+    <h2>Weekly sleep trend</h2>
+    <p class="sub">😴 Average of logged nightly sleep per calendar week, dashed line is the current sleep goal.</p>
+    <p class="sub" id="weeklySleepTakeaway" style="font-weight:600;"></p>
+    <div class="card"><div id="weeklySleepChart"></div>
+      <details class="tableview"><summary>Table view</summary><div id="weeklySleepTable"></div></details>
+    </div>
+  </section>
+
   </div>
 
   <div id="tab-training" class="tabpanel" hidden>
@@ -2019,6 +2037,23 @@ function dailyBodyLog(bodyLogData) {
   return days;
 }
 
+function weeklyBodyLogAvg(bodyLogData, field) {
+  // Calendar-week (Mon-start) simple average of `field` from the daily body log, mirroring
+  // weeklyVolume's bucketing convention above — only weeks with at least one logged value
+  // for that field get an entry, so sparse-logging gaps don't show as misleading zeros.
+  const days = dailyBodyLog(bodyLogData);
+  const weeks = new Map(); // weekStart -> values[]
+  for (const d of days) {
+    if (d[field] == null) continue;
+    const wk = isoWeekStart(d.date);
+    if (!weeks.has(wk)) weeks.set(wk, []);
+    weeks.get(wk).push(d[field]);
+  }
+  const avgs = new Map();
+  for (const [wk, vals] of weeks) avgs.set(wk, vals.reduce((a, b) => a + b, 0) / vals.length);
+  return avgs;
+}
+
 function trailingAvg(days, field, endDate, windowDays) {
   // Average of `field` over the `windowDays` calendar days ending on endDate (inclusive),
   // using whatever entries actually exist in that window rather than requiring it be full
@@ -2484,6 +2519,160 @@ document.getElementById('weeklyVolumeChart').appendChild(weeklyVolumeBarChart())
   const rows = withBadge.slice().reverse().join('');
   document.getElementById('weeklyVolumeTable').innerHTML =
     `<table class="tv"><thead><tr><th>Week of</th><th>Volume (kg·reps)</th><th>vs. prior week</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// ---------- weekly body fat % trend ----------
+{
+  const fatWeeks = weeklyBodyLogAvg(BODYLOG, 'bodyFatPct');
+  const fatWeekKeys = [...fatWeeks.keys()].sort();
+  const takeawayEl = document.getElementById('weeklyFatTakeaway');
+  if (fatWeekKeys.length === 0) {
+    document.getElementById('weeklyFatChart').innerHTML = '<p class="sub">No body-fat % logged yet.</p>';
+    takeawayEl.textContent = '';
+  } else {
+    const currentFatWeek = isoWeekStart(latestSyncedDate);
+    const completed = fatWeekKeys.filter(k => k < currentFatWeek);
+    if (completed.length < 2) {
+      takeawayEl.textContent = 'Not enough completed weeks yet for a trend.';
+    } else {
+      const latest = fatWeeks.get(completed[completed.length - 1]);
+      const trailing = completed.slice(-5, -1).map(k => fatWeeks.get(k));
+      const avgTrailing = trailing.reduce((a, b) => a + b, 0) / trailing.length;
+      const delta = latest - avgTrailing;
+      if (Math.abs(delta) < 0.2) {
+        takeawayEl.textContent = `Holding steady — last complete week averaged ${latest.toFixed(1)}%, close to your ${trailing.length}-week average.`;
+      } else if (delta < 0) {
+        takeawayEl.textContent = `Trending down — last complete week averaged ${latest.toFixed(1)}%, ${Math.abs(delta).toFixed(1)}pt below your ${trailing.length}-week average.`;
+      } else {
+        takeawayEl.textContent = `Trending up — last complete week averaged ${latest.toFixed(1)}%, ${delta.toFixed(1)}pt above your ${trailing.length}-week average.`;
+      }
+    }
+
+    const w = 1000, h = 160, pad = 28;
+    const svg = svgEl('svg', { width: '100%', height: h, viewBox: `0 0 ${w} ${h}`, preserveAspectRatio: 'none' });
+    const vals = fatWeekKeys.map(k => fatWeeks.get(k));
+    const targetVals = fatWeekKeys.map(k => { const t = fatTargetForWeek(k); return t ? t.targetFatPct : null; }).filter(v => v != null);
+    const allVals = vals.concat(targetVals);
+    const lo0 = Math.min(...allVals), hi0 = Math.max(...allVals);
+    const rangePad = Math.max((hi0 - lo0) * 0.15, 0.5);
+    const lo = lo0 - rangePad, hi = hi0 + rangePad;
+    const yFor = v => pad + (h - 2*pad) * (1 - (v - lo) / (hi - lo));
+    for (let g = 0; g <= 4; g++) {
+      const gy = pad + (h - 2*pad) * (g / 4);
+      svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: gy, y2: gy, class: 'gridline' }));
+    }
+    const stepX = fatWeekKeys.length > 1 ? (w - 2*pad) / (fatWeekKeys.length - 1) : 0;
+    const targetPoints = fatWeekKeys.map((k, i) => { const t = fatTargetForWeek(k); return t ? { x: pad + i*stepX, y: yFor(t.targetFatPct) } : null; }).filter(Boolean);
+    if (targetPoints.length > 1) {
+      const pathD = targetPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+      svg.appendChild(svgEl('path', { d: pathD, fill: 'none', stroke: 'var(--text-muted)', 'stroke-width': 1.5, 'stroke-dasharray': '4 3' }));
+    }
+    const points = fatWeekKeys.map((k, i) => ({ x: pad + i*stepX, y: yFor(fatWeeks.get(k)), k, v: fatWeeks.get(k) }));
+    if (points.length > 1) {
+      const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+      svg.appendChild(svgEl('path', { d: pathD, fill: 'none', stroke: 'var(--series-1)', 'stroke-width': 2 }));
+    }
+    points.forEach(p => {
+      const dot = svgEl('circle', { cx: p.x, cy: p.y, r: points.length > 1 ? 4 : 5, fill: 'var(--series-1)' });
+      const title = svgEl('title', {});
+      const t = fatTargetForWeek(p.k);
+      title.textContent = `Week of ${p.k}: ${p.v.toFixed(1)}% avg body fat${t ? ` (target ${t.targetFatPct.toFixed(1)}%)` : ''}`;
+      dot.appendChild(title);
+      svg.appendChild(dot);
+    });
+    svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: h-pad, y2: h-pad, class: 'axisline' }));
+    document.getElementById('weeklyFatChart').appendChild(svg);
+
+    const fatRows = fatWeekKeys.map((k, i) => {
+      const v = fatWeeks.get(k);
+      const prev = i > 0 ? fatWeeks.get(fatWeekKeys[i - 1]) : null;
+      let badge = '<span class="badge baseline">—</span>';
+      if (prev != null) {
+        if (v < prev) badge = '<span class="badge progress">down</span>';
+        else if (v > prev) badge = '<span class="badge plateau">up</span>';
+        else badge = '<span class="badge baseline">same</span>';
+      }
+      const t = fatTargetForWeek(k);
+      return `<tr><td>${k}</td><td>${v.toFixed(1)}%</td><td>${t ? t.targetFatPct.toFixed(1) + '%' : '—'}</td><td>${badge}</td></tr>`;
+    });
+    document.getElementById('weeklyFatTable').innerHTML =
+      `<table class="tv"><thead><tr><th>Week of</th><th>Avg body fat %</th><th>Target</th><th>vs. prior week</th></tr></thead><tbody>${fatRows.slice().reverse().join('')}</tbody></table>`;
+  }
+}
+
+// ---------- weekly sleep trend ----------
+{
+  const sleepWeeks = weeklyBodyLogAvg(BODYLOG, 'sleepMin');
+  const sleepWeekKeys = [...sleepWeeks.keys()].sort();
+  const takeawayEl = document.getElementById('weeklySleepTakeaway');
+  if (sleepWeekKeys.length === 0) {
+    document.getElementById('weeklySleepChart').innerHTML = '<p class="sub">No sleep logged yet.</p>';
+    takeawayEl.textContent = '';
+  } else {
+    const goalMin = sleepGoalMin(dailyBodyLog(BODYLOG), latestSyncedDate);
+    const fmtHM = m => `${Math.floor(m / 60)}h${String(Math.round(m % 60)).padStart(2, '0')}m`;
+    const currentSleepWeek = isoWeekStart(latestSyncedDate);
+    const completed = sleepWeekKeys.filter(k => k < currentSleepWeek);
+    if (completed.length < 2) {
+      takeawayEl.textContent = 'Not enough completed weeks yet for a trend.';
+    } else {
+      const latest = sleepWeeks.get(completed[completed.length - 1]);
+      const trailing = completed.slice(-5, -1).map(k => sleepWeeks.get(k));
+      const avgTrailing = trailing.reduce((a, b) => a + b, 0) / trailing.length;
+      const delta = latest - avgTrailing;
+      if (Math.abs(delta) < 10) {
+        takeawayEl.textContent = `Holding steady — last complete week averaged ${fmtHM(latest)}, close to your ${trailing.length}-week average.`;
+      } else if (delta > 0) {
+        takeawayEl.textContent = `Trending up — last complete week averaged ${fmtHM(latest)}, ${fmtHM(delta)} above your ${trailing.length}-week average.`;
+      } else {
+        takeawayEl.textContent = `Trending down — last complete week averaged ${fmtHM(latest)}, ${fmtHM(-delta)} below your ${trailing.length}-week average.`;
+      }
+    }
+
+    const w = 1000, h = 160, pad = 28;
+    const svg = svgEl('svg', { width: '100%', height: h, viewBox: `0 0 ${w} ${h}`, preserveAspectRatio: 'none' });
+    const vals = sleepWeekKeys.map(k => sleepWeeks.get(k));
+    const lo0 = Math.min(...vals, goalMin), hi0 = Math.max(...vals, goalMin);
+    const rangePad = Math.max((hi0 - lo0) * 0.15, 15);
+    const lo = lo0 - rangePad, hi = hi0 + rangePad;
+    const yFor = v => pad + (h - 2*pad) * (1 - (v - lo) / (hi - lo));
+    for (let g = 0; g <= 4; g++) {
+      const gy = pad + (h - 2*pad) * (g / 4);
+      svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: gy, y2: gy, class: 'gridline' }));
+    }
+    const goalY = yFor(goalMin);
+    svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: goalY, y2: goalY, stroke: 'var(--text-muted)', 'stroke-width': 1.5, 'stroke-dasharray': '4 3' }));
+    const stepX = sleepWeekKeys.length > 1 ? (w - 2*pad) / (sleepWeekKeys.length - 1) : 0;
+    const points = sleepWeekKeys.map((k, i) => ({ x: pad + i*stepX, y: yFor(sleepWeeks.get(k)), k, v: sleepWeeks.get(k) }));
+    if (points.length > 1) {
+      const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+      svg.appendChild(svgEl('path', { d: pathD, fill: 'none', stroke: 'var(--series-1)', 'stroke-width': 2 }));
+    }
+    points.forEach(p => {
+      const dot = svgEl('circle', { cx: p.x, cy: p.y, r: points.length > 1 ? 4 : 5, fill: p.v >= goalMin ? 'var(--good)' : 'var(--warning)' });
+      const title = svgEl('title', {});
+      title.textContent = `Week of ${p.k}: ${fmtHM(p.v)} avg sleep (goal ${fmtHM(goalMin)})`;
+      dot.appendChild(title);
+      svg.appendChild(dot);
+    });
+    svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: h-pad, y2: h-pad, class: 'axisline' }));
+    document.getElementById('weeklySleepChart').appendChild(svg);
+
+    const sleepRows = sleepWeekKeys.map((k, i) => {
+      const v = sleepWeeks.get(k);
+      const prev = i > 0 ? sleepWeeks.get(sleepWeekKeys[i - 1]) : null;
+      let badge = '<span class="badge baseline">—</span>';
+      if (prev != null) {
+        if (v > prev) badge = '<span class="badge progress">up</span>';
+        else if (v < prev) badge = '<span class="badge plateau">down</span>';
+        else badge = '<span class="badge baseline">same</span>';
+      }
+      const goalBadge = v >= goalMin ? '<span class="badge progress">met</span>' : '<span class="badge plateau">under</span>';
+      return `<tr><td>${k}</td><td>${fmtHM(v)}</td><td>${goalBadge}</td><td>${badge}</td></tr>`;
+    });
+    document.getElementById('weeklySleepTable').innerHTML =
+      `<table class="tv"><thead><tr><th>Week of</th><th>Avg sleep</th><th>vs. ${fmtHM(goalMin)} goal</th><th>vs. prior week</th></tr></thead><tbody>${sleepRows.slice().reverse().join('')}</tbody></table>`;
+  }
 }
 
 // ---------- muscle labels (used by the Volume Log tab) ----------
