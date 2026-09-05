@@ -3462,80 +3462,14 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     </table>`;
 }
 
-// ---------- session-based reward track (headline; see [[hevy_dashboard_weekly_refresh]] memory) ----------
-// Guarded on #tab-reward existing: the public build (see build-dashboard.js's PUBLIC:EXCLUDE
-// stripping) removes the whole Rewards tab from the HTML but reuses this same script
-// unmodified, so this and the recovery-expenses block below would otherwise throw on the
-// first getElementById('...').innerHTML = ... against a null element.
-if (document.getElementById('tab-reward')) {
-  // Anchored to latestSyncedDate, not the latest workout date — a rest-day gap in WORKOUTS
-  // shouldn't freeze "current week" on a stale past week (see the comment where
-  // latestSyncedDate is defined).
-  const sessLedger = fatRewardLedger(WORKOUTS, STEPS, BODYLOG, EXPENSES, latestSyncedDate, EXMETA);
-  const current = currentWeekFatProgress(BODYLOG, latestSyncedDate);
-  const fatStr = v => v != null ? `${v.toFixed(1)}%` : '—';
-
-  const streakPct = Math.max(0, Math.min(100, Math.round(sessLedger.currentStreak / sessLedger.streakWeeks * 100)));
-  const hasSession = sessLedger.sessionsAvailable > 0;
-  const headline = hasSession
-    ? `${sessLedger.sessionsAvailable} ${sessLedger.sessionsAvailable === 1 ? 'session' : 'sessions'}`
-    : 'NO SESSION AVAILABLE';
-  document.getElementById('sessionBalanceCard').innerHTML = `
-    <div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;">
-      <div style="font-size:${hasSession ? '34px' : '28px'};font-weight:700;color:${hasSession ? 'var(--good)' : 'var(--critical)'};">${headline}</div>
-      <div class="sub" style="margin:0;">available now, tracked since ${sessLedger.startDate} &mdash; 1 session every ${sessLedger.streakWeeks} continuous weeks hitting your body-fat % target (${sessLedger.currentStreak}/${sessLedger.streakWeeks} so far)</div>
-    </div>
-    <div class="tl-bar" style="margin-top:12px;"><span style="width:${streakPct}%;background:${hasSession ? 'var(--good)' : 'var(--series-1)'};"></span></div>`;
-
-  document.getElementById('fatTargetCard').innerHTML = `
-    <div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;">
-      <div style="font-size:28px;font-weight:700;">${fatStr(current.targetFatPct)}</div>
-      <div class="sub" style="margin:0;">target 7-day avg body fat % for the week of ${current.week}${current.targetFatPct == null ? ' (no schedule yet)' : ''}</div>
-    </div>
-    <div class="sub" style="margin-top:6px;">Baseline ${FAT_BASELINE.date}: ${FAT_BASELINE.weightKg}kg / ${FAT_BASELINE.fatPct}% body fat. 1 session every ${FAT_STREAK_WEEKS} continuous weeks hitting target.</div>`;
-
-  document.getElementById('fatScheduleTable').innerHTML = FAT_TARGET_SCHEDULE.map(r =>
-    `<tr><td>Week ${r.week}</td><td>${r.weekStart}</td><td>${r.targetWeightKg}kg</td><td>${r.targetFatPct}%</td><td>${r.dailyCalorieGoal.toLocaleString()}</td><td>${r.weeklyCalorieGoal.toLocaleString()}</td><td>${r.dailyProteinG}g</td></tr>`
-  ).join('');
-
-  {
-    const takeawayEl = document.getElementById('sessionTakeaway');
-    const onPace = current.onTarget;
-    takeawayEl.classList.add('callout', onPace ? 'good' : 'critical');
-    if (onPace) {
-      takeawayEl.textContent = `On pace — 7-day avg body fat already at or under target, ${sessLedger.streakWeeks - sessLedger.currentStreak} more continuous week(s) for the next session.`;
-    } else if (current.avgFat == null) {
-      takeawayEl.textContent = 'No body-fat data logged yet this week.';
-    } else if (current.targetFatPct == null) {
-      takeawayEl.textContent = 'No schedule target defined for this week yet.';
-    } else {
-      takeawayEl.textContent = `${(current.avgFat - current.targetFatPct).toFixed(1)}% above target — needs to come down to keep the streak alive.`;
-    }
-  }
-  document.getElementById('rewardCurrentWeek').innerHTML =
-    `<table class="tv"><thead><tr><th>Week of</th><th>7d avg body fat</th><th>Target</th></tr></thead>
-     <tbody><tr><td>${current.week} (in progress)</td>
-       <td><span class="badge ${current.onTarget ? 'progress' : 'baseline'}">${fatStr(current.avgFat)}</span></td>
-       <td>${fatStr(current.targetFatPct)}</td>
-     </tr></tbody></table>`;
-
-  document.getElementById('sessionWeeklyTable').innerHTML = sessLedger.weeklyRows.slice().reverse().map(r => {
-    const badge = r.earned ? `<span class="badge progress">hit</span>` : `<span class="badge plateau">missed</span>`;
-    const award = r.sessionAwarded ? ` <span class="badge progress">+1 session</span>` : '';
-    return `<tr><td>${r.week}</td><td>${fatStr(r.avgFat)}</td><td>${fatStr(r.targetFatPct)}</td><td>${badge}</td><td>${r.streak}/${sessLedger.streakWeeks}</td><td>${r.sessionsAvailableAfter}${award}</td></tr>`;
-  }).join('') || `<tr><td colspan="6" style="color:var(--text-muted);">No completed weeks yet.</td></tr>`;
-
-  document.getElementById('sessionRedemptions').innerHTML = sessLedger.redemptions.length
-    ? sessLedger.redemptions.slice().reverse().map(r =>
-        `<tr><td>${r.date}</td><td>${r.note || '—'}</td><td>${r.sessionsAvailableAfter}</td></tr>`
-      ).join('')
-    : `<tr><td colspan="3" style="color:var(--text-muted);">No sessions redeemed yet.</td></tr>`;
-}
-
 // ---------- recovery expenses (was the legacy Rs reward ledger; simplified 2026-08-24 to a
-// plain spend tracker — the session-based track above is the one actually scoring targets
-// now, this is just "how much have I spent on massage/spa recovery total") ----------
-if (document.getElementById('tab-reward')) { // see the guard comment on the block above
+// plain spend tracker; the session-based body-fat reward track that used to headline this tab
+// was removed 2026-09-05 — Recovery Expenses is now the only content on the tab) ----------
+// Guarded on #tab-reward existing: the public build (see build-dashboard.js's PUBLIC:EXCLUDE
+// stripping) removes the whole tab from the HTML but reuses this same script unmodified, so
+// this would otherwise throw on the first getElementById('...').innerHTML = ... against a
+// null element.
+if (document.getElementById('tab-reward')) {
   const inr = n => '₹' + Math.round(Math.abs(n)).toLocaleString('en-IN');
   const recoveryExpenses = dailyExpenses(EXPENSES).filter(e => e.category === REWARD_REDEEM_CATEGORY);
   const totalSpent = recoveryExpenses.reduce((s, e) => s + e.amount, 0);
