@@ -501,6 +501,8 @@
 
 <script>
 const WORKOUTS = [
+{"d": "2026-09-04", "t": "Bodyweight routine", "ex": [{"i": "392887AA", "s": [[0, 20], [0, 20]]}]},
+{"d": "2026-09-04", "t": "Hamstrings & Calves", "ex": [{"i": "4180C405", "s": [[80, 15], [120, 15], [120, 15]]}, {"i": "72CFFAD5", "s": [[50, 10], [70, 9], [70, 10], [80, 10]]}, {"i": "B8127AD1", "s": [[25, 15], [25, 15], [30, 10]]}, {"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 20], [200, 20], [250, 20]]}, {"i": "91237BDD", "s": [[50, 15], [100, 15], [100, 15]]}, {"i": "F4B4C6EE", "s": [[45, 15], [45, 15], [45, 15]]}, {"i": "8BEBFED6", "s": [[50, 15], [50, 15], [55, 10]]}]},
 {"d": "2026-09-03", "t": "Bodyweight Routine", "ex": [{"i": "392887AA", "s": [[0, 20], [0, 20], [0, 20], [0, 20], [0, 20]]}]},
 {"d": "2026-09-03", "t": "Back & Biceps", "ex": [{"i": "BC3492DA", "s": [[40, 15], [50, 15], [60, 10]]}, {"i": "F1D60854", "s": [[20, 15], [25, 15], [30, 15]]}, {"i": "55E6546F", "s": [[20, 20], [30, 20], [40, 10], [20, 15]]}, {"i": "6A6C31A5", "s": [[30, 10], [40, 10], [45, 10]]}, {"i": "0393F233", "s": [[30, 10], [35, 10], [35, 10]]}, {"i": "01A35BF9", "s": [[15, 16], [15, 20], [15, 20]], "n": "Half front, half drag"}, {"i": "1E9A6B8E", "s": [[5, 20], [5, 20], [5, 20]], "n": "Close and wide grip"}, {"i": "37FCC2BB", "s": [[10, 15], [10, 20], [10, 20]]}, {"i": "7E3BC8B6", "s": [[10, 15], [10, 20], [10, 20]]}, {"i": "0222DB42", "s": [[0, 0]], "c": {"min": 6, "km": 1.11}}]},
 {"d": "2026-09-02", "t": "Bodyweight routine", "ex": [{"i": "392887AA", "s": [[0, 20], [0, 20], [0, 20]]}]},
@@ -807,6 +809,7 @@ const EXMETA = {
 "F1D60854":{"name": "Seated Cable Row - Bar Grip", "primary": "upper_back"}
 };
 const STEPS = [
+{"d": "2026-09-04", "steps": 9981, "goal": 12060},
 {"d": "2026-09-03", "steps": 12562, "goal": 11930},
 {"d": "2026-09-02", "steps": 13561, "goal": 11740},
 {"d": "2026-09-01", "steps": 4928, "goal": 13440},
@@ -864,6 +867,7 @@ const STEPS = [
 {"d": "2026-07-11", "steps": 10238, "goal": 5590}
 ];
 const HEARTRATE = [
+{"d": "2026-09-04", "resting": 59, "min": 60, "max": 146},
 {"d": "2026-09-03", "resting": 58, "min": 49, "max": 138},
 {"d": "2026-09-02", "resting": 53, "min": 47, "max": 94},
 {"d": "2026-09-01", "resting": 59, "min": 56, "max": 141},
@@ -921,6 +925,7 @@ const HEARTRATE = [
 {"d": "2026-07-11", "resting": 60, "min": 53, "max": 118}
 ];
 const NUTRITION = [
+{"d": "2026-09-04", "calories": 1989, "goal": 2100, "protein": 150, "proteinGoal": 184, "carbs": 193, "carbsGoal": 210, "fat": 70, "fatGoal": 58},
 {"d": "2026-09-03", "calories": 2045, "goal": 2100, "protein": 193, "proteinGoal": 184, "carbs": 162, "carbsGoal": 210, "fat": 63, "fatGoal": 58},
 {"d": "2026-09-02", "calories": 1909, "goal": 2100, "protein": 204, "proteinGoal": 184, "carbs": 146, "carbsGoal": 210, "fat": 49, "fatGoal": 58},
 {"d": "2026-09-01", "calories": 2049, "goal": 2100, "protein": 163, "proteinGoal": 184, "carbs": 189, "carbsGoal": 210, "fat": 73, "fatGoal": 58},
@@ -953,6 +958,7 @@ const NUTRITION = [
 ];
 const EXPENSES = [];
 const BODYLOG = [
+{"d": "2026-09-05", "sleepMin": 428, "weightKg": 70.0, "bodyFatPct": 21.2},
 {"d": "2026-09-04", "sleepMin": 240, "weightKg": 70.0, "bodyFatPct": 21.3},
 {"d": "2026-09-03", "sleepMin": 471, "weightKg": 70.5, "bodyFatPct": 21.7},
 {"d": "2026-09-02", "sleepMin": 336, "weightKg": 70.1, "bodyFatPct": 21.5},
@@ -976,6 +982,7 @@ const BODYLOG = [
 {"d": "2026-08-14", "weightKg": 69.9, "bodyFatPct": 21.3}
 ];
 const SUPPLEMENTS = [
+{"d": "2026-09-04", "items": ["beta_alanine", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "magnesium", "preworkout", "tongkat_ali"]},
 {"d": "2026-09-03", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "magnesium", "tongkat_ali"]},
 {"d": "2026-09-02", "items": ["calm", "d3_k2", "glycine", "magnesium", "tongkat_ali"]},
 {"d": "2026-09-01", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "preworkout", "tongkat_ali"]},
