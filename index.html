@@ -2357,6 +2357,16 @@ document.getElementById('dateRangeLabel').textContent =
 document.getElementById('mastheadDay').textContent =
   new Date(latestSyncedDate + 'T00:00:00').toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
 
+// The pipeline always syncs "yesterday" and rebuilds same-day, so by the time this page exists,
+// the real current day is latestSyncedDate + 1 — not latestSyncedDate itself. That distinction
+// only matters at a week boundary: on the first sync of a new week, latestSyncedDate is the
+// *last* day of the week that just ended, so isoWeekStart(latestSyncedDate) would still name
+// that already-finished week as "current" (found 2026-09-07 via the fat/sleep trend callouts
+// showing a stale "last complete week"). Anchoring one day later fixes that without touching
+// the viewer's browser clock (rejected earlier for the same reason as the old supplement-tracker
+// bug — see hevy_dashboard_latest_synced_date memory).
+const currentWeekAnchor = addDaysISO(latestSyncedDate, 1);
+
 function statTile(v, l) { return `<div class="stat-tile"><div class="v">${v}</div><div class="l">${l}</div></div>`; }
 {
   const totalVol = [...weeklyVol.values()].reduce((a,b)=>a+b,0);
@@ -2374,7 +2384,7 @@ function statTile(v, l) { return `<div class="stat-tile"><div class="v">${v}</di
   // the last logged WORKOUT) — on a rest day/gap the latter freezes "this week" on the
   // previous week even after a new week has actually started, same bug class as the old
   // Rewards-ledger anchor (see hevy_dashboard_latest_synced_date memory).
-  const currentWeek = isoWeekStart(latestSyncedDate);
+  const currentWeek = isoWeekStart(currentWeekAnchor);
   const thisWeekWorkouts = WORKOUTS.filter(w => isoWeekStart(w.d) === currentWeek);
   const countableThisWeek = thisWeekWorkouts.filter(w => countsTowardWorkoutTotal(w, EXMETA)).length;
   const setsThisWeek = thisWeekWorkouts.reduce((sum, w) => sum + w.ex.reduce((s2, e) => s2 + e.s.length, 0), 0);
@@ -2558,7 +2568,7 @@ document.getElementById('weeklyVolumeChart').appendChild(weeklyVolumeBarChart())
     document.getElementById('weeklyFatChart').innerHTML = '<p class="sub">No body-fat % logged yet.</p>';
     takeawayEl.textContent = '';
   } else {
-    const currentFatWeek = isoWeekStart(latestSyncedDate);
+    const currentFatWeek = isoWeekStart(currentWeekAnchor);
     const completed = fatWeekKeys.filter(k => k < currentFatWeek);
     if (completed.length < 2) {
       takeawayEl.textContent = 'Not enough completed weeks yet for a trend.';
@@ -2639,7 +2649,7 @@ document.getElementById('weeklyVolumeChart').appendChild(weeklyVolumeBarChart())
   } else {
     const goalMin = sleepGoalMin(dailyBodyLog(BODYLOG), latestSyncedDate);
     const fmtHM = m => `${Math.floor(m / 60)}h${String(Math.round(m % 60)).padStart(2, '0')}m`;
-    const currentSleepWeek = isoWeekStart(latestSyncedDate);
+    const currentSleepWeek = isoWeekStart(currentWeekAnchor);
     const completed = sleepWeekKeys.filter(k => k < currentSleepWeek);
     if (completed.length < 2) {
       takeawayEl.textContent = 'Not enough completed weeks yet for a trend.';
