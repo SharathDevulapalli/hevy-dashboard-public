@@ -111,10 +111,10 @@
   details.tableview { margin-top: 10px; }
   details.tableview summary { cursor: pointer; color: var(--text-secondary); font-size: 12px; }
   .macro-goal-row { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 6px; }
-  .macro-goal-row .label { width: 56px; flex: 0 0 auto; color: var(--text-secondary); }
+  .macro-goal-row .label { width: 60px; flex: 0 0 auto; color: var(--text-secondary); }
   .macro-goal-row .track { flex: 1 1 auto; height: 8px; border-radius: 4px; background: var(--grid); overflow: hidden; }
   .macro-goal-row .fill { display: block; height: 100%; border-radius: 4px; }
-  .macro-goal-row .val { flex: 0 0 auto; width: 92px; text-align: right; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .macro-goal-row .val { flex: 0 0 auto; width: 112px; text-align: right; color: var(--text-muted); font-variant-numeric: tabular-nums; }
   .badge {
     display: inline-block; font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 20px;
     letter-spacing: .02em;
@@ -501,6 +501,8 @@
 
 <script>
 const WORKOUTS = [
+{"d": "2026-09-12", "t": "Arms", "ex": [{"i": "94B7239B", "s": [[20, 20], [25, 15], [30, 15]]}, {"i": "01A35BF9", "s": [[15, 21], [15, 21], [15, 21]], "n": "7 each bottom up, top down, full"}, {"i": "CDC472B1", "s": [[30, 15], [35, 15], [35, 15]]}, {"i": "21310F5F", "s": [[20, 15], [20, 15], [25, 10], [15, 10]]}, {"i": "1E9A6B8E", "s": [[5, 20], [5, 20], [7.5, 20]], "n": "Close and Wide Grip"}, {"i": "875F585F", "s": [[15, 15], [15, 15], [15, 15]]}, {"i": "35B51B87", "s": [[15, 15], [15, 20], [15, 20]]}, {"i": "ADA8623C", "s": [[12, 20], [15, 20], [15, 10], [12, 10]], "n": "Straight and Dragged"}, {"i": "3765684D", "s": [[40, 10], [35, 10], [35, 15]]}, {"i": "7E3BC8B6", "s": [[15, 20], [15, 20], [20, 16]]}, {"i": "1006DF48", "s": [[15, 15], [15, 15], [15, 15]]}]},
+{"d": "2026-09-12", "t": "Boxing", "ex": [{"i": "023947AB", "s": [[0, 0]], "c": {"min": 10, "km": 0.0}, "n": "Warmup"}, {"i": "A0D8FA1B", "s": [[0, 0]], "c": {"min": 40, "km": 0.0}, "n": "Hook - 4 way"}, {"i": "023947AB", "s": [[0, 0]], "c": {"min": 10, "km": 0.0}, "n": "Cool down"}]},
 {"d": "2026-09-11", "t": "Bodyweight workout", "ex": [{"i": "392887AA", "s": [[0, 20], [0, 20], [0, 20], [0, 10], [0, 20], [0, 10]]}, {"i": "6BE68B62", "s": [[0, 20], [0, 20], [0, 20], [0, 20], [0, 20]], "n": "Tuck in"}]},
 {"d": "2026-09-11", "t": "Hamstrings & Calves", "ex": [{"i": "D04AC939", "s": [[80, 15], [120, 10], [120, 10]], "n": "With squat machine for hamstrings"}, {"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 15], [200, 20], [250, 20]]}, {"i": "72CFFAD5", "s": [[60, 10], [70, 8], [70, 10], [70, 10]]}, {"i": "B8127AD1", "s": [[20, 15], [25, 15], [30, 15]]}, {"i": "91237BDD", "s": [[100, 20], [100, 20], [100, 20]]}, {"i": "F4B4C6EE", "s": [[45, 15], [45, 15], [50, 15]]}, {"i": "8BEBFED6", "s": [[50, 15], [55, 15], [55, 15]]}]},
 {"d": "2026-09-10", "t": "Bodyweight Routine", "ex": [{"i": "392887AA", "s": [[0, 20], [0, 20], [0, 20], [0, 20], [0, 20]]}, {"i": "DCF3B31B", "s": [[0, 15], [0, 15], [0, 15]]}, {"i": "6BE68B62", "s": [[0, 20], [0, 20], [0, 20], [0, 20]], "n": "Tuckin"}]},
@@ -823,6 +825,7 @@ const EXMETA = {
 "DBF9273A":{"name": "Plate Front Raise", "primary": "shoulders"}
 };
 const STEPS = [
+{"d": "2026-09-12", "steps": 16201, "goal": 14110},
 {"d": "2026-09-11", "steps": 14589, "goal": 14050},
 {"d": "2026-09-10", "steps": 12747, "goal": 14190},
 {"d": "2026-09-09", "steps": 17306, "goal": 13400},
@@ -888,6 +891,7 @@ const STEPS = [
 {"d": "2026-07-11", "steps": 10238, "goal": 5590}
 ];
 const HEARTRATE = [
+{"d": "2026-09-12", "resting": 61, "min": 56, "max": 147},
 {"d": "2026-09-11", "resting": 57, "min": 55, "max": 143},
 {"d": "2026-09-10", "resting": 56, "min": 50, "max": 145},
 {"d": "2026-09-09", "resting": 59, "min": 57, "max": 105},
@@ -953,6 +957,7 @@ const HEARTRATE = [
 {"d": "2026-07-11", "resting": 60, "min": 53, "max": 118}
 ];
 const NUTRITION = [
+{"d": "2026-09-12", "calories": 1765, "goal": 1900, "protein": 210, "proteinGoal": 190, "carbs": 140, "carbsGoal": 166, "fat": 36, "fatGoal": 53},
 {"d": "2026-09-11", "calories": 1712, "goal": 1900, "protein": 196, "proteinGoal": 190, "carbs": 173, "carbsGoal": 166, "fat": 29, "fatGoal": 53},
 {"d": "2026-09-10", "calories": 1884, "goal": 1900, "protein": 165, "proteinGoal": 190, "carbs": 145, "carbsGoal": 166, "fat": 68, "fatGoal": 53},
 {"d": "2026-09-09", "calories": 1824, "goal": 1900, "protein": 165, "proteinGoal": 190, "carbs": 223, "carbsGoal": 166, "fat": 31, "fatGoal": 53},
@@ -1024,6 +1029,7 @@ const BODYLOG = [
 {"d": "2026-08-14", "weightKg": 69.9, "bodyFatPct": 21.3}
 ];
 const SUPPLEMENTS = [
+{"d": "2026-09-12", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "isabgol", "tongkat_ali"]},
 {"d": "2026-09-11", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "magnesium", "preworkout", "tongkat_ali"]},
 {"d": "2026-09-10", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "magnesium", "preworkout", "tongkat_ali"]},
 {"d": "2026-09-09", "items": ["d3_k2", "glycine", "magnesium", "tongkat_ali"]},
@@ -1487,6 +1493,33 @@ function weeklyMacros(nutritionData) {
     w.avgFat = w.totalFat / w.days;
   }
   return weeks;
+}
+
+function weeklyMacroGoalProgress(nutritionData, latestDate) {
+  // {weekStart, weekEnd, days, calories, calorieGoal, protein, proteinGoal, carbs, carbsGoal,
+  // fat, fatGoal} — cumulative calories/macros logged so far this ISO week (Monday-Sunday,
+  // the week containing latestDate) against a full-week target. MFP goals are daily, so the
+  // week target is the most recently known daily goal x 7 (same "daily goal x 7 = weekly
+  // goal" convention as FAT_TARGET_SCHEDULE's dailyCalorieGoal/weeklyCalorieGoal pair) —
+  // taken as of the end of the week so a week with no logged days yet still shows a target.
+  // Returns null if nothing has ever been logged.
+  const allDays = dailyNutrition(nutritionData);
+  if (allDays.length === 0) return null;
+  const weekStart = isoWeekStart(latestDate);
+  const weekEnd = addDaysISO(weekStart, 6);
+  const weekDays = allDays.filter(d => d.date >= weekStart && d.date <= weekEnd);
+  const sum = key => weekDays.reduce((s, d) => s + (d[key] || 0), 0);
+  const refDays = allDays.filter(d => d.date <= weekEnd);
+  const refPool = refDays.length ? refDays : allDays;
+  const ref = refPool[refPool.length - 1];
+  const x7 = goal => goal == null ? null : goal * 7;
+  return {
+    weekStart, weekEnd, days: weekDays.length,
+    calories: sum('calories'), calorieGoal: x7(ref.goal),
+    protein: sum('protein'), proteinGoal: x7(ref.proteinGoal),
+    carbs: sum('carbs'), carbsGoal: x7(ref.carbsGoal),
+    fat: sum('fat'), fatGoal: x7(ref.fatGoal),
+  };
 }
 
 function supplementCalendar(supplementsData, metaItems, startDateStr, totalDays, todayStr) {
@@ -3391,30 +3424,30 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
       ? ''
       : `🥗 Protein goal hit ${onTargetDays}/${trailing7.length} of the last logged days.`;
 
-    const latest = macroDays[macroDays.length - 1];
+    const weekProgress = weeklyMacroGoalProgress(NUTRITION, latestSyncedDate);
     const goalBars = [
-      ['Protein', latest.protein, latest.proteinGoal, 'var(--series-1)'],
-      ['Carbs', latest.carbs, latest.carbsGoal, 'var(--series-2)'],
-      ['Fat', latest.fat, latest.fatGoal, 'var(--series-3)'],
+      ['Protein', weekProgress.protein, weekProgress.proteinGoal, 'var(--series-1)', 'g'],
+      ['Carbs', weekProgress.carbs, weekProgress.carbsGoal, 'var(--series-2)', 'g'],
+      ['Fat', weekProgress.fat, weekProgress.fatGoal, 'var(--series-3)', 'g'],
+      ['Calories', weekProgress.calories, weekProgress.calorieGoal, 'var(--series-1)', ''],
     ];
     if (goalBars.every(([, , goal]) => goal == null)) {
       document.getElementById('macrosGoalBars').innerHTML =
-        `<p class="sub" style="margin:0;">No per-macro goal synced yet for ${latest.date}.</p>`;
+        `<p class="sub" style="margin:0;">No per-macro goal synced yet this week.</p>`;
     } else {
-      // Labeled "today", not a weekly average, to distinguish it from the "this week avg"
-      // line above — this bar deliberately tracks the latest logged day against its own
-      // goal (more actionable than an average), see hevy_dashboard_mfp_nutrition memory.
-      const todayLabel = `<p class="sub" style="margin:0 0 6px;">today — ${latest.date}</p>`;
-      document.getElementById('macrosGoalBars').innerHTML = todayLabel + goalBars.map(([label, grams, goal, color]) => {
+      // Weekly (Monday-Sunday), not a single day — tracks cumulative intake so far this week
+      // against a full-week target (daily MFP goal x 7), so the bar fills up over the week.
+      const weekLabel = `<p class="sub" style="margin:0 0 6px;">this week — ${weekProgress.weekStart} to ${weekProgress.weekEnd}</p>`;
+      document.getElementById('macrosGoalBars').innerHTML = weekLabel + goalBars.map(([label, total, goal, color, unit]) => {
         if (goal == null) return '';
-        const pct = Math.min(grams / goal, 1) * 100;
-        const onTarget = Math.abs(grams - goal) <= goal * 0.1;
-        const overLimit = (label === 'Carbs' || label === 'Fat') && grams > goal;
+        const pct = Math.min(total / goal, 1) * 100;
+        const onTarget = Math.abs(total - goal) <= goal * 0.1;
+        const overLimit = label !== 'Protein' && total > goal;
         const fillColor = overLimit ? 'var(--critical)' : (onTarget ? 'var(--good)' : color);
         return `<div class="macro-goal-row">
           <span class="label">${label}</span>
           <span class="track"><span class="fill" style="width:${pct}%;background:${fillColor};"></span></span>
-          <span class="val">${grams}g / ${goal}g</span>
+          <span class="val">${Math.round(total).toLocaleString()}${unit} / ${Math.round(goal).toLocaleString()}${unit}</span>
         </div>`;
       }).join('');
     }
