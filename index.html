@@ -825,6 +825,7 @@ const EXMETA = {
 "DBF9273A":{"name": "Plate Front Raise", "primary": "shoulders"}
 };
 const STEPS = [
+{"d": "2026-09-13", "steps": 17037, "goal": 14530},
 {"d": "2026-09-12", "steps": 16201, "goal": 14110},
 {"d": "2026-09-11", "steps": 14589, "goal": 14050},
 {"d": "2026-09-10", "steps": 12747, "goal": 14190},
@@ -891,6 +892,7 @@ const STEPS = [
 {"d": "2026-07-11", "steps": 10238, "goal": 5590}
 ];
 const HEARTRATE = [
+{"d": "2026-09-13", "resting": 62, "min": 58, "max": 147},
 {"d": "2026-09-12", "resting": 61, "min": 56, "max": 147},
 {"d": "2026-09-11", "resting": 57, "min": 55, "max": 143},
 {"d": "2026-09-10", "resting": 56, "min": 50, "max": 145},
@@ -957,6 +959,7 @@ const HEARTRATE = [
 {"d": "2026-07-11", "resting": 60, "min": 53, "max": 118}
 ];
 const NUTRITION = [
+{"d": "2026-09-13", "calories": 1820, "goal": 1900, "protein": 179, "proteinGoal": 190, "carbs": 167, "carbsGoal": 166, "fat": 39, "fatGoal": 53},
 {"d": "2026-09-12", "calories": 1765, "goal": 1900, "protein": 210, "proteinGoal": 190, "carbs": 140, "carbsGoal": 166, "fat": 36, "fatGoal": 53},
 {"d": "2026-09-11", "calories": 1712, "goal": 1900, "protein": 196, "proteinGoal": 190, "carbs": 173, "carbsGoal": 166, "fat": 29, "fatGoal": 53},
 {"d": "2026-09-10", "calories": 1884, "goal": 1900, "protein": 165, "proteinGoal": 190, "carbs": 145, "carbsGoal": 166, "fat": 68, "fatGoal": 53},
@@ -1030,6 +1033,7 @@ const BODYLOG = [
 {"d": "2026-08-14", "weightKg": 69.9, "bodyFatPct": 21.3}
 ];
 const SUPPLEMENTS = [
+{"d": "2026-09-13", "items": ["calm", "d3_k2", "tongkat_ali"]},
 {"d": "2026-09-12", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "isabgol", "tongkat_ali"]},
 {"d": "2026-09-11", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "magnesium", "preworkout", "tongkat_ali"]},
 {"d": "2026-09-10", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "magnesium", "preworkout", "tongkat_ali"]},
@@ -1129,6 +1133,13 @@ const SUPPLEMENT_META = [
     "label": "Chelated Magnesium Glycinate",
     "brand": "Unived",
     "serving": "1 capsule (87.75mg elemental Mg)",
+    "timing": "Post-dinner / pre-sleep"
+  },
+  {
+    "id": "zma",
+    "label": "ZMA (Mg Glycinate 286mg (65% RDA), Zinc Citrate 17mg (100%), B6 P5P 1.9mg (100%), HPMC)",
+    "brand": "\u2014",
+    "serving": "1 capsule",
     "timing": "Post-dinner / pre-sleep"
   }
 ];
@@ -1623,6 +1634,7 @@ const REWARD_MIN_AVG_STEPS = 12000;
 const REWARD_REDEEM_CATEGORY = 'recovery';
 const REWARD_START_DATE = '2026-08-02'; // the mechanism itself started here — weeks/redemptions before it aren't scored
 const ROWING_EXERCISE_ID = '0222DB42'; // Rowing Machine — tracked (see cardioSessions) but, like ab work, doesn't count toward total-workout or reward minimums
+const BOXING_EXERCISE_ID = 'A0D8FA1B'; // the only cardio exercise trainingLogSession shows on the Accountability card — see its own exclusion note
 
 // Exercise ids for the "Bodyweight Routine" warm-up/mobility work (added 2026-08-24; Hevy
 // session titled "Morning Routine" is just what the user happens to name it there — the
@@ -2201,16 +2213,21 @@ function trainingLogSession(workout, meta) {
   // Strength entries sharing an exercise id ARE merged (in first-seen order) since a
   // duplicate-logged strength exercise is usually one continuous block split across two log
   // entries by mistake. Cardio entries are never merged, even when the same exercise id
-  // repeats — e.g. a Boxing session bookended by two separate HIIT blocks (warm-up and
-  // cool-down) logs "HIIT" twice with distinct durations, and collapsing them into one row
-  // would silently drop a whole block instead of just losing a formatting nicety.
+  // repeats — e.g. a Boxing block logged twice with distinct durations, and collapsing them
+  // into one row would silently drop a whole block instead of just losing a formatting nicety.
+  //
+  // This card is meant to read as "strength + Boxing" only — every other cardio type (HIIT
+  // warm-up/cool-down bookends around a Boxing block, Rowing Machine, Treadmill, Cycling) is
+  // skipped here entirely, even inside an otherwise-mixed session. Those are still fully
+  // tracked elsewhere (their own Cardio Trend cards) — this only hides them from this one card.
   const order = [];
   const byKey = new Map();
   let cardioSeq = 0;
   for (const e of workout.ex) {
     if (e.c) {
+      if (e.i !== BOXING_EXERCISE_ID) continue;
       const key = `${e.i}__cardio${cardioSeq++}`;
-      byKey.set(key, { exId: e.i, sets: [], cardio: e.c });
+      byKey.set(key, { exId: e.i, sets: [], cardio: e.c, note: e.n || null });
       order.push(key);
       continue;
     }
@@ -2225,7 +2242,7 @@ function trainingLogSession(workout, meta) {
   }
   const firstGroup = groupsSeen[0] || null;
   const exercises = order.map(key => {
-    const { exId: id, sets, cardio } = byKey.get(key);
+    const { exId: id, sets, cardio, note } = byKey.get(key);
     const m = meta[id] || {};
     const bodyweight = !!m.bodyweight;
     const label = m.primary ? (TRAININGLOG_GROUP_LABEL[m.primary] || m.primary.toUpperCase()) : null;
@@ -2242,8 +2259,12 @@ function trainingLogSession(workout, meta) {
       best = bodyweight ? `${repsAtTop} REPS` : `${topWeight} KG × ${repsAtTop}`;
     }
     // Bodyweight sets are always logged at weight 0, so "0×10 · 0×10" reads as nonsensical
-    // noise — show just the rep counts instead, same convention as `best`'s "N REPS".
-    const setsStr = cardio ? null
+    // noise — show just the rep counts instead, same convention as `best`'s "N REPS". For
+    // cardio this slot instead carries the entry's own free-text note (e.g. "Hook - 4 way",
+    // or "Warmup"/"Cool down" for a HIIT block bookending a Boxing session) — same note the
+    // dedicated Boxing Cardio Trend card already surfaces; the Accountability card was
+    // silently dropping it since cardio rows never populated this field before.
+    const setsStr = cardio ? note
       : bodyweight ? sets.map(([, r]) => r).join(' · ') + ' reps'
       : sets.map(([wt, r]) => `${wt}×${r}`).join(' · ') + ' kg';
     return { id, name: m.name || id, group: label, isFirstGroup: label === firstGroup, best, setsStr, cardio: !!cardio };
@@ -3145,7 +3166,7 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
 
 // ---------- boxing cardio trend ----------
 {
-  const boxing = cardioDurationSessions(WORKOUTS, 'A0D8FA1B');
+  const boxing = cardioDurationSessions(WORKOUTS, BOXING_EXERCISE_ID);
   if (boxing.length === 0) {
     document.getElementById('boxingChart').innerHTML = '<p class="sub">No boxing sessions logged yet.</p>';
   } else {
