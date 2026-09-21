@@ -2225,12 +2225,29 @@ function trailingAvg(days, field, endDate, windowDays) {
   return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
 }
 
+// Separate from programDayInfo's block day-count: this is the run of *consecutive calendar
+// days* with a logged workout ending on `date` (inclusive) — any rest day, even a planned
+// one, breaks it back to 0. The Accountability card's overall "Day N" badge intentionally
+// keeps counting through rest days (it tracks the training block, not daily adherence); this
+// is the stricter number shown next to it (user request, 2026-09-21 — the block continues
+// uninterrupted but a missed logging day should still visibly reset the streak).
+function loggingStreak(workouts, date) {
+  const dateSet = new Set(workouts.map(w => w.d));
+  if (!dateSet.has(date)) return 0;
+  let streak = 0;
+  let cursor = date;
+  while (dateSet.has(cursor)) {
+    streak++;
+    cursor = addDaysISO(cursor, -1);
+  }
+  return streak;
+}
+
 function programDayInfo(workouts, date) {
   // "Day N" of the current training block: calendar days (inclusive, day 1 = the block's
   // first logged session) since the most recent gap of >14 days between logged workout
   // dates — the same gap convention called out elsewhere on the dashboard (e.g. the
-  // Jan-May gap). The streak counts the same way: this block hasn't hit a new gap yet, so
-  // day count and streak read identically for now.
+  // Jan-May gap).
   const dates = [...new Set(workouts.map(w => w.d))].sort();
   if (dates.length === 0) return { start: null, dayNumber: null };
   let start = dates[0];
@@ -2386,6 +2403,7 @@ function trainingLogCard(workouts, meta, bodyLogData, stepsData, today) {
   // dayNumber tracks workoutDate, not today — the badge should match the day actually shown
   // on the card (e.g. "day 42" alongside the day-42 session), not run a day ahead of it.
   const { dayNumber } = programDayInfo(workouts, workoutDate);
+  const streak = loggingStreak(workouts, workoutDate);
   const bodyDays = dailyBodyLog(bodyLogData);
   const bodyDate = today;
   const prevBodyDate = addDaysISO(bodyDate, -1);
@@ -2397,7 +2415,7 @@ function trainingLogCard(workouts, meta, bodyLogData, stepsData, today) {
   const stepsRow = (stepsData || []).find(s => s.d === workoutDate) || null;
   const sessions = dayWorkouts.map(w => trainingLogSession(w, meta));
   return {
-    date: workoutDate, bodyDate, dayNumber, sessions,
+    date: workoutDate, bodyDate, dayNumber, streak, sessions,
     weightAvg, weightDelta: (weightAvg != null && weightAvgPrev != null) ? weightAvg - weightAvgPrev : null,
     fatAvg, fatDelta: (fatAvg != null && fatAvgPrev != null) ? fatAvg - fatAvgPrev : null,
     sleepMin: latest ? latest.sleepMin : null,
@@ -3722,7 +3740,7 @@ if (document.getElementById('tab-reward')) {
         <div class="tl-eyebrow">Training Log</div>
         <div class="tl-eyebrow-rule"></div>
         <div class="tl-head">
-          <div class="tl-daybadge"><div class="n">${tl.dayNumber ?? '—'}</div><div class="streak">⚡ ${tl.dayNumber ?? '—'}</div></div>
+          <div class="tl-daybadge"><div class="n">${tl.dayNumber ?? '—'}</div><div class="streak">⚡ ${tl.streak ?? '—'}</div></div>
           <div>
             <div class="tl-focus">${tl.date}</div>
             <div class="tl-title">${tlSession.title}</div>
