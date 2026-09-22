@@ -3706,7 +3706,9 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
       .sup-yes { background: color-mix(in srgb, var(--good) 22%, transparent); color: var(--good); font-weight: 700; }
       .sup-future { background: repeating-linear-gradient(45deg, transparent, transparent 3px, var(--border) 3px, var(--border) 4px); }
       .sup-archive-summary { font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; margin-top: 10px; }
+      .sup-section-label { font-size: 12px; font-weight: 700; color: var(--good); margin: 0 0 6px; }
     </style>
+    <div class="sup-section-label">Active (${activeRows.length})</div>
     ${tableHtml(activeRows)}
     ${notStartedRows.length ? `<details>
       <summary class="sup-archive-summary">Not started (${notStartedRows.length})</summary>
