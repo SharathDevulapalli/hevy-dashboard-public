@@ -1110,91 +1110,104 @@ const SUPPLEMENT_META = [
     "label": "Sat Isabgol (Psyllium Husk)",
     "brand": "Organic India",
     "serving": "5g (1 tbsp)",
-    "timing": "First thing, empty stomach"
+    "timing": "First thing, empty stomach",
+    "status": "archived"
   },
   {
     "id": "pepping_probiotic",
     "label": "Pepping Probiotic",
     "brand": "Pepping",
     "serving": "1 capsule",
-    "timing": "First thing, empty stomach"
+    "timing": "First thing, empty stomach",
+    "status": "active"
   },
   {
     "id": "tongkat_ali",
     "label": "Tongkat Ali LongJack 400mg",
     "brand": "Trexgenics",
     "serving": "1 capsule",
-    "timing": "After breakfast"
+    "timing": "After breakfast",
+    "status": "active"
   },
   {
     "id": "d3_k2",
     "label": "D3 + K2-7",
     "brand": "Unived Basics",
     "serving": "1 capsule (600 IU D3, 55mcg K2-7)",
-    "timing": "After breakfast"
+    "timing": "After breakfast",
+    "status": "active"
   },
   {
     "id": "calm",
     "label": "Calm (Ashwagandha KSM-66 + L-Theanine + 5-HTP)",
     "brand": "Unived",
     "serving": "2 capsules",
-    "timing": "After breakfast"
+    "timing": "After breakfast",
+    "status": "active"
   },
   {
     "id": "citrulline",
     "label": "L-Citrulline 2000mg",
     "brand": "Carbamide Forte",
     "serving": "2g scoop",
-    "timing": "Pre-workout"
+    "timing": "Pre-workout",
+    "status": "active"
   },
   {
     "id": "beta_alanine",
     "label": "Beta-Alanine (Pro Series)",
     "brand": "HealthyHey",
     "serving": "4g scoop",
-    "timing": "Pre-workout"
+    "timing": "Pre-workout",
+    "status": "active"
   },
   {
     "id": "preworkout",
     "label": "Preworkout (L-Theanine + Caffeine)",
     "brand": "Unived",
     "serving": "\u2014",
-    "timing": "Pre-workout"
+    "timing": "Pre-workout",
+    "status": "active"
   },
   {
     "id": "eaa",
     "label": "EAA+ (BCAA + Glutamine, Lychee Kiwi)",
     "brand": "Maverick",
     "serving": "10g scoop",
-    "timing": "During workout"
+    "timing": "During workout",
+    "status": "active"
   },
   {
     "id": "creatine",
     "label": "Micronised Creatine Monohydrate",
     "brand": "Maverick",
     "serving": "3g scoop",
-    "timing": "During workout"
+    "timing": "During workout",
+    "status": "active"
   },
   {
     "id": "glycine",
     "label": "Pure Glycine (Unflavoured)",
     "brand": "Trexgenics",
     "serving": "~2.5g",
-    "timing": "Post-dinner / pre-sleep"
+    "timing": "Post-dinner / pre-sleep",
+    "status": "active"
   },
   {
     "id": "magnesium",
     "label": "Chelated Magnesium Glycinate",
     "brand": "Unived",
     "serving": "1 capsule (87.75mg elemental Mg)",
-    "timing": "Post-dinner / pre-sleep"
+    "timing": "Post-dinner / pre-sleep",
+    "status": "archived"
   },
   {
     "id": "zma",
     "label": "ZMA (Mg Glycinate 286mg (65% RDA), Zinc Citrate 17mg (100%), B6 P5P 1.9mg (100%), HPMC)",
     "brand": "\u2014",
     "serving": "1 capsule",
-    "timing": "Post-dinner / pre-sleep"
+    "timing": "Post-dinner / pre-sleep",
+    "status": "active"
   }
 ];
 
@@ -3599,11 +3612,14 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   const totalDays = Math.max(90, daysSinceStart);
   const sup = supplementCalendar(SUPPLEMENTS, SUPPLEMENT_META, startDate, totalDays, todayStr);
 
-  const overallTaken = sup.rows.reduce((s, r) => s + r.takenDays, 0);
-  const overallPossible = sup.rows.length * sup.elapsedDays;
+  const activeRows = sup.rows.filter(r => r.status !== 'archived');
+  const archivedRows = sup.rows.filter(r => r.status === 'archived');
+
+  const overallTaken = activeRows.reduce((s, r) => s + r.takenDays, 0);
+  const overallPossible = activeRows.length * sup.elapsedDays;
   const overallPct = overallPossible > 0 ? Math.round(overallTaken / overallPossible * 100) : 0;
   document.getElementById('supplementsTakeaway').textContent = sup.elapsedDays > 0
-    ? `💊 ${overallPct}% adherence across ${sup.rows.length} supplements over ${sup.elapsedDays} tracked day(s).`
+    ? `💊 ${overallPct}% adherence across ${activeRows.length} active supplements over ${sup.elapsedDays} tracked day(s).`
     : `💊 Tracking starts today — nothing logged yet.`;
 
   let monthHeader = '', dayHeader = '', curMonth = '';
@@ -3615,7 +3631,7 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     dayHeader += `<th class="sup-day${day.isFuture ? ' sup-future' : ''}" title="${day.date}">${dt.getUTCDate()}</th>`;
   }
 
-  const rowsHtml = sup.rows.map(r => {
+  const rowsHtmlFor = rows => rows.map(r => {
     const pctStr = r.adherencePct == null ? '—' : `${r.adherencePct}%`;
     const cells = r.ticks.map((t, i) => {
       const cls = sup.days[i].isFuture ? 'sup-cell sup-future' : (t ? 'sup-cell sup-yes' : 'sup-cell sup-no');
@@ -3626,6 +3642,15 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
       ${cells}
     </tr>`;
   }).join('');
+
+  const tableHtml = rows => `
+    <table class="sup-table">
+      <thead>
+        <tr><th class="sup-label"></th>${monthHeader}</tr>
+        <tr><th class="sup-label"></th>${dayHeader}</tr>
+      </thead>
+      <tbody>${rowsHtmlFor(rows)}</tbody>
+    </table>`;
 
   document.getElementById('supplementsGrid').innerHTML = `
     <style>
@@ -3639,14 +3664,13 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
       .sup-cell { width: 20px; height: 20px; text-align: center; vertical-align: middle; border: 1px solid var(--border); font-size: 11px; }
       .sup-yes { background: color-mix(in srgb, var(--good) 22%, transparent); color: var(--good); font-weight: 700; }
       .sup-future { background: repeating-linear-gradient(45deg, transparent, transparent 3px, var(--border) 3px, var(--border) 4px); }
+      .sup-archive-summary { font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; margin-top: 10px; }
     </style>
-    <table class="sup-table">
-      <thead>
-        <tr><th class="sup-label"></th>${monthHeader}</tr>
-        <tr><th class="sup-label"></th>${dayHeader}</tr>
-      </thead>
-      <tbody>${rowsHtml}</tbody>
-    </table>`;
+    ${tableHtml(activeRows)}
+    ${archivedRows.length ? `<details>
+      <summary class="sup-archive-summary">Archive (${archivedRows.length})</summary>
+      ${tableHtml(archivedRows)}
+    </details>` : ''}`;
 }
 
 // ---------- recovery expenses (was the legacy Rs reward ledger; simplified 2026-08-24 to a
