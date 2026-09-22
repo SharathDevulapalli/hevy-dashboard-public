@@ -501,6 +501,8 @@
 
 <script>
 const WORKOUTS = [
+{"d": "2026-09-22", "t": "Bodyweight Routine", "ex": [{"i": "BB792A36", "s": [[0, 10], [0, 10]]}, {"i": "392887AA", "s": [[0, 20], [0, 20]]}, {"i": "6BE68B62", "s": [[0, 20], [0, 15], [0, 15]], "n": "Tuck in"}]},
+{"d": "2026-09-22", "t": "Chest & Shoulders", "ex": [{"i": "DA0F0470", "s": [[20, 15], [30, 10], [30, 10]]}, {"i": "79D0BB3A", "s": [[20, 12], [20, 15], [25, 10]]}, {"i": "D3E2AB55", "s": [[10, 20], [20, 10], [20, 10]]}, {"i": "651F844C", "s": [[18, 15], [21, 15], [24, 15]], "n": "Single hand each time"}, {"i": "67280085", "s": [[40, 15], [50, 15], [60, 15]]}, {"i": "422B08F1", "s": [[10, 10], [10, 10], [15, 10]]}, {"i": "8293E554", "s": [[10, 10], [10, 10], [15, 10]]}, {"i": "E5988A0A", "s": [[10, 10], [10, 10], [15, 10]]}, {"i": "878CD1D0", "s": [[10, 10], [10, 10], [15, 10]]}]},
 {"d": "2026-09-21", "t": "Bodyweight Routine", "ex": [{"i": "392887AA", "s": [[0, 20], [0, 20]]}]},
 {"d": "2026-09-20", "t": "Bodyweight Routine", "ex": [{"i": "392887AA", "s": [[0, 20], [0, 25]]}]},
 {"d": "2026-09-17", "t": "Bodyweight Routine", "ex": [{"i": "392887AA", "s": [[0, 20], [0, 20], [0, 20]]}]},
@@ -828,9 +830,11 @@ const EXMETA = {
 "68F8A292":{"name": "Skullcrusher (Dumbbell)", "primary": "triceps"},
 "6BE68B62":{"name": "V Up", "primary": "abdominals", "bodyweight": true},
 "DBF9273A":{"name": "Plate Front Raise", "primary": "shoulders"},
-"797F0782":{"name": "Upright Row (Dumbbell)", "primary": "shoulders"}
+"797F0782":{"name": "Upright Row (Dumbbell)", "primary": "shoulders"},
+"BB792A36":{"name": "Burpee", "primary": "full_body", "bodyweight": true}
 };
 const STEPS = [
+{"d": "2026-09-22", "steps": 8929, "goal": 10720},
 {"d": "2026-09-21", "steps": 10837, "goal": 10680},
 {"d": "2026-09-20", "steps": 13047, "goal": 10410},
 {"d": "2026-09-19", "steps": 5566, "goal": 11620},
@@ -906,6 +910,7 @@ const STEPS = [
 {"d": "2026-07-11", "steps": 10238, "goal": 5590}
 ];
 const HEARTRATE = [
+{"d": "2026-09-22", "resting": 53, "min": 49, "max": 128},
 {"d": "2026-09-21", "resting": 51, "min": 44, "max": 141},
 {"d": "2026-09-20", "resting": 54, "min": 49, "max": 154},
 {"d": "2026-09-19", "resting": 54, "min": 51, "max": 92},
@@ -981,6 +986,7 @@ const HEARTRATE = [
 {"d": "2026-07-11", "resting": 60, "min": 53, "max": 118}
 ];
 const NUTRITION = [
+{"d": "2026-09-22", "calories": 1946, "goal": 1900, "protein": 182, "proteinGoal": 190, "carbs": 144, "carbsGoal": 166, "fat": 69, "fatGoal": 53},
 {"d": "2026-09-21", "calories": 1470, "goal": 1900, "protein": 176, "proteinGoal": 190, "carbs": 128, "carbsGoal": 166, "fat": 26, "fatGoal": 53},
 {"d": "2026-09-20", "calories": 1849, "goal": 1900, "protein": 92, "proteinGoal": 190, "carbs": 235, "carbsGoal": 166, "fat": 58, "fatGoal": 53},
 {"d": "2026-09-19", "calories": 1780, "goal": 1900, "protein": 62, "proteinGoal": 190, "carbs": 255, "carbsGoal": 166, "fat": 51, "fatGoal": 53},
@@ -1072,6 +1078,7 @@ const BODYLOG = [
 {"d": "2026-08-14", "weightKg": 69.9, "bodyFatPct": 21.3}
 ];
 const SUPPLEMENTS = [
+{"d": "2026-09-22", "items": ["calm", "d3_k2", "pepping_probiotic", "tongkat_ali"]},
 {"d": "2026-09-21", "items": ["calm", "d3_k2", "glycine", "pepping_probiotic", "preworkout", "tongkat_ali", "zma"]},
 {"d": "2026-09-20", "items": ["calm", "d3_k2", "glycine", "tongkat_ali", "zma"]},
 {"d": "2026-09-19", "items": ["zma"]},
@@ -1134,6 +1141,14 @@ const SUPPLEMENT_META = [
     "label": "Tongkat Ali LongJack 400mg",
     "brand": "Trexgenics",
     "serving": "1 capsule",
+    "timing": "After breakfast",
+    "status": "active"
+  },
+  {
+    "id": "boron",
+    "label": "Boron",
+    "brand": "NOW Foods",
+    "serving": "\u2014",
     "timing": "After breakfast",
     "status": "active"
   },
