@@ -1122,6 +1122,14 @@ const SUPPLEMENT_META = [
     "status": "active"
   },
   {
+    "id": "flora17_probiotic",
+    "label": "Flora-17 Probiotics",
+    "brand": "Unived",
+    "serving": "\u2014",
+    "timing": "First thing, empty stomach",
+    "status": "not_started"
+  },
+  {
     "id": "tongkat_ali",
     "label": "Tongkat Ali LongJack 400mg",
     "brand": "Trexgenics",
@@ -1136,6 +1144,22 @@ const SUPPLEMENT_META = [
     "serving": "1 capsule (600 IU D3, 55mcg K2-7)",
     "timing": "After breakfast",
     "status": "active"
+  },
+  {
+    "id": "d_rise",
+    "label": "Vitamin D3 (D-Rise)",
+    "brand": "\u2014",
+    "serving": "\u2014",
+    "timing": "After breakfast",
+    "status": "not_started"
+  },
+  {
+    "id": "caldveg",
+    "label": "CalDVeg (Algae Ca/Mg, Vit C, D3 & K2)",
+    "brand": "Unived",
+    "serving": "\u2014",
+    "timing": "After breakfast",
+    "status": "not_started"
   },
   {
     "id": "calm",
@@ -1162,6 +1186,14 @@ const SUPPLEMENT_META = [
     "status": "active"
   },
   {
+    "id": "unived_beta_alanine",
+    "label": "Beta-Alanine (Carnosine precursor)",
+    "brand": "Unived",
+    "serving": "3.2g",
+    "timing": "Pre-workout",
+    "status": "not_started"
+  },
+  {
     "id": "preworkout",
     "label": "Preworkout (L-Theanine + Caffeine)",
     "brand": "Unived",
@@ -1183,6 +1215,14 @@ const SUPPLEMENT_META = [
     "brand": "Maverick",
     "serving": "3g scoop",
     "timing": "During workout",
+    "status": "active"
+  },
+  {
+    "id": "swisse_omega3",
+    "label": "Omega 3 (Fish Oil)",
+    "brand": "Swisse",
+    "serving": "1 capsule",
+    "timing": "Post-lunch",
     "status": "active"
   },
   {
@@ -3612,7 +3652,8 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   const totalDays = Math.max(90, daysSinceStart);
   const sup = supplementCalendar(SUPPLEMENTS, SUPPLEMENT_META, startDate, totalDays, todayStr);
 
-  const activeRows = sup.rows.filter(r => r.status !== 'archived');
+  const activeRows = sup.rows.filter(r => r.status !== 'archived' && r.status !== 'not_started');
+  const notStartedRows = sup.rows.filter(r => r.status === 'not_started');
   const archivedRows = sup.rows.filter(r => r.status === 'archived');
 
   const overallTaken = activeRows.reduce((s, r) => s + r.takenDays, 0);
@@ -3667,6 +3708,10 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
       .sup-archive-summary { font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; margin-top: 10px; }
     </style>
     ${tableHtml(activeRows)}
+    ${notStartedRows.length ? `<details>
+      <summary class="sup-archive-summary">Not started (${notStartedRows.length})</summary>
+      ${tableHtml(notStartedRows)}
+    </details>` : ''}
     ${archivedRows.length ? `<details>
       <summary class="sup-archive-summary">Archive (${archivedRows.length})</summary>
       ${tableHtml(archivedRows)}
