@@ -321,7 +321,6 @@
   <section>
     <h2>Weekly training volume</h2>
     <p class="sub">🏋️ Total load (kg × reps, all exercises) per calendar week, full history.</p>
-    <p class="sub" id="weeklyVolumeTakeaway" style="font-weight:600;"></p>
     <div class="card"><div id="weeklyVolumeChart"></div>
       <details class="tableview"><summary>Table view</summary><div id="weeklyVolumeTable"></div></details>
     </div>
@@ -330,7 +329,6 @@
   <section>
     <h2>Weekly body fat % trend</h2>
     <p class="sub">📉 Average of logged daily readings per calendar week, dashed line is that week's reward-schedule target.</p>
-    <p class="sub" id="weeklyFatTakeaway" style="font-weight:600;"></p>
     <div class="card"><div id="weeklyFatChart"></div>
       <details class="tableview"><summary>Table view</summary><div id="weeklyFatTable"></div></details>
     </div>
@@ -339,7 +337,6 @@
   <section>
     <h2>Weekly sleep trend</h2>
     <p class="sub">😴 Average of logged nightly sleep per calendar week, dashed line is the current sleep goal.</p>
-    <p class="sub" id="weeklySleepTakeaway" style="font-weight:600;"></p>
     <div class="card"><div id="weeklySleepChart"></div>
       <details class="tableview"><summary>Table view</summary><div id="weeklySleepTable"></div></details>
     </div>
@@ -2516,31 +2513,6 @@ const weeklyVol = weeklyVolume(WORKOUTS);
 const weekKeys = [...weeklyVol.keys()].sort();
 const snapshot = weeklySnapshot(WORKOUTS, EXMETA);
 
-{
-  // Takeaway compares the latest COMPLETE week (weekKeys[length-1] is always in-progress,
-  // same convention as the "This week" stat row above) against the trailing 4-week average
-  // before it, so a partial current week never drags the comparison down.
-  const completed = weekKeys.slice(0, -1);
-  const el = document.getElementById('weeklyVolumeTakeaway');
-  if (completed.length < 2) {
-    el.textContent = 'Not enough completed weeks yet for a trend.';
-  } else {
-    const latest = weeklyVol.get(completed[completed.length - 1]);
-    const trailing = completed.slice(-5, -1).map(k => weeklyVol.get(k));
-    const avgTrailing = trailing.reduce((a, b) => a + b, 0) / trailing.length;
-    const pct = Math.round(((latest - avgTrailing) / avgTrailing) * 100);
-    if (avgTrailing === 0) {
-      el.textContent = latest > 0 ? 'Back to training after a gap.' : 'No volume logged in the trailing weeks.';
-    } else if (Math.abs(pct) < 8) {
-      el.textContent = `Holding steady — within ${Math.abs(pct)}% of your last ${trailing.length}-week average.`;
-    } else if (pct > 0) {
-      el.textContent = `Trending up — last complete week was ${pct}% above your ${trailing.length}-week average.`;
-    } else {
-      el.textContent = `Trending down — last complete week was ${Math.abs(pct)}% below your ${trailing.length}-week average.`;
-    }
-  }
-}
-
 // ---------- header stats ----------
 const dates = WORKOUTS.map(w => w.d).sort();
 // "Now" for anything that needs to know the actual current sync day (reward week cutoffs,
@@ -2571,9 +2543,13 @@ const currentWeekAnchor = addDaysISO(latestSyncedDate, 1);
 function statTile(v, l) { return `<div class="stat-tile"><div class="v">${v}</div><div class="l">${l}</div></div>`; }
 {
   const totalVol = [...weeklyVol.values()].reduce((a,b)=>a+b,0);
-  const activeWeeks = weekKeys.filter(w => weeklyVol.get(w) > 0).length;
+  // Strength-only (2026-09-23 user request): total workouts and "weeks with training" count
+  // only sessions with real strength work (isStrengthDay — excludes Bodyweight Routine,
+  // cardio-only incl. Boxing/Rowing, and abs-only sessions).
+  const strengthWorkouts = WORKOUTS.filter(w => isStrengthDay(w, EXMETA));
+  const activeWeeks = new Set(strengthWorkouts.map(w => isoWeekStart(w.d))).size;
   const avgPerActiveWeek = Math.round(totalVol / Math.max(activeWeeks,1));
-  const countableWorkouts = WORKOUTS.filter(w => countsTowardWorkoutTotal(w, EXMETA)).length;
+  const countableWorkouts = strengthWorkouts.length;
   document.getElementById('statRow').innerHTML =
     statTile(countableWorkouts, 'total workouts') +
     statTile(activeWeeks, 'weeks with training') +
@@ -2587,7 +2563,9 @@ function statTile(v, l) { return `<div class="stat-tile"><div class="v">${v}</di
   // Rewards-ledger anchor (see hevy_dashboard_latest_synced_date memory).
   const currentWeek = isoWeekStart(currentWeekAnchor);
   const thisWeekWorkouts = WORKOUTS.filter(w => isoWeekStart(w.d) === currentWeek);
-  const countableThisWeek = thisWeekWorkouts.filter(w => countsTowardWorkoutTotal(w, EXMETA)).length;
+  // Strength + Boxing only (same rule as the Accountability card): Bodyweight Routine,
+  // Rowing, HIIT/Treadmill/Cycling-only and abs-only sessions don't count as a workout here.
+  const countableThisWeek = thisWeekWorkouts.filter(w => isStrengthDay(w, EXMETA) || w.ex.some(e => e.i === BOXING_EXERCISE_ID)).length;
   const setsThisWeek = thisWeekWorkouts.reduce((sum, w) => sum + w.ex.reduce((s2, e) => s2 + e.s.length, 0), 0);
   const volThisWeek = weeklyVol.get(currentWeek) || 0;
   const agg = snapshot.reduce((a, s) => ({
@@ -2704,28 +2682,9 @@ document.getElementById('weeklyVolumeChart').appendChild(weeklyVolumeBarChart())
 {
   const fatWeeks = weeklyBodyLogAvg(BODYLOG, 'bodyFatPct');
   const fatWeekKeys = [...fatWeeks.keys()].sort();
-  const takeawayEl = document.getElementById('weeklyFatTakeaway');
   if (fatWeekKeys.length === 0) {
     document.getElementById('weeklyFatChart').innerHTML = '<p class="sub">No body-fat % logged yet.</p>';
-    takeawayEl.textContent = '';
   } else {
-    const currentFatWeek = isoWeekStart(currentWeekAnchor);
-    const completed = fatWeekKeys.filter(k => k < currentFatWeek);
-    if (completed.length < 2) {
-      takeawayEl.textContent = 'Not enough completed weeks yet for a trend.';
-    } else {
-      const latest = fatWeeks.get(completed[completed.length - 1]);
-      const trailing = completed.slice(-5, -1).map(k => fatWeeks.get(k));
-      const avgTrailing = trailing.reduce((a, b) => a + b, 0) / trailing.length;
-      const delta = latest - avgTrailing;
-      if (Math.abs(delta) < 0.2) {
-        takeawayEl.textContent = `Holding steady — last complete week averaged ${latest.toFixed(1)}%, close to your ${trailing.length}-week average.`;
-      } else if (delta < 0) {
-        takeawayEl.textContent = `Trending down — last complete week averaged ${latest.toFixed(1)}%, ${Math.abs(delta).toFixed(1)}pt below your ${trailing.length}-week average.`;
-      } else {
-        takeawayEl.textContent = `Trending up — last complete week averaged ${latest.toFixed(1)}%, ${delta.toFixed(1)}pt above your ${trailing.length}-week average.`;
-      }
-    }
 
     const w = 1000, h = 160, pad = 28;
     const svg = svgEl('svg', { width: '100%', height: h, viewBox: `0 0 ${w} ${h}`, preserveAspectRatio: 'none' });
@@ -2783,30 +2742,11 @@ document.getElementById('weeklyVolumeChart').appendChild(weeklyVolumeBarChart())
 {
   const sleepWeeks = weeklyBodyLogAvg(BODYLOG, 'sleepMin');
   const sleepWeekKeys = [...sleepWeeks.keys()].sort();
-  const takeawayEl = document.getElementById('weeklySleepTakeaway');
   if (sleepWeekKeys.length === 0) {
     document.getElementById('weeklySleepChart').innerHTML = '<p class="sub">No sleep logged yet.</p>';
-    takeawayEl.textContent = '';
   } else {
     const goalMin = sleepGoalMin(dailyBodyLog(BODYLOG), latestSyncedDate);
     const fmtHM = m => `${Math.floor(m / 60)}h${String(Math.round(m % 60)).padStart(2, '0')}m`;
-    const currentSleepWeek = isoWeekStart(currentWeekAnchor);
-    const completed = sleepWeekKeys.filter(k => k < currentSleepWeek);
-    if (completed.length < 2) {
-      takeawayEl.textContent = 'Not enough completed weeks yet for a trend.';
-    } else {
-      const latest = sleepWeeks.get(completed[completed.length - 1]);
-      const trailing = completed.slice(-5, -1).map(k => sleepWeeks.get(k));
-      const avgTrailing = trailing.reduce((a, b) => a + b, 0) / trailing.length;
-      const delta = latest - avgTrailing;
-      if (Math.abs(delta) < 10) {
-        takeawayEl.textContent = `Holding steady — last complete week averaged ${fmtHM(latest)}, close to your ${trailing.length}-week average.`;
-      } else if (delta > 0) {
-        takeawayEl.textContent = `Trending up — last complete week averaged ${fmtHM(latest)}, ${fmtHM(delta)} above your ${trailing.length}-week average.`;
-      } else {
-        takeawayEl.textContent = `Trending down — last complete week averaged ${fmtHM(latest)}, ${fmtHM(-delta)} below your ${trailing.length}-week average.`;
-      }
-    }
 
     const w = 1000, h = 160, pad = 28;
     const svg = svgEl('svg', { width: '100%', height: h, viewBox: `0 0 ${w} ${h}`, preserveAspectRatio: 'none' });
