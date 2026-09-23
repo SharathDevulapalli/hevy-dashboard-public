@@ -1778,6 +1778,7 @@ const BODYWEIGHT_ROUTINE_EXERCISE_IDS = new Set([
   'DCF3B31B', // Crunch (added 2026-08-30)
   'F49E31D6', // Mountain Climber (added 2026-08-30)
   '6BE68B62', // V Up (added 2026-09-08)
+  'BB792A36', // Burpee (added 2026-09-23)
 ]);
 
 function countsTowardWorkoutTotal(workout, meta) {
@@ -2474,7 +2475,15 @@ function trainingLogCard(workouts, meta, bodyLogData, stepsData, today) {
   // from this one card. A mixed session (e.g. Push Up inside a real Chest & Shoulders day, or
   // real ab work alongside Rowing) still shows in full, since not every exercise in it is
   // excluded.
-  const dayWorkouts = workouts.filter(w => w.d === workoutDate && !w.ex.every(e => BODYWEIGHT_ROUTINE_EXERCISE_IDS.has(e.i) || e.i === ROWING_EXERCISE_ID));
+  // The id set alone kept leaking: every time a new bodyweight move got logged (Crunch,
+  // Mountain Climber, V Up, Burpee) the whole routine reappeared here until its id was added.
+  // So a session is also excluded when its title says it's a bodyweight/morning routine, or
+  // when every exercise is Hevy "reps_only" (meta.bodyweight) — either catches new moves
+  // without needing the id set updated first.
+  const isExcludedFromCard = w =>
+    /bodyweight|morning routine/i.test(w.t || '') ||
+    w.ex.every(e => BODYWEIGHT_ROUTINE_EXERCISE_IDS.has(e.i) || e.i === ROWING_EXERCISE_ID || (meta[e.i] && meta[e.i].bodyweight));
+  const dayWorkouts = workouts.filter(w => w.d === workoutDate && !isExcludedFromCard(w));
   // dayNumber tracks workoutDate, not today — the badge should match the day actually shown
   // on the card (e.g. "day 42" alongside the day-42 session), not run a day ahead of it.
   const { dayNumber } = programDayInfo(workouts, workoutDate);
