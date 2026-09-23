@@ -2364,7 +2364,11 @@ function trainingLogSession(workout, meta) {
   const order = [];
   const byKey = new Map();
   let cardioSeq = 0;
+  //
+  // Bodyweight Routine moves (Push Up, V Up, Burpee, etc.) are likewise skipped even when
+  // logged inside a real strength session — the card shows no bodyweight work at all.
   for (const e of workout.ex) {
+    if (BODYWEIGHT_ROUTINE_EXERCISE_IDS.has(e.i)) continue;
     if (e.c) {
       if (e.i !== BOXING_EXERCISE_ID) continue;
       const key = `${e.i}__cardio${cardioSeq++}`;
@@ -2497,7 +2501,7 @@ function trainingLogCard(workouts, meta, bodyLogData, stepsData, today) {
   const fatAvgPrev = trailingAvg(bodyDays, 'bodyFatPct', prevBodyDate, 7);
   const latest = bodyDays.find(d => d.date === bodyDate) || null;
   const stepsRow = (stepsData || []).find(s => s.d === workoutDate) || null;
-  const sessions = dayWorkouts.map(w => trainingLogSession(w, meta));
+  const sessions = dayWorkouts.map(w => trainingLogSession(w, meta)).filter(s => s.exercises.length);
   return {
     date: workoutDate, bodyDate, dayNumber, streak, sessions,
     weightAvg, weightDelta: (weightAvg != null && weightAvgPrev != null) ? weightAvg - weightAvgPrev : null,
