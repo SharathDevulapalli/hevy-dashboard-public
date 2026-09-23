@@ -108,6 +108,8 @@
   table.tv { border-collapse: collapse; width: 100%; font-size: 12.5px; margin-top: 8px; }
   table.tv th, table.tv td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
   table.tv th { color: var(--text-muted); font-weight: 500; }
+  table.tv-aligned { table-layout: fixed; }
+  table.tv-aligned td:first-child { overflow-wrap: anywhere; }
   details.tableview { margin-top: 10px; }
   details.tableview summary { cursor: pointer; color: var(--text-secondary); font-size: 12px; }
   .macro-goal-row { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 6px; }
@@ -429,7 +431,6 @@
       </header>
       <section>
         <p class="sub" id="volumeLogTakeaway" style="font-weight:600;"></p>
-        <div class="vol-tabs" id="volTabs"></div>
         <div id="volumeLogTables"></div>
       </section>
     </div>
@@ -3013,116 +3014,17 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   const fmtVol = n => n == null ? '—' : Math.round(n).toLocaleString();
   const fmtPct = n => (n >= 0 ? '+' : '') + n.toFixed(0) + '%';
 
-  // Anatomical upper-to-lower order (distinct from MUSCLE_ORDER above, which is ordered
-  // for the set-count chart, not top-to-bottom on the body).
-  const VOL_MUSCLE_ORDER = ['shoulders', 'chest', 'lats', 'upper_back', 'traps', 'biceps', 'triceps', 'forearms', 'abdominals', 'adductors', 'abductors', 'quadriceps', 'hamstrings', 'glutes', 'calves'];
+  // Single flat table (2026-09-23: user asked to drop the per-muscle tabs/sub-buckets and
+  // show everything as one group with aligned columns). Rows stay in anatomical
+  // upper-to-lower order by primary muscle so related lifts still sit together, then by
+  // largest gain first within a muscle. Fixed column widths (colgroup + table-layout:fixed)
+  // keep the rowing table below lined up with the main one.
+  const VOL_MUSCLE_ORDER = ['shoulders', 'chest', 'lats', 'upper_back', 'traps', 'biceps', 'triceps', 'forearms', 'abdominals', 'full_body', 'adductors', 'abductors', 'quadriceps', 'hamstrings', 'glutes', 'calves'];
+  const muscleRank = r => { const i = VOL_MUSCLE_ORDER.indexOf(r.primary || ''); return i === -1 ? VOL_MUSCLE_ORDER.length : i; };
+  const sortedRows = volRows.slice().sort((a, b) =>
+    muscleRank(a) - muscleRank(b) || (b.deltaPct ?? -Infinity) - (a.deltaPct ?? -Infinity));
 
-  const volGroupsRender = [...VOL_MUSCLE_ORDER, ...new Set(volRows.map(r => r.primary).filter(g => g && !VOL_MUSCLE_ORDER.includes(g)))];
-
-  // Movement-pattern sub-buckets within a primary muscle group, for groups worth splitting
-  // further (e.g. "shoulders" mixes overhead pressing, isolation raises, and rear-delt work,
-  // which train very differently despite sharing a primary muscle tag). Matched by exact
-  // exercise name; anything in the group not listed in any bucket below still shows, under
-  // an "Other" bucket, rather than silently disappearing.
-  const EXERCISE_SUBGROUPS = {
-    shoulders: [
-      { name: 'Overhead Press (compound)', what: 'Front + side delt, triceps',
-        exercises: ['Overhead Press (Barbell)', 'Overhead Press (Dumbbell)', 'Shoulder Press (Dumbbell)', 'Shoulder Press (Machine Plates)', 'Standing Military Press (Barbell)', 'Arnold Press (Dumbbell)'] },
-      { name: 'Front Raise (isolation)', what: 'Anterior delt only',
-        exercises: ['Front Raise (Dumbbell)', 'Front Raise (Barbell)', 'Front Raise (Cable)'] },
-      { name: 'Lateral/Upright (medial delt)', what: 'Side delt, traps',
-        exercises: ['Lateral Raise (Dumbbell)', 'Upright Row (Barbell)'] },
-      { name: 'Rear Delt (posterior)', what: 'Rear delt, posture-correction',
-        exercises: ['Rear Delt Reverse Fly (Dumbbell)', 'Band Pullaparts', 'Band Pull-Aparts'] },
-    ],
-    chest: [
-      { name: 'Flat/Neutral Press', what: 'Mid/lower chest, overall mass',
-        exercises: ['Bench Press (Barbell)', 'Bench Press (Dumbbell)', 'Hex Press (Dumbbell)', 'Decline Bench Press (Barbell)', 'Decline Bench Press (Dumbbell)'] },
-      { name: 'Incline Press', what: 'Upper chest — the part that most visibly drives the "full, shelf-like" chest look',
-        exercises: ['Incline Bench Press (Barbell)', 'Incline Bench Press (Dumbbell)', 'Incline Bench Press (Smith Machine)'] },
-      { name: 'Fly / Isolation', what: 'Pec stretch/contraction, inner chest line, definition',
-        exercises: ['Cable Fly Crossovers', 'Incline Chest Fly (Dumbbell)', 'Chest Fly (Dumbbell)'] },
-      { name: 'Bodyweight Compound', what: 'General chest/triceps endurance',
-        exercises: ['Push Up'] },
-    ],
-    quadriceps: [
-      { name: 'Squat (bilateral, compound)', what: 'Overall quad mass, biggest strength numbers',
-        exercises: ['Squat (Machine)', 'Squat (Smith Machine)', 'Squat (Bodyweight)'] },
-      { name: 'Leg Press variants', what: 'Quad-dominant, spares lower back vs. free squat',
-        exercises: ['Leg Press (Machine)', 'Leg Press Horizontal (Machine)', 'Belt Squat (Machine)', 'Pendulum Squat (Machine)'] },
-      { name: 'Lunge/Split-Stance', what: 'Unilateral quad + stability, directly transfers to real-world movement',
-        exercises: ['Lunge (Barbell)', 'Lunge (Dumbbell)', 'Walking Lunge (Dumbbell)', 'Walking Lunge', 'Lunge', 'Overhead Dumbbell Lunge'] },
-      { name: 'Sumo/Goblet Squat', what: 'Quad + adductor crossover, front-loaded',
-        exercises: ['Sumo Squat (Dumbbell)', 'Goblet Squat'] },
-      { name: 'Isolation', what: 'Pure quad, no hip/glute assistance',
-        exercises: ['Leg Extension (Machine)'] },
-    ],
-  };
-
-  // Umbrella groups that merge several primary-muscle tags into one boxed "Back" section
-  // (lats/upper_back/traps train together as one region day-to-day, even though each
-  // exercise carries a narrower primary tag) — rendered at the position of the first listed
-  // primary in VOL_MUSCLE_ORDER, with the other primaries skipped in the main loop below.
-  const COMBINED_GROUPS = [
-    {
-      label: 'Back', primaries: ['lats', 'upper_back', 'traps'],
-      subgroups: [
-        { name: 'Vertical Pull (Lats width)', what: 'Lat width — the actual driver of the V-taper/shoulder-to-waist ratio',
-          exercises: ['Lat Pulldown (Cable)', 'Lat Pulldown - Close Grip (Cable)', 'Straight Arm Lat Pulldown (Cable)', 'Iso-Lateral High Row (Machine)'] },
-        { name: 'Horizontal Pull (Back thickness)', what: 'Mid-back thickness, rhomboids, posture',
-          exercises: ['Bent Over Row (Barbell)', 'Dumbbell Row', 'Seated Cable Row - V Grip (Cable)', 'T Bar Row', 'Chest Supported Incline Row (Dumbbell)', 'Iso-Lateral Row (Machine)'] },
-        { name: 'Hip Hinge Pull', what: 'Posterior chain, grip, overall pulling strength',
-          exercises: ['Rack Pull'] },
-        { name: 'Isolation/Stretch', what: 'Lat stretch, serratus, chest-to-lat tie-in',
-          exercises: ['Pullover (Dumbbell)'] },
-        { name: 'Traps', what: 'Upper trap thickness — frames the neck/shoulder line',
-          exercises: ['Shrug (Machine)', 'Shrug (Barbell)'] },
-      ],
-    },
-    {
-      label: 'Arms', primaries: ['biceps', 'triceps'],
-      subgroups: [
-        { name: 'Standard Curl (mid-bicep)', what: 'Overall bicep mass, most transferable strength',
-          exercises: ['Bicep Curl (Cable)', 'Bicep Curl (Dumbbell)', 'Bicep Curl (Barbell)', 'EZ Bar Biceps Curl'] },
-        { name: 'Incline Curl (long head stretch)', what: 'Long head — adds peak height to the bicep, most relevant to how a flexed arm looks',
-          exercises: ['Seated Incline Curl (Dumbbell)', 'Seated Incline Hammer Curl (Dumbbell)'] },
-        { name: 'Preacher Curl (peak contraction)', what: 'Strict isolation, no momentum — good for the squeeze/peak',
-          exercises: ['Preacher Curl (Barbell)', 'Preacher Curl (Machine)', 'Preacher Curl (Dumbbell)'] },
-        { name: 'Hammer/Neutral Grip', what: 'Brachialis — pushes the bicep up rather than just thicker, widens arm circumference',
-          exercises: ['Hammer Curl (Dumbbell)', 'Hammer Curl (Cable)'] },
-        { name: 'Concentration', what: 'Isolated peak contraction, single-arm focus',
-          exercises: ['Concentration Curl'] },
-        { name: 'Pushdown (cable, elbows fixed)', what: 'Lateral head, most trainable for volume',
-          exercises: ['Triceps Rope Pushdown', 'Triceps Pressdown', 'Triceps Pushdown', 'Single Arm Triceps Pushdown (Cable)'] },
-        { name: 'Overhead Extension (long head stretch)', what: 'Long head — adds mass to the back of the arm, most visible from behind/side',
-          exercises: ['Overhead Triceps Extension (Cable)', 'Triceps Extension (Dumbbell)', 'Triceps Extension (Cable)'] },
-        { name: 'Compound Press (heaviest loading)', what: 'All three heads, heaviest weight capacity',
-          exercises: ['Skullcrusher (Barbell)', 'Bench Press - Close Grip (Barbell)'] },
-        { name: 'Dip Variations', what: 'Full triceps + chest crossover, bodyweight progression',
-          exercises: ['Triceps Dip (Assisted)', 'Seated Dip Machine', 'Bench Dip'] },
-        { name: 'Kickback (peak contraction)', what: 'Isolated peak squeeze',
-          exercises: ['Triceps Kickback (Dumbbell)'] },
-      ],
-    },
-    // Core and Hip Complex have no movement-pattern subgroups yet (no `subgroups` key) —
-    // they just relabel/merge their primary-muscle tag(s) into one section, ready to take a
-    // subgroup breakdown later the same way the groups above did.
-    { label: 'Core & Bodyweight', primaries: ['abdominals', 'full_body'] },
-    { label: 'Hip Complex', primaries: ['adductors', 'abductors', 'glutes'] },
-    {
-      label: 'Hamstrings & Calves', primaries: ['hamstrings', 'calves'],
-      subgroups: [
-        { name: 'Hip Hinge (Hamstring-dominant)', what: 'Hamstring + glute, posterior chain',
-          exercises: ['Romanian Deadlift (Dumbbell)'] },
-        { name: 'Leg Curl (isolation)', what: 'Pure hamstring, no hip involvement',
-          exercises: ['Lying Leg Curl (Machine)', 'Standing Leg Curls'] },
-        { name: 'Vertical Press (secondary hamstring)', what: 'Primarily quad, but loads hamstring at depth',
-          exercises: ['Vertical Leg press'] },
-        { name: 'Calves', what: 'Calf mass/strength',
-          exercises: ['Calf Press (Machine)', 'Standing Calf Raise'] },
-      ],
-    },
-  ];
+  const VOL_COLGROUP = '<colgroup><col style="width:34%"><col style="width:11%"><col style="width:6%"><col style="width:13%"><col style="width:6%"><col style="width:14%"><col style="width:16%"></colgroup>';
 
   const rowsToTable = rows => {
     const trs = rows.map(r => {
@@ -3138,27 +3040,11 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
       const oneRM = r.maxWeight != null ? `${r.maxWeight} kg` : '—';
       return `<tr><td>${r.name}${bw}</td><td>${fmtVol(r.recentAvg)}</td><td>${r.recentN || '—'}</td><td>${fmtVol(r.baseAvg)}</td><td>${r.baseN || '—'}</td><td>${statusCell}</td><td>${oneRM}</td></tr>`;
     }).join('');
-    return `<table class="tv"><thead><tr><th>Exercise</th><th>Recent avg</th><th>N</th><th>Baseline avg</th><th>N</th><th>Change</th><th>Max weight (all-time)</th></tr></thead><tbody>${trs}</tbody></table>`;
+    return `<table class="tv tv-aligned">${VOL_COLGROUP}<thead><tr><th>Exercise</th><th>Recent avg</th><th>N</th><th>Baseline avg</th><th>N</th><th>Change</th><th>Max weight (all-time)</th></tr></thead><tbody>${trs}</tbody></table>`;
   };
 
-  // One-line insight scoped to a single muscle group's own exercises (same best/worst-by-
-  // deltaPct logic as the tab-level takeaway above, just narrowed to this group).
-  const groupInsight = rows => {
-    const withDelta = rows.filter(r => r.deltaPct != null);
-    if (withDelta.length === 0) return 'No comparable data yet this window.';
-    if (withDelta.length === 1) {
-      const r = withDelta[0];
-      return `${r.name} ${r.deltaPct >= 0 ? '+' : ''}${r.deltaPct.toFixed(0)}% vs baseline.`;
-    }
-    const sorted = withDelta.slice().sort((a, b) => b.deltaPct - a.deltaPct);
-    const best = sorted[0], worst = sorted[sorted.length - 1];
-    if (best.id === worst.id) return `${best.name} ${best.deltaPct >= 0 ? '+' : ''}${best.deltaPct.toFixed(0)}% vs baseline.`;
-    return `${best.name} leading (${best.deltaPct >= 0 ? '+' : ''}${best.deltaPct.toFixed(0)}%); ${worst.name} lagging (${worst.deltaPct >= 0 ? '+' : ''}${worst.deltaPct.toFixed(0)}%).`;
-  };
-
-  // Rowing has no weight/reps, so it can't join the volume table above — it's surfaced
-  // inside the Core section (rowing is core-adjacent cardio) as its own pace-trend panel,
-  // using the same recent-vs-baseline windows as the strength comparison for consistency.
+  // Rowing has no weight/reps, so it can't join the volume table — shown as its own
+  // pace-trend table underneath, same recent-vs-baseline windows and same column grid.
   // Lower pace = faster = progress, the opposite sense of the volume badges above.
   const rowingCoreSessions = cardioSessions(WORKOUTS, ROWING_EXERCISE_ID);
   const rowingCoreRecent = rowingCoreSessions.filter(r => r.date >= VOL_RECENT_START && r.date <= volRecentEnd);
@@ -3178,88 +3064,13 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   } else {
     rowingPaceBadge = `<span class="badge baseline">pace steady</span>`;
   }
-  const rowingCorePanelHtml = rowingCoreSessions.length === 0
-    ? `<h4 style="font-size:12.5px;margin:14px 0 4px;">Rowing (cardio) <span style="font-weight:400;color:var(--text-muted);">&mdash; pace trend, not volume-based</span></h4><p class="sub">No rowing sessions logged yet.</p>`
-    : `<h4 style="font-size:12.5px;margin:14px 0 4px;">Rowing (cardio) <span style="font-weight:400;color:var(--text-muted);">&mdash; pace trend, not volume-based</span></h4>
-       <table class="tv"><thead><tr><th>Recent avg pace</th><th>N</th><th>Baseline avg pace</th><th>N</th><th>Change</th></tr></thead>
-       <tbody><tr><td>${fmtPace(rowingRecentAvgPace)}</td><td>${rowingCoreRecent.length || '—'}</td><td>${fmtPace(rowingBaseAvgPace)}</td><td>${rowingCoreBase.length || '—'}</td><td>${rowingPaceBadge}</td></tr></tbody></table>`;
+  const rowingPanelHtml = rowingCoreSessions.length === 0 ? '' :
+    `<h4 style="font-size:12.5px;margin:18px 0 4px;">Rowing (cardio) <span style="font-weight:400;color:var(--text-muted);">&mdash; pace trend, not volume-based</span></h4>
+     <table class="tv tv-aligned">${VOL_COLGROUP}<thead><tr><th>Exercise</th><th>Recent pace</th><th>N</th><th>Baseline pace</th><th>N</th><th>Change</th><th></th></tr></thead>
+     <tbody><tr><td>Rowing Machine</td><td>${fmtPace(rowingRecentAvgPace)}</td><td>${rowingCoreRecent.length || '—'}</td><td>${fmtPace(rowingBaseAvgPace)}</td><td>${rowingCoreBase.length || '—'}</td><td>${rowingPaceBadge}</td><td></td></tr></tbody></table>`;
 
-  const volSections = []; // { key, label, html } — one per rendered muscle-group tab
-  const consumedPrimaries = new Set();
-  for (const grp of volGroupsRender) {
-    if (consumedPrimaries.has(grp)) continue;
-    const combined = COMBINED_GROUPS.find(c => c.primaries[0] === grp);
-    const isCoreGroup = !!(combined && combined.label === 'Core & Bodyweight');
-
-    // Core & Bodyweight also pulls in every Bodyweight Routine exercise by id (e.g. Push Up,
-    // primary 'chest') regardless of which primary muscle it's tagged with or which specific
-    // workout it was logged in — additive to that exercise's normal muscle-group section
-    // (Push Up still renders under Chest too), same "counts everywhere it's logged"
-    // principle as the Cardio Trend Bodyweight Routine card above.
-    const rows = (combined
-      ? volRows.filter(r => combined.primaries.includes(r.primary || '') || (isCoreGroup && BODYWEIGHT_ROUTINE_EXERCISE_IDS.has(r.id)))
-      : volRows.filter(r => (r.primary || '') === grp)
-    ).sort((a, b) => (b.deltaPct ?? -Infinity) - (a.deltaPct ?? -Infinity));
-    if (combined) combined.primaries.forEach(p => consumedPrimaries.add(p));
-    if (rows.length === 0 && !(isCoreGroup && rowingCoreSessions.length > 0)) continue;
-
-    const displayLabel = combined ? combined.label : (MUSCLE_LABEL[grp] || grp);
-    const insightHtml = `<p class="sub vol-group-insight">${groupInsight(rows)}</p>`;
-
-    const subgroups = combined ? combined.subgroups : EXERCISE_SUBGROUPS[grp];
-    // Every merged/umbrella group (Core, Hip Complex, Back, Arms, ...) gets the boxed
-    // vertical-label layout so it reads as one distinct unit — whether or not it has a
-    // movement-pattern breakdown yet. A single primary-muscle group with a curated
-    // breakdown (e.g. shoulders, chest, quads) gets it too; a plain flat group doesn't.
-    const boxed = !!(combined || subgroups);
-    const sectionKey = displayLabel.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    if (!boxed) {
-      volSections.push({ key: sectionKey, label: displayLabel,
-        html: `<div class="day-section"><h3>${displayLabel}</h3>${insightHtml}${rowsToTable(rows)}</div>` });
-      continue;
-    }
-
-    let inner;
-    if (!subgroups) {
-      inner = rowsToTable(rows);
-    } else {
-      const claimed = new Set();
-      inner = '';
-      for (const sg of subgroups) {
-        // Ordered by the curated exercises list above (so name-variants like "Overhead
-        // Press"/"Shoulder Press" sit next to each other), not re-sorted by deltaPct.
-        const sgRows = sg.exercises.map(name => rows.find(r => r.name === name)).filter(Boolean);
-        if (sgRows.length === 0) continue;
-        sgRows.forEach(r => claimed.add(r.id));
-        inner += `<h4 style="font-size:12.5px;margin:14px 0 4px;">${sg.name} <span style="font-weight:400;color:var(--text-muted);">&mdash; ${sg.what}</span></h4>${rowsToTable(sgRows)}`;
-      }
-      const leftover = rows.filter(r => !claimed.has(r.id));
-      if (leftover.length > 0) {
-        inner += `<h4 style="font-size:12.5px;margin:14px 0 4px;">Other</h4>${rowsToTable(leftover)}`;
-      }
-    }
-    if (isCoreGroup) inner += rowingCorePanelHtml;
-    volSections.push({ key: sectionKey, label: displayLabel,
-      html: `<div class="day-section vol-boxed">
-      <div class="vol-box-label">${displayLabel}</div>
-      <div class="vol-box-content">${insightHtml}${inner}</div>
-    </div>` });
-  }
-
-  document.getElementById('volTabs').innerHTML = volSections.map((s, i) =>
-    `<button class="vol-tab-btn${i === 0 ? ' active' : ''}" type="button" data-group="${s.key}">${s.label}</button>`
-  ).join('');
-  document.getElementById('volumeLogTables').innerHTML = volSections.map((s, i) =>
-    `<div class="vol-group-panel" data-group="${s.key}"${i === 0 ? '' : ' hidden'}>${s.html}</div>`
-  ).join('');
-  document.querySelectorAll('#volTabs .vol-tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#volTabs .vol-tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('#volumeLogTables .vol-group-panel').forEach(p => p.hidden = true);
-      btn.classList.add('active');
-      document.querySelector(`#volumeLogTables .vol-group-panel[data-group="${btn.dataset.group}"]`).hidden = false;
-    });
-  });
+  document.getElementById('volumeLogTables').innerHTML =
+    `<div class="day-section">${rowsToTable(sortedRows)}${rowingPanelHtml}</div>`;
 }
 
 // ---------- rowing machine cardio trend ----------
