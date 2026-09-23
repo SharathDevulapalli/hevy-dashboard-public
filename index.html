@@ -109,6 +109,7 @@
   table.tv th, table.tv td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
   table.tv th { color: var(--text-muted); font-weight: 500; }
   table.tv-aligned { table-layout: fixed; }
+  tr.vol-group-row td { font-weight: 600; font-size: 12px; color: var(--text-secondary); padding-top: 14px; border-bottom: 1px solid var(--text-muted); }
   ul.vol-insights { margin: 4px 0 14px; padding-left: 0; list-style: none; font-size: 13px; line-height: 1.6; }
   ul.vol-insights b { font-weight: 600; }
   table.tv-aligned td:first-child { overflow-wrap: anywhere; }
@@ -3052,10 +3053,20 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   const sortedRows = volRows.slice().sort((a, b) =>
     muscleRank(a) - muscleRank(b) || (b.deltaPct ?? -Infinity) - (a.deltaPct ?? -Infinity));
 
+  // Latest workout first (2026-09-23 user request): the exercises from the most recent
+  // session on the Strength tab (same weeklySnapshot source, so bodyweight/cardio are
+  // already excluded) are pinned to the top in the order they were done, then everything
+  // else in the anatomical order above — so the latest session reads at a glance.
+  const latestSession = snapshot.length ? snapshot[snapshot.length - 1] : null;
+  const latestIds = latestSession ? latestSession.exercises.map(e => e.id) : [];
+  const latestRows = latestIds.map(id => sortedRows.find(r => r.id === id)).filter(Boolean);
+  const otherRows = sortedRows.filter(r => !latestIds.includes(r.id));
+
   const VOL_COLGROUP = '<colgroup><col style="width:34%"><col style="width:11%"><col style="width:6%"><col style="width:13%"><col style="width:6%"><col style="width:14%"><col style="width:16%"></colgroup>';
 
-  const rowsToTable = rows => {
-    const trs = rows.map(r => {
+  const groupRow = text => `<tr class="vol-group-row"><td colspan="7">${text}</td></tr>`;
+  const rowsToTable = (rows, before = '', between = null) => {
+    const trs = rows.map((r, i) => {
       let statusCell;
       if (r.deltaPct != null) {
         statusCell = `<span class="badge ${r.deltaPct >= 0 ? 'progress' : 'surplus'}">${fmtPct(r.deltaPct)}</span>`;
@@ -3066,9 +3077,9 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
       }
       const bw = r.bodyweight ? ' <span style="color:var(--text-muted);font-size:10px;">bw</span>' : '';
       const oneRM = r.maxWeight != null ? `${r.maxWeight} kg` : '—';
-      return `<tr><td>${r.name}${bw}</td><td>${fmtVol(r.recentAvg)}</td><td>${r.recentN || '—'}</td><td>${fmtVol(r.baseAvg)}</td><td>${r.baseN || '—'}</td><td>${statusCell}</td><td>${oneRM}</td></tr>`;
+      return (between && i === between.at ? groupRow(between.text) : '') + `<tr><td>${r.name}${bw}</td><td>${fmtVol(r.recentAvg)}</td><td>${r.recentN || '—'}</td><td>${fmtVol(r.baseAvg)}</td><td>${r.baseN || '—'}</td><td>${statusCell}</td><td>${oneRM}</td></tr>`;
     }).join('');
-    return `<table class="tv tv-aligned">${VOL_COLGROUP}<thead><tr><th>Exercise</th><th>Recent avg</th><th>N</th><th>Baseline avg</th><th>N</th><th>Change</th><th>Max weight (all-time)</th></tr></thead><tbody>${trs}</tbody></table>`;
+    return `<table class="tv tv-aligned">${VOL_COLGROUP}<thead><tr><th>Exercise</th><th>Recent avg</th><th>N</th><th>Baseline avg</th><th>N</th><th>Change</th><th>Max weight (all-time)</th></tr></thead><tbody>${before}${trs}</tbody></table>`;
   };
 
   // Rowing has no weight/reps, so it can't join the volume table — shown as its own
@@ -3098,7 +3109,11 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
      <tbody><tr><td>Rowing Machine</td><td>${fmtPace(rowingRecentAvgPace)}</td><td>${rowingCoreRecent.length || '—'}</td><td>${fmtPace(rowingBaseAvgPace)}</td><td>${rowingCoreBase.length || '—'}</td><td>${rowingPaceBadge}</td><td></td></tr></tbody></table>`;
 
   document.getElementById('volumeLogTables').innerHTML =
-    `<div class="day-section">${rowsToTable(sortedRows)}${rowingPanelHtml}</div>`;
+    `<div class="day-section">${latestRows.length
+      ? rowsToTable([...latestRows, ...otherRows],
+          groupRow(`Latest workout: ${latestSession.title} &mdash; ${latestSession.date}`),
+          { at: latestRows.length, text: 'All other exercises' })
+      : rowsToTable(sortedRows)}${rowingPanelHtml}</div>`;
 }
 
 // ---------- rowing machine cardio trend ----------
