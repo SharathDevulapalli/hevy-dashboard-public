@@ -109,6 +109,8 @@
   table.tv th, table.tv td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
   table.tv th { color: var(--text-muted); font-weight: 500; }
   table.tv-aligned { table-layout: fixed; }
+  ul.vol-insights { margin: 4px 0 14px; padding-left: 0; list-style: none; font-size: 13px; line-height: 1.6; }
+  ul.vol-insights b { font-weight: 600; }
   table.tv-aligned td:first-child { overflow-wrap: anywhere; }
   details.tableview { margin-top: 10px; }
   details.tableview summary { cursor: pointer; color: var(--text-secondary); font-size: 12px; }
@@ -436,7 +438,7 @@
         <div class="stat-row" id="volStatRow"></div>
       </header>
       <section>
-        <p class="sub" id="volumeLogTakeaway" style="font-weight:600;"></p>
+        <div class="sub" id="volumeLogTakeaway"></div>
         <div id="volumeLogTables"></div>
       </section>
     </div>
@@ -2992,29 +2994,49 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     statTile(goneCount, 'not since ' + VOL_RECENT_START);
 
   {
-    // Which muscle group is carrying the recent gains vs which is lagging, averaged across
-    // its tracked exercises' deltaPct (only exercises with both a recent and baseline avg).
-    const byGroup = new Map();
-    for (const r of volRows) {
-      if (r.deltaPct == null) continue;
-      const g = r.primary || 'other';
-      if (!byGroup.has(g)) byGroup.set(g, []);
-      byGroup.get(g).push(r.deltaPct);
-    }
-    const groupAvgs = [...byGroup.entries()].map(([g, vals]) => ({ g, avg: vals.reduce((a,b)=>a+b,0)/vals.length }));
-    const takeawayEl = document.getElementById('volumeLogTakeaway');
-    if (groupAvgs.length === 0) {
-      takeawayEl.textContent = '';
-    } else {
-      groupAvgs.sort((a, b) => b.avg - a.avg);
-      const best = groupAvgs[0], worst = groupAvgs[groupAvgs.length - 1];
-      const label = g => MUSCLE_LABEL[g] || g;
-      if (groupAvgs.length === 1 || best.g === worst.g) {
-        takeawayEl.textContent = `📈 ${label(best.g)} averaging ${best.avg >= 0 ? '+' : ''}${best.avg.toFixed(0)}% vs baseline.`;
-      } else {
-        takeawayEl.textContent = `📈 ${label(best.g)} leading gains (${best.avg >= 0 ? '+' : ''}${best.avg.toFixed(0)}%); ${label(worst.g)} lagging (${worst.avg >= 0 ? '+' : ''}${worst.avg.toFixed(0)}%).`;
+    // Key-insights list (2026-09-23, replacing a single "X leading / Y lagging" line that was
+    // routinely driven by one-exercise groups, e.g. Abductors +80% from a single lift).
+    // Groups only qualify with >= 3 comparable exercises, and exercise-level gainers/decliners
+    // need >= 2 sessions in both windows, so one-off sessions don't dominate.
+    const pct = n => (n >= 0 ? '+' : '') + n.toFixed(0) + '%';
+    const label = g => MUSCLE_LABEL[g] || g;
+    const comparable = volRows.filter(r => r.deltaPct != null);
+    const insights = [];
+    if (comparable.length) {
+      const sortedD = comparable.map(r => r.deltaPct).sort((a, b) => a - b);
+      const mid = Math.floor(sortedD.length / 2);
+      const median = sortedD.length % 2 ? sortedD[mid] : (sortedD[mid - 1] + sortedD[mid]) / 2;
+      const upN = comparable.filter(r => r.deltaPct > 0).length;
+      insights.push(`📊 <b>Overall:</b> ${upN} of ${comparable.length} comparable exercises up; median change ${pct(median)} vs baseline.`);
+
+      const byGroup = new Map();
+      for (const r of comparable) {
+        const g = r.primary || 'other';
+        if (!byGroup.has(g)) byGroup.set(g, []);
+        byGroup.get(g).push(r.deltaPct);
       }
+      const groups = [...byGroup.entries()].filter(([, v]) => v.length >= 3)
+        .map(([g, v]) => ({ g, n: v.length, avg: v.reduce((a, b) => a + b, 0) / v.length }))
+        .sort((a, b) => b.avg - a.avg);
+      if (groups.length >= 2) {
+        const top = groups.slice(0, 2).map(x => `${label(x.g)} ${pct(x.avg)} (${x.n} ex)`).join(', ');
+        const bottom = groups[groups.length - 1];
+        insights.push(`💪 <b>Strongest groups:</b> ${top}.`);
+        insights.push(`⚠️ <b>Lagging group:</b> ${label(bottom.g)} ${pct(bottom.avg)} across ${bottom.n} exercises.`);
+      }
+
+      const solid = comparable.filter(r => r.recentN >= 2 && r.baseN >= 2).sort((a, b) => b.deltaPct - a.deltaPct);
+      const gainers = solid.filter(r => r.deltaPct > 0).slice(0, 3);
+      const decliners = solid.filter(r => r.deltaPct < 0).slice(-3).reverse();
+      if (gainers.length) insights.push(`🚀 <b>Biggest gains:</b> ${gainers.map(r => `${r.name} ${pct(r.deltaPct)}`).join(', ')}.`);
+      if (decliners.length) insights.push(`📉 <b>Biggest drops:</b> ${decliners.map(r => `${r.name} ${pct(r.deltaPct)}`).join(', ')}.`);
     }
+    const dropped = volRows.filter(r => r.recentN === 0 && r.baseN >= 3).sort((a, b) => b.baseN - a.baseN);
+    if (dropped.length) {
+      insights.push(`🗂️ <b>Dropped staples</b> (3+ baseline sessions, none since ${VOL_RECENT_START}): ${dropped.map(r => r.name).join(', ')}.`);
+    }
+    document.getElementById('volumeLogTakeaway').innerHTML = insights.length
+      ? `<ul class="vol-insights">${insights.map(t => `<li>${t}</li>`).join('')}</ul>` : '';
   }
 
   const fmtVol = n => n == null ? '—' : Math.round(n).toLocaleString();
