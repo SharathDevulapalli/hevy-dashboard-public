@@ -124,6 +124,24 @@
   td.nut-cell.over { color: var(--critical); font-weight: 600; }
   td.nut-cell.short { font-weight: 600; background: color-mix(in srgb, var(--warning) 20%, transparent); }
   tr.nut-week td { font-weight: 600; color: var(--text-primary); font-size: 12.5px; }
+  .ph-controls { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin: 0 0 14px; font-size: 13px; color: var(--text-secondary); }
+  .ph-controls select { font: inherit; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-1); color: var(--text-primary); }
+  .ph-btns { display: inline-flex; gap: 4px; }
+  .ph-btns button { appearance: none; font: inherit; font-size: 12px; padding: 5px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-1); color: var(--text-secondary); cursor: pointer; }
+  .ph-btns button.active { color: var(--text-primary); border-color: var(--series-1); box-shadow: inset 0 -2px 0 var(--series-1); }
+  .ph-btns button:disabled { opacity: .45; cursor: not-allowed; }
+  .ph-stage { position: relative; width: 100%; max-width: 480px; aspect-ratio: 4 / 5; margin: 0 auto; border-radius: 10px; overflow: hidden; background: var(--grid); }
+  .ph-stage img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .ph-handle { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.35); transform: translateX(-1px); pointer-events: none; }
+  .ph-slider-row { display: flex; align-items: center; gap: 10px; max-width: 480px; margin: 10px auto 0; font-size: 12px; color: var(--text-muted); }
+  .ph-slider-row input { flex: 1; }
+  .ph-caps { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 720px; margin: 12px auto 0; font-size: 12.5px; color: var(--text-secondary); }
+  .ph-caps b { color: var(--text-primary); }
+  .ph-strip { display: flex; gap: 8px; overflow-x: auto; margin-top: 18px; padding-bottom: 6px; }
+  .ph-thumb { appearance: none; border: 2px solid transparent; border-radius: 8px; padding: 0; background: none; cursor: pointer; flex: 0 0 auto; text-align: center; font-size: 11px; color: var(--text-muted); }
+  .ph-thumb img { display: block; width: 72px; height: 90px; object-fit: cover; border-radius: 6px; }
+  .ph-thumb.active { border-color: var(--series-1); }
+  .ph-thumb.flagged span::after { content: ' ⚠'; color: var(--warning); }
   .med-scroll { overflow-x: auto; }
   table.med-table { min-width: 1100px; }
   table.med-table th, table.med-table td { white-space: nowrap; }
@@ -318,6 +336,7 @@
     <button class="tab-btn" data-tab="training" type="button">Training</button>
     <button class="tab-btn" data-tab="nutrition" type="button">Nutrition</button>
     <button class="tab-btn" data-tab="reward" type="button">Recovery</button>
+    
     
     <button id="pdfExportBtn" type="button" style="margin-left:auto;appearance:none;background:var(--surface-1);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);cursor:pointer;font:inherit;font-size:13px;padding:7px 14px;align-self:center;">&darr; Download as PDF</button>
   </div>
@@ -536,10 +555,14 @@
 
   
 
+  
+
 </div>
 
 <script>
 const WORKOUTS = [
+{"d": "2026-09-24", "t": "Bodyweight Routine", "ex": [{"i": "392887AA", "s": [[0, 15], [0, 15]]}, {"i": "09C9F635", "s": [[0, 15], [0, 15], [0, 15]]}, {"i": "6BE68B62", "s": [[0, 10], [0, 15], [0, 15]], "n": "Tuck In"}]},
+{"d": "2026-09-24", "t": "Back & Biceps", "ex": [{"i": "6A6C31A5", "s": [[30, 15], [40, 10], [45, 10]]}, {"i": "0393F233", "s": [[35, 10], [35, 10], [40, 10]]}, {"i": "08A2974E", "s": [[20, 15], [30, 10], [35, 10]]}, {"i": "9273BA17", "s": [[30, 15], [40, 15], [40, 15]]}, {"i": "37FCC2BB", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "7E3BC8B6", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "1E9A6B8E", "s": [[5, 20], [7.5, 20], [10, 20]]}, {"i": "01A35BF9", "s": [[15, 20], [15, 20], [15, 20]], "n": "10 front, 10 dragged"}]},
 {"d": "2026-09-23", "t": "Bodyweight Routine", "ex": [{"i": "09C9F635", "s": [[0, 20], [0, 20], [0, 20]]}, {"i": "392887AA", "s": [[0, 20], [0, 15], [0, 15]]}]},
 {"d": "2026-09-23", "t": "Quads", "ex": [{"i": "CC35A01F", "s": [[80, 20], [120, 20], [120, 20]]}, {"i": "F30A4F01", "s": [[10, 30], [15, 30], [15, 30]]}, {"i": "75A4F6C4", "s": [[25, 20], [30, 20], [35, 20]]}, {"i": "3FD83744", "s": [[50, 20], [75, 14], [75, 20], [100, 20]]}]},
 {"d": "2026-09-22", "t": "Bodyweight Routine", "ex": [{"i": "BB792A36", "s": [[0, 10], [0, 10]]}, {"i": "392887AA", "s": [[0, 20], [0, 20]]}, {"i": "6BE68B62", "s": [[0, 20], [0, 15], [0, 15]], "n": "Tuck in"}]},
@@ -873,9 +896,11 @@ const EXMETA = {
 "DBF9273A":{"name": "Plate Front Raise", "primary": "shoulders"},
 "797F0782":{"name": "Upright Row (Dumbbell)", "primary": "shoulders"},
 "BB792A36":{"name": "Burpee", "primary": "full_body", "bodyweight": true},
-"F30A4F01":{"name": "Walking Lunge (Sandbag)", "primary": "quadriceps"}
+"F30A4F01":{"name": "Walking Lunge (Sandbag)", "primary": "quadriceps"},
+"9273BA17":{"name": "Rope Straight Arm Pulldown", "primary": "lats"}
 };
 const STEPS = [
+{"d": "2026-09-24", "steps": 12770, "goal": 11920},
 {"d": "2026-09-23", "steps": 12506, "goal": 11770},
 {"d": "2026-09-22", "steps": 15961, "goal": 10720},
 {"d": "2026-09-21", "steps": 10837, "goal": 10680},
@@ -953,6 +978,7 @@ const STEPS = [
 {"d": "2026-07-11", "steps": 10238, "goal": 5590}
 ];
 const HEARTRATE = [
+{"d": "2026-09-24", "resting": 55, "min": 52, "max": 130},
 {"d": "2026-09-23", "resting": 50, "min": 49, "max": 138},
 {"d": "2026-09-22", "resting": 53, "min": 49, "max": 128},
 {"d": "2026-09-21", "resting": 51, "min": 44, "max": 141},
@@ -1030,6 +1056,7 @@ const HEARTRATE = [
 {"d": "2026-07-11", "resting": 60, "min": 53, "max": 118}
 ];
 const NUTRITION = [
+{"d": "2026-09-24", "calories": 1968, "goal": 1900, "protein": 187, "proteinGoal": 190, "carbs": 196, "carbsGoal": 166, "fat": 42, "fatGoal": 53},
 {"d": "2026-09-23", "calories": 1866, "goal": 1900, "protein": 205, "proteinGoal": 190, "carbs": 165, "carbsGoal": 166, "fat": 40, "fatGoal": 53},
 {"d": "2026-09-22", "calories": 1910, "goal": 1900, "protein": 148, "proteinGoal": 190, "carbs": 172, "carbsGoal": 166, "fat": 71, "fatGoal": 53},
 {"d": "2026-09-21", "calories": 1470, "goal": 1900, "protein": 176, "proteinGoal": 190, "carbs": 128, "carbsGoal": 166, "fat": 26, "fatGoal": 53},
@@ -1125,6 +1152,7 @@ const BODYLOG = [
 {"d": "2026-08-14", "weightKg": 69.9, "bodyFatPct": 21.3}
 ];
 const SUPPLEMENTS = [
+{"d": "2026-09-24", "items": ["beta_alanine", "boron", "citrulline", "creatine", "d3_k2", "glycine", "preworkout", "tongkat_ali", "unived_eaa", "zma"]},
 {"d": "2026-09-23", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "preworkout", "swisse_omega3", "tongkat_ali", "zma"]},
 {"d": "2026-09-22", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "pepping_probiotic", "preworkout", "swisse_omega3", "tongkat_ali", "zma"]},
 {"d": "2026-09-21", "items": ["calm", "d3_k2", "glycine", "pepping_probiotic", "preworkout", "tongkat_ali", "zma"]},
@@ -1174,15 +1202,7 @@ const SUPPLEMENT_META = [
     "brand": "Pepping",
     "serving": "1 capsule",
     "timing": "First thing, empty stomach",
-    "status": "active"
-  },
-  {
-    "id": "flora17_probiotic",
-    "label": "Flora-17 Probiotics",
-    "brand": "Unived",
-    "serving": "\u2014",
-    "timing": "First thing, empty stomach",
-    "status": "not_started"
+    "status": "archived"
   },
   {
     "id": "tongkat_ali",
@@ -1190,7 +1210,14 @@ const SUPPLEMENT_META = [
     "brand": "Trexgenics",
     "serving": "1 capsule",
     "timing": "After breakfast",
-    "status": "active"
+    "status": "active",
+    "breaks": [
+      {
+        "start": "2026-10-01",
+        "end": "2026-10-15",
+        "reason": "Cycling break"
+      }
+    ]
   },
   {
     "id": "boron",
@@ -1206,7 +1233,14 @@ const SUPPLEMENT_META = [
     "brand": "Unived Basics",
     "serving": "1 capsule (600 IU D3, 55mcg K2-7)",
     "timing": "After breakfast",
-    "status": "active"
+    "status": "archived",
+    "skipWeekdays": {
+      "days": [
+        6
+      ],
+      "from": "2026-09-26"
+    },
+    "activeUntil": "2026-09-24"
   },
   {
     "id": "d_rise",
@@ -1214,7 +1248,11 @@ const SUPPLEMENT_META = [
     "brand": "\u2014",
     "serving": "\u2014",
     "timing": "After breakfast",
-    "status": "not_started"
+    "status": "active",
+    "activeFrom": "2026-09-26",
+    "weekdays": [
+      6
+    ]
   },
   {
     "id": "caldveg",
@@ -1222,7 +1260,14 @@ const SUPPLEMENT_META = [
     "brand": "Unived",
     "serving": "\u2014",
     "timing": "After breakfast",
-    "status": "not_started"
+    "status": "active",
+    "skipWeekdays": {
+      "days": [
+        6
+      ],
+      "from": "2026-09-26"
+    },
+    "activeFrom": "2026-09-25"
   },
   {
     "id": "calm",
@@ -1230,7 +1275,7 @@ const SUPPLEMENT_META = [
     "brand": "Unived",
     "serving": "2 capsules",
     "timing": "After breakfast",
-    "status": "active"
+    "status": "archived"
   },
   {
     "id": "swisse_omega3",
@@ -1278,6 +1323,14 @@ const SUPPLEMENT_META = [
     "brand": "Maverick",
     "serving": "10g scoop",
     "timing": "During workout",
+    "status": "archived"
+  },
+  {
+    "id": "unived_eaa",
+    "label": "EAA + Hydration Mix (EAA 7.05g)",
+    "brand": "Unived",
+    "serving": "13g",
+    "timing": "During workout",
     "status": "active"
   },
   {
@@ -1286,14 +1339,6 @@ const SUPPLEMENT_META = [
     "brand": "Maverick",
     "serving": "3g scoop",
     "timing": "During workout",
-    "status": "active"
-  },
-  {
-    "id": "glycine",
-    "label": "Pure Glycine (Unflavoured)",
-    "brand": "Trexgenics",
-    "serving": "~2.5g",
-    "timing": "Post-dinner / pre-sleep",
     "status": "active"
   },
   {
@@ -1310,10 +1355,34 @@ const SUPPLEMENT_META = [
     "brand": "Unived",
     "serving": "2 capsules",
     "timing": "Post-dinner / pre-sleep",
+    "status": "active",
+    "breaks": [
+      {
+        "start": "2026-10-01",
+        "end": "2026-10-15",
+        "reason": "Cycling break"
+      }
+    ]
+  },
+  {
+    "id": "flora17_probiotic",
+    "label": "Flora-17 Probiotics",
+    "brand": "Unived",
+    "serving": "\u2014",
+    "timing": "Post-dinner / pre-sleep",
+    "status": "not_started"
+  },
+  {
+    "id": "glycine",
+    "label": "Pure Glycine (Unflavoured)",
+    "brand": "Trexgenics",
+    "serving": "~2.5g",
+    "timing": "Post-dinner / pre-sleep",
     "status": "active"
   }
 ];
 const MEDICAL = {"reports":[],"params":[]};
+const PHOTOS = {"baseline":null,"photos":[]};
 
 // Pure data-processing logic shared between the sanity-check script and the dashboard HTML.
 // No DOM dependency so it can be unit-checked under plain Node first.
@@ -1654,9 +1723,27 @@ function supplementCalendar(supplementsData, metaItems, startDateStr, totalDays,
   const elapsedDays = days.filter(day => !day.isFuture).length;
   const rows = metaItems.map(item => {
     const ticks = days.map(day => !day.isFuture && !!byDate.get(day.date) && byDate.get(day.date).has(item.id));
-    const takenDays = ticks.filter(Boolean).length;
-    const adherencePct = elapsedDays > 0 ? Math.round((takenDays / elapsedDays) * 100) : null;
-    return Object.assign({}, item, { ticks, takenDays, adherencePct });
+    // Planned cycling breaks (item.breaks: [{start, end}] inclusive) — a break day is neither
+    // a miss nor part of the adherence denominator; a tick still shows if logged anyway.
+    const onBreak = days.map(day => (item.breaks || []).some(b => day.date >= b.start && day.date <= b.end));
+    // Weekday schedules (2026-09-24): `activeFrom` (not due before it), `activeUntil` (not due
+    // after it — e.g. a product replaced by another), `weekdays` (due only
+    // on these getUTCDay() numbers, e.g. [6] = Saturdays for a weekly D3), `skipWeekdays`
+    // ({days, from}: planned gap on those weekdays from that date, e.g. D3+K2-7 on Saturdays
+    // when the weekly D3 replaces it). Not-due days are neither misses nor in the denominator.
+    const notDue = days.map(day => {
+      const dow = new Date(day.date + 'T00:00:00Z').getUTCDay();
+      if (item.activeFrom && day.date < item.activeFrom) return true;
+      if (item.activeUntil && day.date > item.activeUntil) return true; // replaced/stopped after this date
+      if (item.weekdays && !item.weekdays.includes(dow)) return true;
+      const sk = item.skipWeekdays;
+      return !!(sk && day.date >= (sk.from || '') && sk.days.includes(dow));
+    });
+    const excluded = i => onBreak[i] || notDue[i];
+    const takenDays = ticks.filter((t, i) => t && !excluded(i)).length;
+    const dueDays = days.filter((day, i) => !day.isFuture && !excluded(i)).length;
+    const adherencePct = dueDays > 0 ? Math.round((takenDays / dueDays) * 100) : null;
+    return Object.assign({}, item, { ticks, onBreak, notDue, takenDays, adherencePct });
   });
   return { days, rows, elapsedDays };
 }
@@ -3327,11 +3414,20 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   const rowsHtmlFor = rows => rows.map(r => {
     const pctStr = r.adherencePct == null ? '—' : `${r.adherencePct}%`;
     const cells = r.ticks.map((t, i) => {
-      const cls = sup.days[i].isFuture ? 'sup-cell sup-future' : (t ? 'sup-cell sup-yes' : 'sup-cell sup-no');
-      return `<td class="${cls}" title="${sup.days[i].date}">${t ? '✓' : ''}</td>`;
+      const brk = r.onBreak && r.onBreak[i];
+      const nd = !brk && r.notDue && r.notDue[i];
+      const cls = 'sup-cell' + (brk ? ' sup-break' : nd ? ' sup-notdue' : '') + (t ? ' sup-yes' : sup.days[i].isFuture ? ' sup-future' : ' sup-no');
+      const title = sup.days[i].date + (brk ? ' — planned cycling break' + (t ? ' (taken anyway)' : '') : nd ? ' — not scheduled' : '');
+      return `<td class="${cls}" title="${title}">${t ? '✓' : brk ? '–' : nd ? '·' : ''}</td>`;
     }).join('');
+    const fmtBreak = b => { const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const f = d => `${+d.slice(8, 10)} ${M[+d.slice(5, 7) - 1]}`; return `${f(b.start)}–${f(b.end)}`; };
+    const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const schedNote = (r.weekdays ? ` &middot; <span class="sup-break-note">${r.weekdays.map(d => DOW[d]).join('/')} only</span>` : '')
+      + (r.skipWeekdays ? ` &middot; <span class="sup-break-note">not on ${r.skipWeekdays.days.map(d => DOW[d]).join('/')}</span>` : '');
+    const breakNote = schedNote + (r.breaks || []).filter(b => b.end >= sup.days[0].date).map(b => ` &middot; <span class="sup-break-note">break ${fmtBreak(b)}</span>`).join('');
     return `<tr>
-      <th class="sup-label"><div>${r.label} <span class="sup-pct">${pctStr}</span></div><div class="sup-sub">${r.brand} &middot; ${r.timing}</div></th>
+      <th class="sup-label"><div>${r.label} <span class="sup-pct">${pctStr}</span></div><div class="sup-sub">${r.brand} &middot; ${r.timing}${breakNote}</div></th>
       ${cells}
     </tr>`;
   }).join('');
@@ -3348,7 +3444,9 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   document.getElementById('supplementsGrid').innerHTML = `
     <style>
       .sup-table { border-collapse: collapse; }
-      .sup-label { position: sticky; left: 0; background: var(--surface-1); text-align: left; padding: 6px 12px 6px 0; font-size: 12px; font-weight: 600; white-space: nowrap; z-index: 1; border-right: 1px solid var(--border); }
+      .sup-label { position: sticky; left: 0; background: var(--surface-1); text-align: left; padding: 6px 12px 6px 0; font-size: 12px; font-weight: 600; z-index: 1; border-right: 1px solid var(--border);
+        /* One fixed width for every section's table (Active / Not started / Archive) so their day columns line up. */
+        width: 300px; min-width: 300px; max-width: 300px; white-space: normal; }
       .sup-pct { font-weight: 700; color: var(--good); font-size: 11px; margin-left: 4px; }
       .sup-sub { font-weight: 400; font-size: 10px; color: var(--text-muted); }
       .sup-month, .sup-day { text-align: center; color: var(--text-muted); font-weight: 500; min-width: 20px; }
@@ -3357,6 +3455,11 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
       .sup-cell { width: 20px; height: 20px; text-align: center; vertical-align: middle; border: 1px solid var(--border); font-size: 11px; }
       .sup-yes { background: color-mix(in srgb, var(--good) 22%, transparent); color: var(--good); font-weight: 700; }
       .sup-future { background: repeating-linear-gradient(45deg, transparent, transparent 3px, var(--border) 3px, var(--border) 4px); }
+      .sup-break { background: color-mix(in srgb, var(--series-1) 16%, transparent); color: var(--series-1); font-weight: 700; }
+      .sup-break.sup-yes { background: color-mix(in srgb, var(--warning) 28%, transparent); color: var(--text-primary); }
+      .sup-break-note { color: var(--series-1); font-weight: 600; }
+      .sup-notdue { background: var(--page); color: var(--text-muted); }
+      .sup-notdue.sup-yes { background: color-mix(in srgb, var(--good) 22%, transparent); color: var(--good); }
       .sup-archive-summary { font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; margin-top: 10px; }
       .sup-section-label { font-size: 12px; font-weight: 700; color: var(--good); margin: 0 0 6px; }
       .sup-sec-row th.sup-sec { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); padding-top: 14px; }
@@ -3656,6 +3759,105 @@ if (document.getElementById('subtab-expenses')) {
     }
     saveBtn.style.display = '';
     saveBtn.onclick = tlRenderPNG;
+  }
+}
+
+// ---------- Photos tab: aligned progress-photo compare (private build only) ----------
+// photo_sync.py writes one aligned 800x1000 JPEG per day to hevy/data/photos/<date>.jpg (all
+// normalised onto the oldest photo's shoulders/hips) plus the PHOTOS index. Images are
+// referenced by relative path, never embedded, so the page stays small and photos never
+// reach git or the public build (the tab is PUBLIC:EXCLUDE and PHOTOS is stubbed there).
+if (document.getElementById('tab-photos')) {
+  const photos = (PHOTOS.photos || []).slice().sort((a, b) => a.d.localeCompare(b.d));
+  const stage = document.getElementById('phStage');
+  if (!photos.length) {
+    document.getElementById('phRangeLabel').textContent = 'No progress photos yet';
+    stage.outerHTML = '<p class="sub">Add front, waist-up photos to <code>Fitness/Progress Photos</code> — the daily sync dates them from their metadata and aligns them to the oldest one.</p>';
+    document.getElementById('phControls').hidden = true;
+  } else {
+    const src = p => `hevy/data/photos/${p.d}.jpg`;
+    const first = photos[0], last = photos[photos.length - 1];
+    document.getElementById('phRangeLabel').textContent =
+      `${photos.length} photo${photos.length === 1 ? '' : 's'} · ${first.d} to ${last.d} · baseline ${PHOTOS.baseline || first.d}`;
+
+    const body = new Map(dailyBodyLog(BODYLOG).map(d => [d.date, d]));
+    const caption = p => {
+      const b = body.get(p.d);
+      const parts = [p.d];
+      if (b && b.weightKg != null) parts.push(`${b.weightKg.toFixed(1)} kg`);
+      if (b && b.bodyFatPct != null) parts.push(`${b.bodyFatPct.toFixed(1)}% fat`);
+      if (b && b.weightKg != null && b.bodyFatPct != null) parts.push(`${(b.weightKg * b.bodyFatPct / 100).toFixed(1)} kg fat mass`);
+      if (p.flagged) parts.push('⚠ ' + (p.note || 'check photo'));
+      return parts.join(' · ');
+    };
+    const opts = photos.map(p => `<option value="${p.d}">${p.d}</option>`).join('');
+    const selA = document.getElementById('phBefore'), selB = document.getElementById('phAfter');
+    selA.innerHTML = opts; selB.innerHTML = opts;
+    const imgA = document.getElementById('phImgBefore'), imgB = document.getElementById('phImgAfter');
+    const slider = document.getElementById('phSlider'), handle = document.getElementById('phHandle');
+    let mode = 'slider';
+
+    const byDate = d => photos.find(p => p.d === d);
+    // Closest photo on or before `d` (falls back to the oldest one).
+    const onOrBefore = d => photos.filter(p => p.d <= d).pop() || first;
+
+    const render = () => {
+      const a = byDate(selA.value), b = byDate(selB.value);
+      imgA.src = src(a); imgB.src = src(b);
+      document.getElementById('phCapBefore').textContent = caption(a);
+      document.getElementById('phCapAfter').textContent = caption(b);
+      const v = +slider.value;
+      if (mode === 'slider') {
+        imgB.style.opacity = 1;
+        imgB.style.clipPath = `inset(0 0 0 ${v}%)`;
+        handle.hidden = false; handle.style.left = `${v}%`;
+      } else {
+        imgB.style.clipPath = 'none';
+        imgB.style.opacity = v / 100;
+        handle.hidden = true;
+      }
+      document.querySelectorAll('#phStrip .ph-thumb').forEach(t => t.classList.toggle('active', t.dataset.d === selB.value));
+      const ba = body.get(a.d), bb = body.get(b.d);
+      const delta = [];
+      if (ba && bb && ba.weightKg != null && bb.weightKg != null) delta.push(`weight ${bb.weightKg - ba.weightKg >= 0 ? '+' : '−'}${Math.abs(bb.weightKg - ba.weightKg).toFixed(1)} kg`);
+      if (ba && bb && ba.bodyFatPct != null && bb.bodyFatPct != null) delta.push(`body fat ${bb.bodyFatPct - ba.bodyFatPct >= 0 ? '+' : '−'}${Math.abs(bb.bodyFatPct - ba.bodyFatPct).toFixed(1)} pts`);
+      document.getElementById('phDelta').textContent = delta.length ? `Change: ${delta.join(' · ')}` : '';
+    };
+    // Quick compares: "N weeks ago" = the photo closest to (on or before) latest - N weeks, vs
+    // latest. Only enabled once there IS a photo that far back — before that it would just fall
+    // back to the baseline and look identical to "Baseline vs latest" (looked broken, 2026-09-24).
+    const quickPair = q => q === 'baseline' ? [first, last] : [onOrBefore(addDaysISO(last.d, -7 * +q)), last];
+    const syncQuickActive = () => document.querySelectorAll('#phControls [data-quick]').forEach(btn => {
+      const [a, b] = quickPair(btn.dataset.quick);
+      btn.classList.toggle('active', !btn.disabled && selA.value === a.d && selB.value === b.d);
+    });
+    const setPair = (a, b) => { selA.value = a.d; selB.value = b.d; render(); syncQuickActive(); };
+
+    selA.addEventListener('change', () => { render(); syncQuickActive(); });
+    selB.addEventListener('change', () => { render(); syncQuickActive(); });
+    slider.addEventListener('input', render);
+    document.querySelectorAll('#phControls [data-quick]').forEach(btn => {
+      const q = btn.dataset.quick;
+      if (q !== 'baseline' && first.d > addDaysISO(last.d, -7 * +q)) {
+        btn.disabled = true;
+        btn.title = `Available once you have photos from ${q} week${q === '1' ? '' : 's'} back (from ${addDaysISO(first.d, 7 * +q)})`;
+      }
+      btn.addEventListener('click', () => { const [a, b] = quickPair(q); setPair(a, b); });
+    });
+    document.querySelectorAll('#phControls [data-mode]').forEach(btn => btn.addEventListener('click', () => {
+      mode = btn.dataset.mode;
+      document.querySelectorAll('#phControls [data-mode]').forEach(b => b.classList.toggle('active', b === btn));
+      document.getElementById('phLeftLbl').textContent = mode === 'slider' ? '◀ before' : 'before';
+      document.getElementById('phRightLbl').textContent = mode === 'slider' ? 'after ▶' : 'after (fade in →)';
+      slider.value = 50; render();
+    }));
+
+    document.getElementById('phStrip').innerHTML = photos.map(p =>
+      `<button type="button" class="ph-thumb${p.flagged ? ' flagged' : ''}" data-d="${p.d}" title="${caption(p)}"><img loading="lazy" src="${src(p)}" alt=""><span>${p.d.slice(5)}</span></button>`
+    ).join('');
+    document.querySelectorAll('#phStrip .ph-thumb').forEach(t => t.addEventListener('click', () => { selB.value = t.dataset.d; render(); syncQuickActive(); }));
+
+    setPair(first, last);
   }
 }
 
