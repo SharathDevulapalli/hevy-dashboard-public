@@ -561,6 +561,8 @@
 
 <script>
 const WORKOUTS = [
+{"d": "2026-09-25", "t": "Bodyweight Routine", "ex": [{"i": "09C9F635", "s": [[0, 20], [0, 20]]}, {"i": "6BE68B62", "s": [[0, 15], [0, 15], [0, 15], [0, 15]], "n": "Tuckin"}]},
+{"d": "2026-09-25", "t": "Hamstrings, Calves & Triceps", "ex": [{"i": "72CFFAD5", "s": [[40, 10], [50, 10], [70, 10]]}, {"i": "B8127AD1", "s": [[25, 15], [30, 10], [25, 5], [30, 7], [25, 8]]}, {"i": "4180C405", "s": [[50, 15], [80, 10], [120, 10]]}, {"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 20], [200, 20], [250, 20]]}, {"i": "94B7239B", "s": [[20, 15], [25, 10], [30, 5], [25, 5]]}, {"i": "B5EFBF9C", "s": [[20, 14], [20, 14], [25, 14]]}, {"i": "21310F5F", "s": [[20, 15], [25, 10], [25, 10]]}, {"i": "6127A3AD", "s": [[10, 30], [15, 30], [15, 30]], "n": "Each side"}, {"i": "91237BDD", "s": [[100, 20], [100, 20], [150, 15]]}, {"i": "8BEBFED6", "s": [[50, 15], [55, 10], [55, 10]]}, {"i": "F4B4C6EE", "s": [[45, 15], [50, 10], [50, 10]]}]},
 {"d": "2026-09-24", "t": "Bodyweight Routine", "ex": [{"i": "392887AA", "s": [[0, 15], [0, 15]]}, {"i": "09C9F635", "s": [[0, 15], [0, 15], [0, 15]]}, {"i": "6BE68B62", "s": [[0, 10], [0, 15], [0, 15]], "n": "Tuck In"}]},
 {"d": "2026-09-24", "t": "Back & Biceps", "ex": [{"i": "6A6C31A5", "s": [[30, 15], [40, 10], [45, 10]]}, {"i": "0393F233", "s": [[35, 10], [35, 10], [40, 10]]}, {"i": "08A2974E", "s": [[20, 15], [30, 10], [35, 10]]}, {"i": "9273BA17", "s": [[30, 15], [40, 15], [40, 15]]}, {"i": "37FCC2BB", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "7E3BC8B6", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "1E9A6B8E", "s": [[5, 20], [7.5, 20], [10, 20]]}, {"i": "01A35BF9", "s": [[15, 20], [15, 20], [15, 20]], "n": "10 front, 10 dragged"}]},
 {"d": "2026-09-23", "t": "Bodyweight Routine", "ex": [{"i": "09C9F635", "s": [[0, 20], [0, 20], [0, 20]]}, {"i": "392887AA", "s": [[0, 20], [0, 15], [0, 15]]}]},
@@ -900,6 +902,7 @@ const EXMETA = {
 "9273BA17":{"name": "Rope Straight Arm Pulldown", "primary": "lats"}
 };
 const STEPS = [
+{"d": "2026-09-25", "steps": 11763, "goal": 12090},
 {"d": "2026-09-24", "steps": 12770, "goal": 11920},
 {"d": "2026-09-23", "steps": 12506, "goal": 11770},
 {"d": "2026-09-22", "steps": 15961, "goal": 10720},
@@ -978,6 +981,7 @@ const STEPS = [
 {"d": "2026-07-11", "steps": 10238, "goal": 5590}
 ];
 const HEARTRATE = [
+{"d": "2026-09-25", "resting": 54, "min": 50, "max": 130},
 {"d": "2026-09-24", "resting": 55, "min": 52, "max": 130},
 {"d": "2026-09-23", "resting": 50, "min": 49, "max": 138},
 {"d": "2026-09-22", "resting": 53, "min": 49, "max": 128},
@@ -1056,6 +1060,7 @@ const HEARTRATE = [
 {"d": "2026-07-11", "resting": 60, "min": 53, "max": 118}
 ];
 const NUTRITION = [
+{"d": "2026-09-25", "calories": 1732, "goal": 1900, "protein": 189, "proteinGoal": 190, "carbs": 151, "carbsGoal": 166, "fat": 38, "fatGoal": 53},
 {"d": "2026-09-24", "calories": 1968, "goal": 1900, "protein": 187, "proteinGoal": 190, "carbs": 196, "carbsGoal": 166, "fat": 42, "fatGoal": 53},
 {"d": "2026-09-23", "calories": 1866, "goal": 1900, "protein": 205, "proteinGoal": 190, "carbs": 165, "carbsGoal": 166, "fat": 40, "fatGoal": 53},
 {"d": "2026-09-22", "calories": 1910, "goal": 1900, "protein": 148, "proteinGoal": 190, "carbs": 172, "carbsGoal": 166, "fat": 71, "fatGoal": 53},
@@ -1109,6 +1114,7 @@ const NUTRITION = [
 ];
 const EXPENSES = [];
 const BODYLOG = [
+{"d": "2026-09-26", "sleepMin": 352, "weightKg": 68.8, "bodyFatPct": 20.4},
 {"d": "2026-09-25", "sleepMin": 334, "weightKg": 68.3, "bodyFatPct": 19.2},
 {"d": "2026-09-24", "sleepMin": 432, "weightKg": 67.8, "bodyFatPct": 20.2},
 {"d": "2026-09-23", "sleepMin": 280, "weightKg": 68.1, "bodyFatPct": 19.5},
@@ -1153,6 +1159,7 @@ const BODYLOG = [
 {"d": "2026-08-14", "weightKg": 69.9, "bodyFatPct": 21.3}
 ];
 const SUPPLEMENTS = [
+{"d": "2026-09-25", "items": ["beta_alanine", "boron", "caldveg", "citrulline", "glycine", "preworkout", "swisse_omega3", "tongkat_ali", "unived_eaa", "zma"]},
 {"d": "2026-09-24", "items": ["beta_alanine", "boron", "citrulline", "creatine", "d3_k2", "glycine", "preworkout", "tongkat_ali", "unived_eaa", "zma"]},
 {"d": "2026-09-23", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "preworkout", "swisse_omega3", "tongkat_ali", "zma"]},
 {"d": "2026-09-22", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "pepping_probiotic", "preworkout", "swisse_omega3", "tongkat_ali", "zma"]},
