@@ -2613,7 +2613,16 @@ document.getElementById('mastheadDay').textContent =
 // showing a stale "last complete week"). Anchoring one day later fixes that without touching
 // the viewer's browser clock (rejected earlier for the same reason as the old supplement-tracker
 // bug — see hevy_dashboard_latest_synced_date memory).
-const currentWeekAnchor = addDaysISO(latestSyncedDate, 1);
+// 2026-09-27 fix: the blanket +1 over-shot whenever this morning's MFP weigh-in was already synced
+// (the normal case) — BODYLOG then already carries today's date, so latestSyncedDate + 1 landed
+// on tomorrow and flipped the week to next Monday a day early (every Sunday). Now: BODYLOG and
+// EXPENSES (MFP Measurements) are same-day sources (their max date can be today), every other source closes "yesterday" (max + 1 = today);
+// the real current day is the later of the two.
+const maxDateOf = arr => (arr || []).reduce((m, r) => (r.d && (!m || r.d > m)) ? r.d : m, null);
+const dayClosedMax = [WORKOUTS, STEPS, HEARTRATE, NUTRITION, SUPPLEMENTS]
+  .map(maxDateOf).filter(Boolean).sort().pop();
+const currentWeekAnchor = [dayClosedMax && addDaysISO(dayClosedMax, 1), maxDateOf(BODYLOG), maxDateOf(EXPENSES)]
+  .filter(Boolean).sort().pop() || addDaysISO(latestSyncedDate, 1);
 
 function statTile(v, l) { return `<div class="stat-tile"><div class="v">${v}</div><div class="l">${l}</div></div>`; }
 {
