@@ -495,7 +495,7 @@
   <div id="tab-nutrition" class="tabpanel" hidden>
     <div class="subtabs" role="tablist">
       <button class="subtab-btn active" data-subtab="calories" type="button">Calories</button>
-      <button class="subtab-btn" data-subtab="supplements" type="button">Supplements</button>
+      
     </div>
 
     <div id="subtab-calories" class="subtabpanel pdf-page">
@@ -517,13 +517,7 @@
       </section>
     </div>
 
-    <div id="subtab-supplements" class="subtabpanel pdf-page" hidden>
-      <section style="margin-top:4px;">
-        <div class="card">
-          <div id="supplementsGrid" style="overflow-x:auto;"></div>
-        </div>
-      </section>
-    </div>
+    
   </div>
 
   <div id="tab-reward" class="tabpanel" hidden>
@@ -1171,245 +1165,8 @@ const BODYLOG = [
 {"d": "2026-08-15", "weightKg": 69.85, "bodyFatPct": 21.5},
 {"d": "2026-08-14", "weightKg": 69.9, "bodyFatPct": 21.3}
 ];
-const SUPPLEMENTS = [
-{"d": "2026-09-28", "items": ["beta_alanine", "boron", "caldveg", "citrulline", "creatine", "d3_k2", "flora17_probiotic", "preworkout", "swisse_omega3", "tongkat_ali", "unived_eaa", "zma"]},
-{"d": "2026-09-27", "items": ["d_rise", "flora17_probiotic", "glycine", "zma"]},
-{"d": "2026-09-26", "items": ["flora17_probiotic", "glycine", "zma"]},
-{"d": "2026-09-25", "items": ["beta_alanine", "boron", "caldveg", "citrulline", "creatine", "glycine", "preworkout", "swisse_omega3", "tongkat_ali", "unived_eaa", "zma"]},
-{"d": "2026-09-24", "items": ["beta_alanine", "boron", "citrulline", "creatine", "d3_k2", "glycine", "preworkout", "tongkat_ali", "unived_eaa", "zma"]},
-{"d": "2026-09-23", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "preworkout", "swisse_omega3", "tongkat_ali", "zma"]},
-{"d": "2026-09-22", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "pepping_probiotic", "preworkout", "swisse_omega3", "tongkat_ali", "zma"]},
-{"d": "2026-09-21", "items": ["calm", "d3_k2", "glycine", "pepping_probiotic", "preworkout", "tongkat_ali", "zma"]},
-{"d": "2026-09-20", "items": ["calm", "d3_k2", "glycine", "tongkat_ali", "zma"]},
-{"d": "2026-09-19", "items": ["zma"]},
-{"d": "2026-09-18", "items": ["calm", "d3_k2", "tongkat_ali", "zma"]},
-{"d": "2026-09-17", "items": ["calm", "d3_k2", "tongkat_ali", "zma"]},
-{"d": "2026-09-16", "items": ["zma"]},
-{"d": "2026-09-15", "items": ["calm", "d3_k2", "pepping_probiotic", "tongkat_ali"]},
-{"d": "2026-09-14", "items": ["glycine", "zma"]},
-{"d": "2026-09-13", "items": ["calm", "d3_k2", "glycine", "tongkat_ali", "zma"]},
-{"d": "2026-09-12", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "isabgol", "tongkat_ali"]},
-{"d": "2026-09-11", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "magnesium", "preworkout", "tongkat_ali"]},
-{"d": "2026-09-10", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "magnesium", "preworkout", "tongkat_ali"]},
-{"d": "2026-09-09", "items": ["d3_k2", "glycine", "magnesium", "tongkat_ali"]},
-{"d": "2026-09-08", "items": ["beta_alanine", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "isabgol", "magnesium", "tongkat_ali"]},
-{"d": "2026-09-07", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "isabgol", "magnesium", "preworkout", "tongkat_ali"]},
-{"d": "2026-09-06", "items": ["glycine", "isabgol", "magnesium"]},
-{"d": "2026-09-05", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "isabgol", "magnesium", "preworkout", "tongkat_ali"]},
-{"d": "2026-09-04", "items": ["beta_alanine", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "magnesium", "preworkout", "tongkat_ali"]},
-{"d": "2026-09-03", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "magnesium", "tongkat_ali"]},
-{"d": "2026-09-02", "items": ["calm", "d3_k2", "glycine", "magnesium", "tongkat_ali"]},
-{"d": "2026-09-01", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "preworkout", "tongkat_ali"]},
-{"d": "2026-08-31", "items": ["calm", "d3_k2", "tongkat_ali"]},
-{"d": "2026-08-30", "items": ["calm", "d3_k2", "isabgol", "tongkat_ali"]},
-{"d": "2026-08-29", "items": ["calm", "creatine", "d3_k2", "eaa", "glycine", "magnesium", "tongkat_ali"]},
-{"d": "2026-08-28", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "magnesium", "preworkout", "tongkat_ali"]},
-{"d": "2026-08-27", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "isabgol", "magnesium", "preworkout", "tongkat_ali"]},
-{"d": "2026-08-26", "items": ["calm", "creatine", "d3_k2", "eaa", "glycine", "isabgol", "magnesium", "preworkout", "tongkat_ali"]},
-{"d": "2026-08-25", "items": ["beta_alanine", "calm", "citrulline", "creatine", "d3_k2", "eaa", "glycine", "isabgol", "magnesium", "preworkout", "tongkat_ali"]},
-{"d": "2026-08-24", "items": ["beta_alanine", "calm", "citrulline", "d3_k2", "glycine", "isabgol", "magnesium", "tongkat_ali"]},
-{"d": "2026-08-23", "items": ["creatine", "d3_k2", "eaa", "glycine", "isabgol", "magnesium", "preworkout", "tongkat_ali"]},
-{"d": "2026-08-22", "items": ["creatine", "d3_k2", "eaa", "glycine", "magnesium", "preworkout", "tongkat_ali"]}
-];
-const SUPPLEMENT_META = [
-  {
-    "id": "isabgol",
-    "label": "Sat Isabgol (Psyllium Husk)",
-    "brand": "Organic India",
-    "serving": "5g (1 tbsp)",
-    "timing": "First thing, empty stomach",
-    "status": "archived"
-  },
-  {
-    "id": "pepping_probiotic",
-    "label": "Pepping Probiotic",
-    "brand": "Pepping",
-    "serving": "1 capsule",
-    "timing": "First thing, empty stomach",
-    "status": "archived"
-  },
-  {
-    "id": "tongkat_ali",
-    "label": "Tongkat Ali LongJack 400mg",
-    "brand": "Trexgenics",
-    "serving": "1 capsule",
-    "timing": "After breakfast",
-    "status": "active",
-    "breaks": [
-      {
-        "start": "2026-10-01",
-        "end": "2026-10-15",
-        "reason": "Cycling break"
-      }
-    ]
-  },
-  {
-    "id": "boron",
-    "label": "Boron",
-    "brand": "NOW Foods",
-    "serving": "\u2014",
-    "timing": "After breakfast",
-    "status": "active"
-  },
-  {
-    "id": "d3_k2",
-    "label": "D3 + K2-7",
-    "brand": "Unived Basics",
-    "serving": "1 capsule (600 IU D3, 55mcg K2-7)",
-    "timing": "After breakfast",
-    "status": "archived",
-    "skipWeekdays": {
-      "days": [
-        0
-      ],
-      "from": "2026-09-27"
-    },
-    "activeUntil": "2026-09-24"
-  },
-  {
-    "id": "d_rise",
-    "label": "Vitamin D3 (D-Rise)",
-    "brand": "\u2014",
-    "serving": "\u2014",
-    "timing": "After breakfast",
-    "status": "active",
-    "activeFrom": "2026-09-27",
-    "weekdays": [
-      0
-    ]
-  },
-  {
-    "id": "caldveg",
-    "label": "CalDVeg (Algae Ca/Mg, Vit C, D3 & K2)",
-    "brand": "Unived",
-    "serving": "\u2014",
-    "timing": "After breakfast",
-    "status": "active",
-    "skipWeekdays": {
-      "days": [
-        0
-      ],
-      "from": "2026-09-27"
-    },
-    "activeFrom": "2026-09-25"
-  },
-  {
-    "id": "calm",
-    "label": "Calm (Ashwagandha KSM-66 + L-Theanine + 5-HTP)",
-    "brand": "Unived",
-    "serving": "2 capsules",
-    "timing": "After breakfast",
-    "status": "archived"
-  },
-  {
-    "id": "swisse_omega3",
-    "label": "Omega 3 (Fish Oil)",
-    "brand": "Swisse",
-    "serving": "1 capsule",
-    "timing": "Post-lunch",
-    "status": "active"
-  },
-  {
-    "id": "citrulline",
-    "label": "L-Citrulline 2000mg",
-    "brand": "Carbamide Forte",
-    "serving": "2g scoop",
-    "timing": "Pre-workout",
-    "status": "active"
-  },
-  {
-    "id": "beta_alanine",
-    "label": "Beta-Alanine (Pro Series)",
-    "brand": "HealthyHey",
-    "serving": "4g scoop",
-    "timing": "Pre-workout",
-    "status": "archived",
-    "activeUntil": "2026-09-25"
-  },
-  {
-    "id": "unived_beta_alanine",
-    "label": "Beta-Alanine (Carnosine precursor)",
-    "brand": "Unived",
-    "serving": "3.2g",
-    "timing": "Pre-workout",
-    "status": "active",
-    "activeFrom": "2026-09-26"
-  },
-  {
-    "id": "preworkout",
-    "label": "Preworkout (L-Theanine + Caffeine)",
-    "brand": "Unived",
-    "serving": "\u2014",
-    "timing": "Pre-workout",
-    "status": "active"
-  },
-  {
-    "id": "eaa",
-    "label": "EAA+ (BCAA + Glutamine, Lychee Kiwi)",
-    "brand": "Maverick",
-    "serving": "10g scoop",
-    "timing": "During workout",
-    "status": "archived",
-    "activeUntil": "2026-09-23"
-  },
-  {
-    "id": "unived_eaa",
-    "label": "EAA + Hydration Mix (EAA 7.05g)",
-    "brand": "Unived",
-    "serving": "13g",
-    "timing": "During workout",
-    "status": "active",
-    "activeFrom": "2026-09-24"
-  },
-  {
-    "id": "creatine",
-    "label": "Micronised Creatine Monohydrate",
-    "brand": "Maverick",
-    "serving": "3g scoop",
-    "timing": "During workout",
-    "status": "active"
-  },
-  {
-    "id": "magnesium",
-    "label": "Chelated Magnesium Glycinate",
-    "brand": "Unived",
-    "serving": "1 capsule (87.75mg elemental Mg)",
-    "timing": "Post-dinner / pre-sleep",
-    "status": "archived"
-  },
-  {
-    "id": "zma",
-    "label": "ZMA (Magnesium + Zinc + B6)",
-    "brand": "Unived",
-    "serving": "2 capsules",
-    "timing": "Post-dinner / pre-sleep",
-    "status": "active",
-    "breaks": [
-      {
-        "start": "2026-10-01",
-        "end": "2026-10-15",
-        "reason": "Cycling break"
-      }
-    ]
-  },
-  {
-    "id": "flora17_probiotic",
-    "label": "Flora-17 Probiotics",
-    "brand": "Unived",
-    "serving": "\u2014",
-    "timing": "Post-dinner / pre-sleep",
-    "status": "active",
-    "activeFrom": "2026-09-26"
-  },
-  {
-    "id": "glycine",
-    "label": "Pure Glycine (Unflavoured)",
-    "brand": "Trexgenics",
-    "serving": "~2.5g",
-    "timing": "Post-dinner / pre-sleep",
-    "status": "active"
-  }
-];
+const SUPPLEMENTS = [];
+const SUPPLEMENT_META = [];
 const MEDICAL = {"reports":[],"params":[]};
 const PHOTOS = {"baseline":null,"photos":[]};
 
@@ -3399,7 +3156,9 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
 }
 
 // ---------- supplements tracker ----------
-{
+// Guarded on #supplementsGrid existing: the public build strips the Supplements subtab
+// (PUBLIC:EXCLUDE) and stubs SUPPLEMENTS/SUPPLEMENT_META, private-only since 2026-09-29.
+if (document.getElementById('supplementsGrid')) {
   // Grid starts at the earliest tracked date (day tracking was set up in MFP - see
   // SUPPLEMENT_TRACKING_START in mfp_sync.py) rather than sliding with "today", so the
   // start column stays fixed as time passes; it just grows past 90 columns once more than
