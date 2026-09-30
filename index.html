@@ -273,7 +273,6 @@
     display: flex; flex-direction: column; align-items: center; justify-content: center;
   }
   .tl-daybadge .n { font-size: 32px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; color: var(--tlc-fg); }
-  .tl-daybadge .streak { font-size: 10.5px; font-weight: 600; color: var(--tlc-accent); margin-top: 6px; letter-spacing: .02em; }
   .tl-focus { color: var(--tlc-faint); font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
   .tl-title { font-size: 22px; font-weight: 800; margin: 3px 0 10px; letter-spacing: -.01em; }
   .tl-chip {
@@ -555,6 +554,8 @@
 
 <script>
 const WORKOUTS = [
+{"d": "2026-09-29", "t": "Bodyweight Routine", "ex": [{"i": "022DF610", "s": [[0, 15], [0, 15], [0, 15]]}, {"i": "09C9F635", "s": [[0, 15], [0, 15], [0, 15]]}, {"i": "6BE68B62", "s": [[0, 15], [0, 15], [0, 15]], "n": "Tuck i"}]},
+{"d": "2026-09-29", "t": "Quads & Triceps", "ex": [{"i": "CC35A01F", "s": [[120, 15], [160, 15], [200, 15]]}, {"i": "B5D3A742", "s": [[40, 10], [50, 10], [60, 10]], "n": "Each side"}, {"i": "75A4F6C4", "s": [[30, 20], [40, 20], [50, 20]]}, {"i": "C7973E0E", "s": [[150, 15], [200, 15], [250, 15]], "n": "Deep press"}, {"i": "CDC472B1", "s": [[20, 15], [25, 15], [30, 15]]}, {"i": "B5EFBF9C", "s": [[20, 15], [25, 15], [30, 15]]}, {"i": "B5EFBF9C", "s": [[20, 15], [25, 15], [30, 15]]}, {"i": "6127A3AD", "s": [[15, 15], [15, 15], [15, 15]]}]},
 {"d": "2026-09-28", "t": "Chest & Shoulders", "ex": [{"i": "07B38369", "s": [[25, 20], [30, 20], [40, 10], [40, 10], [20, 10]]}, {"i": "651F844C", "s": [[12, 15], [18, 15], [21, 10]]}, {"i": "293483AD", "s": [[12, 15], [18, 15], [21, 10]]}, {"i": "DA0F0470", "s": [[10, 25], [20, 15], [30, 10]]}, {"i": "878CD1D0", "s": [[25, 15], [30, 12], [30, 10], [20, 6]]}, {"i": "E5988A0A", "s": [[10, 20], [10, 20], [15, 10]]}, {"i": "422B08F1", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "8293E554", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "797F0782", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "67280085", "s": [[50, 12], [60, 12], [60, 12]]}]},
 {"d": "2026-09-25", "t": "Bodyweight Routine", "ex": [{"i": "09C9F635", "s": [[0, 20], [0, 20]]}, {"i": "6BE68B62", "s": [[0, 15], [0, 15], [0, 15], [0, 15]], "n": "Tuckin"}]},
 {"d": "2026-09-25", "t": "Hamstrings, Calves & Triceps", "ex": [{"i": "72CFFAD5", "s": [[40, 10], [50, 10], [70, 10]]}, {"i": "B8127AD1", "s": [[25, 15], [30, 10], [25, 5], [30, 7], [25, 8]]}, {"i": "4180C405", "s": [[50, 15], [80, 10], [120, 10]]}, {"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 20], [200, 20], [250, 20]]}, {"i": "94B7239B", "s": [[20, 15], [25, 10], [30, 5], [25, 5]]}, {"i": "B5EFBF9C", "s": [[20, 14], [20, 14], [25, 14]]}, {"i": "21310F5F", "s": [[20, 15], [25, 10], [25, 10]]}, {"i": "6127A3AD", "s": [[10, 30], [15, 30], [15, 30]], "n": "Each side"}, {"i": "91237BDD", "s": [[100, 20], [100, 20], [150, 15]]}, {"i": "8BEBFED6", "s": [[50, 15], [55, 10], [55, 10]]}, {"i": "F4B4C6EE", "s": [[45, 15], [50, 10], [50, 10]]}]},
@@ -894,9 +895,11 @@ const EXMETA = {
 "797F0782":{"name": "Upright Row (Dumbbell)", "primary": "shoulders"},
 "BB792A36":{"name": "Burpee", "primary": "full_body", "bodyweight": true},
 "F30A4F01":{"name": "Walking Lunge (Sandbag)", "primary": "quadriceps"},
-"9273BA17":{"name": "Rope Straight Arm Pulldown", "primary": "lats"}
+"9273BA17":{"name": "Rope Straight Arm Pulldown", "primary": "lats"},
+"022DF610":{"name": "Sit Up", "primary": "abdominals", "bodyweight": true}
 };
 const STEPS = [
+{"d": "2026-09-29", "steps": 13990, "goal": 13430},
 {"d": "2026-09-28", "steps": 13911, "goal": 13310},
 {"d": "2026-09-27", "steps": 16871, "goal": 12410},
 {"d": "2026-09-26", "steps": 15478, "goal": 12060},
@@ -979,6 +982,7 @@ const STEPS = [
 {"d": "2026-07-11", "steps": 10238, "goal": 5590}
 ];
 const HEARTRATE = [
+{"d": "2026-09-29", "resting": 49, "min": 47, "max": 126},
 {"d": "2026-09-28", "resting": 55, "min": 50, "max": 151},
 {"d": "2026-09-27", "resting": 53, "min": 48, "max": 150},
 {"d": "2026-09-26", "resting": 55, "min": 52, "max": 100},
@@ -1061,6 +1065,7 @@ const HEARTRATE = [
 {"d": "2026-07-11", "resting": 60, "min": 53, "max": 118}
 ];
 const NUTRITION = [
+{"d": "2026-09-29", "calories": 1580, "goal": 1900, "protein": 177, "proteinGoal": 190, "carbs": 164, "carbsGoal": 166, "fat": 23, "fatGoal": 53},
 {"d": "2026-09-28", "calories": 1665, "goal": 1900, "protein": 192, "proteinGoal": 190, "carbs": 157, "carbsGoal": 166, "fat": 32, "fatGoal": 53},
 {"d": "2026-09-27", "calories": 1663, "goal": 1900, "protein": 174, "proteinGoal": 190, "carbs": 122, "carbsGoal": 166, "fat": 45, "fatGoal": 53},
 {"d": "2026-09-26", "calories": 1448, "goal": 1900, "protein": 58, "proteinGoal": 190, "carbs": 168, "carbsGoal": 166, "fat": 55, "fatGoal": 53},
@@ -1118,6 +1123,7 @@ const NUTRITION = [
 ];
 const EXPENSES = [];
 const BODYLOG = [
+{"d": "2026-09-30", "sleepMin": 339, "weightKg": 68.5, "bodyFatPct": 20.4},
 {"d": "2026-09-29", "sleepMin": 356, "weightKg": 68.6, "bodyFatPct": 20.4},
 {"d": "2026-09-28", "sleepMin": 467, "weightKg": 69.2, "bodyFatPct": 20.8},
 {"d": "2026-09-27", "sleepMin": 440, "weightKg": 68.6, "bodyFatPct": 20.5},
@@ -3355,7 +3361,7 @@ if (document.getElementById('subtab-expenses')) {
         <div class="tl-eyebrow">Training Log</div>
         <div class="tl-eyebrow-rule"></div>
         <div class="tl-head">
-          <div class="tl-daybadge"><div class="n">${tl.dayNumber ?? '—'}</div><div class="streak">⚡ ${tl.streak ?? '—'}</div></div>
+          <div class="tl-daybadge"><div class="n">${tl.dayNumber ?? '—'}</div></div>
           <div>
             <div class="tl-focus">${tl.date}</div>
             <div class="tl-title">${tlSession.title}</div>
@@ -3462,9 +3468,7 @@ if (document.getElementById('subtab-expenses')) {
         ctx.strokeStyle = 'rgba(47,230,184,0.4)'; ctx.lineWidth = 1; ctx.stroke();
         ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
         ctx.fillStyle = C.fg; ctx.font = '800 30px system-ui, -apple-system, "Segoe UI", sans-serif';
-        ctx.fillText(String(tl.dayNumber ?? '—'), padX + badgeW / 2, headTop + 44);
-        ctx.fillStyle = C.accent; ctx.font = '700 11px system-ui, -apple-system, "Segoe UI", sans-serif';
-        ctx.fillText('⚡ ' + (tl.streak ?? '—'), padX + badgeW / 2, headTop + 62);
+        ctx.fillText(String(tl.dayNumber ?? '—'), padX + badgeW / 2, headTop + 50);
       }
       const textX = padX + badgeW + 18, textMaxW = innerW - badgeW - 18;
       let ty = headTop;
