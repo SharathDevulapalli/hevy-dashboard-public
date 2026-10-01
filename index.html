@@ -142,6 +142,13 @@
   .ph-thumb img { display: block; width: 72px; height: 90px; object-fit: cover; border-radius: 6px; }
   .ph-thumb.active { border-color: var(--series-1); }
   .ph-thumb.flagged span::after { content: ' ⚠'; color: var(--warning); }
+  .ci-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .ci-grid .ci-head { font-size: 12px; font-weight: 600; color: var(--text-muted); text-align: center; }
+  .ci-grid .ci-row { grid-column: 1 / -1; font-size: 12.5px; color: var(--text-secondary); margin-top: 6px; }
+  .ci-grid .ci-row b { color: var(--text-primary); }
+  .ci-grid figure { margin: 0; aspect-ratio: 4 / 5; border-radius: 8px; overflow: hidden; background: var(--grid); }
+  .ci-grid img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .ci-grid .ci-missing { display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--text-muted); }
   .med-scroll { overflow-x: auto; }
   table.med-table { min-width: 1100px; }
   table.med-table th, table.med-table td { white-space: nowrap; }
@@ -283,7 +290,7 @@
   .tl-chip .ck { color: var(--tlc-accent); }
   .tl-statgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px; position: relative; z-index: 1; }
   .tl-stat { background: var(--tlc-panel); border: 1px solid var(--tlc-panel-b); border-radius: 14px; padding: 13px 14px; }
-  .tl-stat .icon { font-size: 12px; margin-right: 5px; opacity: .85; }
+  .tl-stat .icon { font-size: 12px; margin-right: 5px; opacity: .7; filter: grayscale(1) brightness(1.7); }
   .tl-stat .v { font-size: 19px; font-weight: 800; color: var(--tlc-fg); font-variant-numeric: tabular-nums; }
   .tl-stat .v .unit { font-size: 11px; font-weight: 500; color: var(--tlc-faint); }
   .tl-stat .l { font-size: 9.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--tlc-faint); margin-top: 5px; }
@@ -554,6 +561,8 @@
 
 <script>
 const WORKOUTS = [
+{"d": "2026-10-01", "t": "Bodyweight Routine", "ex": [{"i": "022DF610", "s": [[0, 15], [0, 15]]}, {"i": "09C9F635", "s": [[0, 15], [0, 15]]}, {"i": "6BE68B62", "s": [[0, 15], [0, 15]], "n": "Tuck in"}]},
+{"d": "2026-10-01", "t": "Hamstrings, Calves & Forearms", "ex": [{"i": "8BEBFED6", "s": [[50, 15], [55, 15], [55, 15]]}, {"i": "F4B4C6EE", "s": [[45, 15], [50, 10], [55, 10]]}, {"i": "4180C405", "s": [[80, 12], [120, 12], [160, 12]]}, {"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 20], [200, 20], [250, 10], [200, 10], [150, 10], [100, 10], [50, 10]], "n": "10 close 10 wide"}, {"i": "91237BDD", "s": [[50, 20], [100, 20], [100, 20]]}, {"i": "72CFFAD5", "s": [[60, 10], [70, 10], [80, 10]]}, {"i": "B8127AD1", "s": [[20, 14], [25, 14], [30, 7], [25, 7]], "n": "7 fast 7 slow"}, {"i": "1006DF48", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "D8460FA6", "s": [[10, 15], [15, 10], [15, 10]]}, {"i": "0E4523F4", "s": [[15, 15], [15, 15], [15, 15]]}]},
 {"d": "2026-09-30", "t": "Bodyweight Routine", "ex": [{"i": "022DF610", "s": [[0, 15]]}, {"i": "09C9F635", "s": [[0, 15]]}, {"i": "6BE68B62", "s": [[0, 15]], "n": "Tuck i"}]},
 {"d": "2026-09-30", "t": "Back & Biceps", "ex": [{"i": "6A6C31A5", "s": [[35, 15], [40, 15], [45, 10]], "n": "45 with support"}, {"i": "0393F233", "s": [[35, 10], [35, 10], [35, 10]]}, {"i": "55E6546F", "s": [[20, 20], [30, 20], [30, 15]]}, {"i": "BC3492DA", "s": [[40, 15], [60, 10], [60, 10]], "n": "Both hands"}, {"i": "D2387AB1", "s": [[20, 15], [25, 15], [30, 15]]}, {"i": "37FCC2BB", "s": [[10, 18], [10, 18], [10, 18]], "n": "Alternate fast slow"}, {"i": "37FCC2BB", "s": [[10, 20], [10, 20], [10, 20]], "n": "Single hand alternate"}, {"i": "01A35BF9", "s": [[15, 10], [15, 10], [15, 10]]}, {"i": "7E3BC8B6", "s": [[10, 20], [10, 20], [10, 20]]}]},
 {"d": "2026-09-29", "t": "Bodyweight Routine", "ex": [{"i": "022DF610", "s": [[0, 15], [0, 15], [0, 15]]}, {"i": "09C9F635", "s": [[0, 15], [0, 15], [0, 15]]}, {"i": "6BE68B62", "s": [[0, 15], [0, 15], [0, 15]], "n": "Tuck i"}]},
@@ -898,9 +907,11 @@ const EXMETA = {
 "BB792A36":{"name": "Burpee", "primary": "full_body", "bodyweight": true},
 "F30A4F01":{"name": "Walking Lunge (Sandbag)", "primary": "quadriceps"},
 "9273BA17":{"name": "Rope Straight Arm Pulldown", "primary": "lats"},
-"022DF610":{"name": "Sit Up", "primary": "abdominals", "bodyweight": true}
+"022DF610":{"name": "Sit Up", "primary": "abdominals", "bodyweight": true},
+"D8460FA6":{"name": "Reverse Wrist Curl (Dumbbell)", "primary": "forearms"}
 };
 const STEPS = [
+{"d": "2026-10-01", "steps": 8748, "goal": 13470},
 {"d": "2026-09-30", "steps": 12671, "goal": 13550},
 {"d": "2026-09-29", "steps": 13990, "goal": 13430},
 {"d": "2026-09-28", "steps": 13911, "goal": 13310},
@@ -985,6 +996,7 @@ const STEPS = [
 {"d": "2026-07-11", "steps": 10238, "goal": 5590}
 ];
 const HEARTRATE = [
+{"d": "2026-10-01", "resting": 47, "min": 43, "max": 117},
 {"d": "2026-09-30", "resting": 54, "min": 44, "max": 118},
 {"d": "2026-09-29", "resting": 49, "min": 47, "max": 126},
 {"d": "2026-09-28", "resting": 55, "min": 50, "max": 151},
@@ -1069,6 +1081,7 @@ const HEARTRATE = [
 {"d": "2026-07-11", "resting": 60, "min": 53, "max": 118}
 ];
 const NUTRITION = [
+{"d": "2026-10-01", "calories": 1761, "goal": 1900, "protein": 163, "proteinGoal": 190, "carbs": 166, "carbsGoal": 166, "fat": 50, "fatGoal": 53},
 {"d": "2026-09-30", "calories": 1522, "goal": 1900, "protein": 168, "proteinGoal": 190, "carbs": 151, "carbsGoal": 166, "fat": 31, "fatGoal": 53},
 {"d": "2026-09-29", "calories": 1580, "goal": 1900, "protein": 177, "proteinGoal": 190, "carbs": 164, "carbsGoal": 166, "fat": 23, "fatGoal": 53},
 {"d": "2026-09-28", "calories": 1665, "goal": 1900, "protein": 192, "proteinGoal": 190, "carbs": 157, "carbsGoal": 166, "fat": 32, "fatGoal": 53},
@@ -1181,6 +1194,9 @@ const SUPPLEMENTS = [];
 const SUPPLEMENT_META = [];
 const MEDICAL = {"reports":[],"params":[]};
 const PHOTOS = {"baseline":null,"photos":[]};
+const MEASUREMENTS = [];
+// Winter arc (user, 2026-10-01): today's photos + tape are the benchmark; weekly check-ins to year end.
+const WINTER_ARC = { start: '2026-10-01', end: '2026-12-31' };
 
 // Pure data-processing logic shared between the sanity-check script and the dashboard HTML.
 // No DOM dependency so it can be unit-checked under plain Node first.
@@ -2709,11 +2725,35 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
 
 // ---------- volume log: per-exercise recent vs. baseline avg volume ----------
 {
+  // Three windows (2026-10-01 user request): Baseline (Jan 1 – Aug 1), Recent frozen at
+  // Aug 2 – Sep 30, and the Winter arc (Oct 1 – Dec 31, so far) compared against Recent.
   const VOL_RECENT_START = '2026-08-02';
   const VOL_BASE_START = '2026-01-01';
   const VOL_BASE_END = '2026-08-01';
-  const volRecentEnd = dates[dates.length - 1];
-  const volRows = volumeComparison(WORKOUTS, EXMETA, VOL_RECENT_START, volRecentEnd, VOL_BASE_START, VOL_BASE_END);
+  const volRecentEnd = '2026-09-30';
+  const latestWorkout = dates[dates.length - 1];
+  const VOL_ARC_START = WINTER_ARC.start;
+  const volArcEnd = latestWorkout < WINTER_ARC.end ? latestWorkout : WINTER_ARC.end;
+  const baseCmp = volumeComparison(WORKOUTS, EXMETA, VOL_RECENT_START, volRecentEnd, VOL_BASE_START, VOL_BASE_END);
+  const arcCmp = latestWorkout >= VOL_ARC_START ? volumeComparison(WORKOUTS, EXMETA, VOL_ARC_START, volArcEnd, VOL_RECENT_START, volRecentEnd) : [];
+  const arcById = new Map(arcCmp.map(r => [r.id, r]));
+  // One row per exercise seen in any window; arc* = Winter arc avg / sessions / change vs Recent.
+  const volRows = baseCmp.map(r => {
+    const a = arcById.get(r.id);
+    return Object.assign({}, r, { arcAvg: a ? a.recentAvg : null, arcN: a ? a.recentN : 0, arcDeltaPct: a ? a.deltaPct : null });
+  });
+  for (const a of arcCmp) if (!volRows.some(r => r.id === a.id)) {
+    volRows.push(Object.assign({}, a, { recentAvg: a.baseAvg, recentN: a.baseN, baseAvg: null, baseN: 0, deltaPct: null,
+      arcAvg: a.recentAvg, arcN: a.recentN, arcDeltaPct: a.deltaPct }));
+  }
+  // Tiles and insights follow the live comparison: Winter arc vs Recent once the arc has
+  // sessions, until then Recent vs Baseline. cmpRows re-labels the fields for that code.
+  const arcLive = volRows.some(r => r.arcN > 0);
+  const cmpSince = arcLive ? VOL_ARC_START : VOL_RECENT_START;
+  const cmpVs = arcLive ? 'Recent' : 'baseline';
+  const cmpRows = arcLive
+    ? volRows.map(r => Object.assign({}, r, { deltaPct: r.arcDeltaPct, recentN: r.arcN, baseN: r.recentN }))
+    : volRows;
 
   // Window dates live in the table's column headings (2026-09-23 user request), e.g.
   // "Recent avg / Aug 2 – Sep 22, 2026", instead of a range line above the tab.
@@ -2722,17 +2762,18 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   const winLabel = (a, b) => `<span class="vol-win">${shortD(a)} – ${shortD(b)}${a.slice(0, 4) === b.slice(0, 4) ? ', ' + b.slice(0, 4) : ' ' + b.slice(0, 4)}</span>`;
   const recentTh = what => `${what}${winLabel(VOL_RECENT_START, volRecentEnd)}`;
   const baseTh = what => `${what}${winLabel(VOL_BASE_START, VOL_BASE_END)}`;
+  const arcTh = what => `${what}${winLabel(VOL_ARC_START, WINTER_ARC.end)}`;
 
-  const up = volRows.filter(r => r.deltaPct != null && r.deltaPct > 0).length;
-  const down = volRows.filter(r => r.deltaPct != null && r.deltaPct < 0).length;
-  const isNewCount = volRows.filter(r => r.recentN > 0 && r.baseN === 0).length;
-  const goneCount = volRows.filter(r => r.recentN === 0 && r.baseN > 0).length;
+  const up = cmpRows.filter(r => r.deltaPct != null && r.deltaPct > 0).length;
+  const down = cmpRows.filter(r => r.deltaPct != null && r.deltaPct < 0).length;
+  const isNewCount = cmpRows.filter(r => r.recentN > 0 && r.baseN === 0).length;
+  const goneCount = cmpRows.filter(r => r.recentN === 0 && r.baseN > 0).length;
   document.getElementById('volStatRow').innerHTML =
     statTile(volRows.length, 'exercises tracked') +
-    statTile(up, 'volume up') +
-    statTile(down, 'volume down') +
-    statTile(isNewCount, 'new since ' + VOL_RECENT_START) +
-    statTile(goneCount, 'not since ' + VOL_RECENT_START);
+    statTile(up, `volume up vs ${cmpVs}`) +
+    statTile(down, `volume down vs ${cmpVs}`) +
+    statTile(isNewCount, 'new since ' + cmpSince) +
+    statTile(goneCount, arcLive ? 'not yet this arc' : 'not since ' + cmpSince);
 
   {
     // Key-insights list (2026-09-23, replacing a single "X leading / Y lagging" line that was
@@ -2741,14 +2782,14 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     // need >= 2 sessions in both windows, so one-off sessions don't dominate.
     const pct = n => (n >= 0 ? '+' : '') + n.toFixed(0) + '%';
     const label = g => MUSCLE_LABEL[g] || g;
-    const comparable = volRows.filter(r => r.deltaPct != null);
+    const comparable = cmpRows.filter(r => r.deltaPct != null);
     const insights = [];
     if (comparable.length) {
       const sortedD = comparable.map(r => r.deltaPct).sort((a, b) => a - b);
       const mid = Math.floor(sortedD.length / 2);
       const median = sortedD.length % 2 ? sortedD[mid] : (sortedD[mid - 1] + sortedD[mid]) / 2;
       const upN = comparable.filter(r => r.deltaPct > 0).length;
-      insights.push(`📊 <b>Overall:</b> ${upN} of ${comparable.length} comparable exercises up; median change ${pct(median)} vs baseline.`);
+      insights.push(`📊 <b>Overall:</b> ${upN} of ${comparable.length} comparable exercises up; median change ${pct(median)} vs ${cmpVs}${arcLive ? ' (Winter arc so far)' : ''}.`);
 
       const byGroup = new Map();
       for (const r of comparable) {
@@ -2772,9 +2813,10 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
       if (gainers.length) insights.push(`🚀 <b>Biggest gains:</b> ${gainers.map(r => `${r.name} ${pct(r.deltaPct)}`).join(', ')}.`);
       if (decliners.length) insights.push(`📉 <b>Biggest drops:</b> ${decliners.map(r => `${r.name} ${pct(r.deltaPct)}`).join(', ')}.`);
     }
-    const dropped = volRows.filter(r => r.recentN === 0 && r.baseN >= 3).sort((a, b) => b.baseN - a.baseN);
+    // Not during the arc: it has only just begun, so "not yet" isn't a drop.
+    const dropped = arcLive ? [] : cmpRows.filter(r => r.recentN === 0 && r.baseN >= 3).sort((a, b) => b.baseN - a.baseN);
     if (dropped.length) {
-      insights.push(`🗂️ <b>Dropped staples</b> (3+ baseline sessions, none since ${VOL_RECENT_START}): ${dropped.map(r => r.name).join(', ')}.`);
+      insights.push(`🗂️ <b>Dropped staples</b> (3+ baseline sessions, none since ${cmpSince}): ${dropped.map(r => r.name).join(', ')}.`);
     }
     document.getElementById('volumeLogTakeaway').innerHTML = insights.length
       ? `<ul class="vol-insights">${insights.map(t => `<li>${t}</li>`).join('')}</ul>` : '';
@@ -2791,7 +2833,7 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   const VOL_MUSCLE_ORDER = ['shoulders', 'chest', 'lats', 'upper_back', 'traps', 'biceps', 'triceps', 'forearms', 'abdominals', 'full_body', 'adductors', 'abductors', 'quadriceps', 'hamstrings', 'glutes', 'calves'];
   const muscleRank = r => { const i = VOL_MUSCLE_ORDER.indexOf(r.primary || ''); return i === -1 ? VOL_MUSCLE_ORDER.length : i; };
   const sortedRows = volRows.slice().sort((a, b) =>
-    muscleRank(a) - muscleRank(b) || (b.deltaPct ?? -Infinity) - (a.deltaPct ?? -Infinity));
+    muscleRank(a) - muscleRank(b) || ((arcLive ? b.arcDeltaPct : b.deltaPct) ?? -Infinity) - ((arcLive ? a.arcDeltaPct : a.deltaPct) ?? -Infinity));
 
   // Latest workout first (2026-09-23 user request): the exercises from the most recent
   // session on the Strength tab (same weeklySnapshot source, so bodyweight/cardio are
@@ -2807,9 +2849,14 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   const latestRows = latestIds.map(id => weightedRows.find(r => r.id === id)).filter(Boolean);
   const otherRows = weightedRows.filter(r => !latestIds.includes(r.id));
 
-  const VOL_COLGROUP = '<colgroup><col style="width:30%"><col style="width:15%"><col style="width:5%"><col style="width:15%"><col style="width:5%"><col style="width:13%"><col style="width:17%"></colgroup>';
+  const VOL_COLGROUP = '<colgroup><col style="width:21%"><col style="width:10%"><col style="width:4%"><col style="width:10%"><col style="width:4%"><col style="width:11%"><col style="width:10%"><col style="width:4%"><col style="width:12%"><col style="width:14%"></colgroup>';
 
-  const groupRow = text => `<tr class="vol-group-row"><td colspan="7">${text}</td></tr>`;
+  const groupRow = text => `<tr class="vol-group-row"><td colspan="10">${text}</td></tr>`;
+  // Winter arc vs Recent: % once both have sessions; "new" for lifts Recent never had;
+  // "not yet" (not "not since") for Recent lifts the arc hasn't reached yet.
+  const arcCell = r => r.arcDeltaPct != null ? `<span class="badge ${r.arcDeltaPct >= 0 ? 'progress' : 'surplus'}">${fmtPct(r.arcDeltaPct)}</span>`
+    : r.arcN > 0 ? `<span class="badge baseline">new</span>`
+    : r.recentN > 0 ? `<span class="badge baseline">not yet</span>` : '—';
   // sections: [[heading or null, rows], ...] — rendered as one table so columns stay aligned.
   const rowsToTable = sections => {
     const trs = sections.filter(([, rows]) => rows.length).map(([heading, rows]) => (heading ? groupRow(heading) : '') + rows.map(r => {
@@ -2819,12 +2866,12 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
       } else if (r.baseN === 0) {
         statusCell = `<span class="badge baseline">new</span>`;
       } else {
-        statusCell = `<span class="badge plateau">not since ${VOL_RECENT_START}</span>`;
+        statusCell = `<span class="badge plateau">not since ${shortD(VOL_RECENT_START)}</span>`;
       }
       const oneRM = r.maxWeight != null ? `${r.maxWeight} kg` : '—';
-      return `<tr><td>${r.name}</td><td>${fmtVol(r.recentAvg)}</td><td>${r.recentN || '—'}</td><td>${fmtVol(r.baseAvg)}</td><td>${r.baseN || '—'}</td><td>${statusCell}</td><td>${oneRM}</td></tr>`;
+      return `<tr><td>${r.name}</td><td>${fmtVol(r.baseAvg)}</td><td>${r.baseN || '—'}</td><td>${fmtVol(r.recentAvg)}</td><td>${r.recentN || '—'}</td><td>${statusCell}</td><td>${fmtVol(r.arcAvg)}</td><td>${r.arcN || '—'}</td><td>${arcCell(r)}</td><td>${oneRM}</td></tr>`;
     }).join('')).join('');
-    return `<table class="tv tv-aligned">${VOL_COLGROUP}<thead><tr><th>Exercise</th><th>${recentTh('Recent avg')}</th><th>N</th><th>${baseTh('Baseline avg')}</th><th>N</th><th>Change</th><th>Max weight (all-time)</th></tr></thead><tbody>${trs}</tbody></table>`;
+    return `<table class="tv tv-aligned">${VOL_COLGROUP}<thead><tr><th>Exercise</th><th>${baseTh('Baseline avg')}</th><th>N</th><th>${recentTh('Recent avg')}</th><th>N</th><th>Recent vs baseline</th><th>${arcTh('Winter Arc avg')}</th><th>N</th><th>Winter Arc vs recent</th><th>Max weight (all-time)</th></tr></thead><tbody>${trs}</tbody></table>`;
   };
 
   // Rowing has no weight/reps, so it can't join the volume table — shown as its own
@@ -2833,25 +2880,25 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   const rowingCoreSessions = cardioSessions(WORKOUTS, ROWING_EXERCISE_ID);
   const rowingCoreRecent = rowingCoreSessions.filter(r => r.date >= VOL_RECENT_START && r.date <= volRecentEnd);
   const rowingCoreBase = rowingCoreSessions.filter(r => r.date >= VOL_BASE_START && r.date <= VOL_BASE_END);
+  const rowingCoreArc = rowingCoreSessions.filter(r => r.date >= VOL_ARC_START && r.date <= volArcEnd);
   const avgPace = arr => arr.length ? arr.reduce((a, r) => a + r.paceMinPerKm, 0) / arr.length : null;
   const rowingRecentAvgPace = avgPace(rowingCoreRecent), rowingBaseAvgPace = avgPace(rowingCoreBase);
   const rowingPaceDeltaPct = (rowingRecentAvgPace != null && rowingBaseAvgPace != null && rowingBaseAvgPace > 0)
     ? ((rowingRecentAvgPace - rowingBaseAvgPace) / rowingBaseAvgPace * 100) : null;
   const fmtPace = n => n == null ? '—' : n.toFixed(2) + ' min/km';
-  let rowingPaceBadge;
-  if (rowingPaceDeltaPct == null) {
-    rowingPaceBadge = `<span class="badge baseline">${rowingBaseAvgPace == null ? 'new' : 'not since ' + VOL_RECENT_START}</span>`;
-  } else if (rowingPaceDeltaPct <= -1) {
-    rowingPaceBadge = `<span class="badge progress">${Math.abs(rowingPaceDeltaPct).toFixed(0)}% faster</span>`;
-  } else if (rowingPaceDeltaPct >= 1) {
-    rowingPaceBadge = `<span class="badge plateau">${rowingPaceDeltaPct.toFixed(0)}% slower</span>`;
-  } else {
-    rowingPaceBadge = `<span class="badge baseline">pace steady</span>`;
-  }
+  const paceBadge = (pctDelta, noneTxt) => pctDelta == null ? `<span class="badge baseline">${noneTxt}</span>`
+    : pctDelta <= -1 ? `<span class="badge progress">${Math.abs(pctDelta).toFixed(0)}% faster</span>`
+    : pctDelta >= 1 ? `<span class="badge plateau">${pctDelta.toFixed(0)}% slower</span>`
+    : `<span class="badge baseline">pace steady</span>`;
+  const rowingPaceBadge = paceBadge(rowingPaceDeltaPct, rowingBaseAvgPace == null ? 'new' : 'not since ' + VOL_RECENT_START);
+  const rowingArcAvgPace = avgPace(rowingCoreArc);
+  const rowingArcDeltaPct = (rowingArcAvgPace != null && rowingRecentAvgPace != null && rowingRecentAvgPace > 0)
+    ? ((rowingArcAvgPace - rowingRecentAvgPace) / rowingRecentAvgPace * 100) : null;
+  const rowingArcBadge = paceBadge(rowingArcDeltaPct, rowingArcAvgPace != null ? 'new' : 'not yet');
   const rowingPanelHtml = rowingCoreSessions.length === 0 ? '' :
     `<h4 style="font-size:12.5px;margin:18px 0 4px;">Rowing (cardio) <span style="font-weight:400;color:var(--text-muted);">&mdash; pace trend, not volume-based</span></h4>
-     <table class="tv tv-aligned">${VOL_COLGROUP}<thead><tr><th>Exercise</th><th>${recentTh('Recent pace')}</th><th>N</th><th>${baseTh('Baseline pace')}</th><th>N</th><th>Change</th><th></th></tr></thead>
-     <tbody><tr><td>Rowing Machine</td><td>${fmtPace(rowingRecentAvgPace)}</td><td>${rowingCoreRecent.length || '—'}</td><td>${fmtPace(rowingBaseAvgPace)}</td><td>${rowingCoreBase.length || '—'}</td><td>${rowingPaceBadge}</td><td></td></tr></tbody></table>`;
+     <table class="tv tv-aligned">${VOL_COLGROUP}<thead><tr><th>Exercise</th><th>${baseTh('Baseline pace')}</th><th>N</th><th>${recentTh('Recent pace')}</th><th>N</th><th>Recent vs baseline</th><th>${arcTh('Winter Arc pace')}</th><th>N</th><th>Winter Arc vs recent</th><th></th></tr></thead>
+     <tbody><tr><td>Rowing Machine</td><td>${fmtPace(rowingBaseAvgPace)}</td><td>${rowingCoreBase.length || '—'}</td><td>${fmtPace(rowingRecentAvgPace)}</td><td>${rowingCoreRecent.length || '—'}</td><td>${rowingPaceBadge}</td><td>${fmtPace(rowingArcAvgPace)}</td><td>${rowingCoreArc.length || '—'}</td><td>${rowingArcBadge}</td><td></td></tr></tbody></table>`;
 
   document.getElementById('volumeLogTables').innerHTML =
     `<div class="day-section">${rowsToTable([
@@ -3397,7 +3444,15 @@ if (document.getElementById('subtab-expenses')) {
       const padX = 24;
       const innerW = W - padX * 2;
       ctx.scale(scale, scale);
-      try { ctx.letterSpacing = '3px'; } catch (e) {}
+      // Tracking per element (2026-10-01): wide only on the small uppercase labels; names, sets
+      // and numbers at normal spacing (a blanket 3px truncated exercise names and set lists).
+      const ls = px => { try { ctx.letterSpacing = px + 'px'; } catch (e) {} };
+      // Emoji icons drawn in one tone so they sit in the teal palette instead of full colour.
+      const icon = (glyph, x, yy) => {
+        ctx.save(); ctx.filter = 'grayscale(1) brightness(1.7)'; ctx.globalAlpha = 0.7;
+        ctx.fillText(glyph, x, yy); ctx.restore();
+        return ctx.measureText(glyph).width;
+      };
 
       function roundRect(x, y, w, h, r) {
         ctx.beginPath();
@@ -3430,7 +3485,7 @@ if (document.getElementById('subtab-expenses')) {
       }
       function pillRow(items, x, y, maxW) {
         let cx = x, cy = y; const rowH = 22, gap = 6;
-        ctx.font = '700 10.5px system-ui, -apple-system, "Segoe UI", sans-serif';
+        ctx.font = '700 10.5px system-ui, -apple-system, "Segoe UI", sans-serif'; ls(1.5);
         for (const label of items) {
           const w = ctx.measureText('✓ ' + label.toUpperCase()).width + 24;
           if (cx + w > x + maxW && cx > x) { cx = x; cy += rowH + 6; }
@@ -3440,7 +3495,7 @@ if (document.getElementById('subtab-expenses')) {
             ctx.strokeStyle = C.panelB; ctx.lineWidth = 1; ctx.stroke();
             ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
             ctx.fillStyle = C.accent; ctx.fillText('✓', cx + 10, cy + rowH / 2 + 1);
-            ctx.fillStyle = C.muted; ctx.fillText(label.toUpperCase(), cx + 22, cy + rowH / 2 + 1);
+            ctx.fillStyle = C.muted; ctx.fillText(label.toUpperCase(), cx + 24, cy + rowH / 2 + 1);
           }
           cx += w + gap;
         }
@@ -3450,7 +3505,7 @@ if (document.getElementById('subtab-expenses')) {
       let y = 26;
       // eyebrow + rule
       ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-      ctx.font = '700 11px system-ui, -apple-system, "Segoe UI", sans-serif';
+      ctx.font = '700 11px system-ui, -apple-system, "Segoe UI", sans-serif'; ls(4);
       if (draw) { ctx.fillStyle = C.faint; ctx.fillText('TRAINING LOG', W / 2, y + 10); }
       y += 14 + 8;
       if (draw) {
@@ -3473,17 +3528,17 @@ if (document.getElementById('subtab-expenses')) {
         shieldPath(padX, headTop, badgeW, badgeH);
         ctx.strokeStyle = 'rgba(47,230,184,0.4)'; ctx.lineWidth = 1; ctx.stroke();
         ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-        ctx.fillStyle = C.fg; ctx.font = '800 30px system-ui, -apple-system, "Segoe UI", sans-serif';
+        ctx.fillStyle = C.fg; ctx.font = '800 30px system-ui, -apple-system, "Segoe UI", sans-serif'; ls(0);
         ctx.fillText(String(tl.dayNumber ?? '—'), padX + badgeW / 2, headTop + 50);
       }
       const textX = padX + badgeW + 18, textMaxW = innerW - badgeW - 18;
       let ty = headTop;
       if (draw) {
-        ctx.textAlign = 'left'; ctx.fillStyle = C.faint; ctx.font = '700 10px system-ui, -apple-system, "Segoe UI", sans-serif';
+        ctx.textAlign = 'left'; ctx.fillStyle = C.faint; ctx.font = '700 10px system-ui, -apple-system, "Segoe UI", sans-serif'; ls(2);
         ctx.fillText(("TODAY'S FOCUS — " + tl.date).toUpperCase(), textX, ty + 10);
       }
       ty += 22;
-      if (draw) { ctx.fillStyle = C.fg; ctx.font = '800 20px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.fillText(fitText(tlSession.title, textMaxW), textX, ty + 16); }
+      if (draw) { ctx.fillStyle = C.fg; ctx.font = '800 20px system-ui, -apple-system, "Segoe UI", sans-serif'; ls(0.3); ctx.fillText(fitText(tlSession.title, textMaxW), textX, ty + 16); }
       ty += 30;
       ty = pillRow(tlSession.groups, textX, ty, textMaxW);
       y = Math.max(headTop + badgeH, ty) + 22;
@@ -3502,13 +3557,14 @@ if (document.getElementById('subtab-expenses')) {
         roundRect(cx, cy, cellW, cellH, 14); ctx.fillStyle = C.panel; ctx.fill();
         ctx.strokeStyle = C.panelB; ctx.lineWidth = 1; ctx.stroke();
         ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-        ctx.font = '800 17px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.fillStyle = C.fg;
-        ctx.fillText(s.icon + '  ' + s.v, cx + 14, cy + 28);
-        ctx.font = '700 9.5px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.fillStyle = C.faint;
+        ctx.font = '800 17px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.fillStyle = C.fg; ls(0.5);
+        const iw = icon(s.icon, cx + 14, cy + 28);
+        ctx.fillText(s.v, cx + 14 + iw + 9, cy + 28);
+        ctx.font = '700 9.5px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.fillStyle = C.faint; ls(1.5);
         ctx.fillText(s.l, cx + 14, cy + 46);
         if (s.delta != null && Math.abs(s.delta) >= 0.005) {
           const down = s.delta < 0;
-          ctx.fillStyle = down ? C.good : C.bad; ctx.font = '700 10.5px system-ui, -apple-system, "Segoe UI", sans-serif';
+          ctx.fillStyle = down ? C.good : C.bad; ctx.font = '700 10.5px system-ui, -apple-system, "Segoe UI", sans-serif'; ls(0.5);
           ctx.fillText((down ? '▼ ' : '▲ ') + Math.abs(s.delta).toFixed(2), cx + 14, cy + 62);
         } else if (s.bar != null) {
           roundRect(cx + 14, cy + 56, cellW - 28, 4, 2); ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fill();
@@ -3525,15 +3581,15 @@ if (document.getElementById('subtab-expenses')) {
           const cy = y + rowH / 2 - 10;
           ctx.beginPath(); ctx.arc(padX + 10, cy, 10, 0, Math.PI * 2);
           ctx.fillStyle = e.isFirstGroup ? 'rgba(47,230,184,0.22)' : 'rgba(255,255,255,0.08)'; ctx.fill();
-          ctx.fillStyle = e.isFirstGroup ? C.accent : C.faint; ctx.font = '700 10px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillStyle = e.isFirstGroup ? C.accent : C.faint; ctx.font = '700 10px system-ui'; ls(0); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
           ctx.fillText('✓', padX + 10, cy + 1);
-          ctx.textAlign = 'right'; ctx.font = '800 13.5px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.fillStyle = C.fg;
+          ctx.textAlign = 'right'; ctx.font = '800 13.5px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.fillStyle = C.fg; ls(0.4);
           ctx.fillText(e.best, padX + innerW, y + 18);
           const bestW = ctx.measureText(e.best).width;
           ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-          ctx.font = '700 13.5px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.fillStyle = C.fg;
+          ctx.font = '700 13.5px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.fillStyle = C.fg; ls(0.2);
           ctx.fillText(fitText(e.name, innerW - 30 - bestW - 12), padX + 30, y + 18);
-          if (e.setsStr) { ctx.font = '11.5px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.fillStyle = C.faint; ctx.fillText(fitText(e.setsStr, innerW - 30), padX + 30, y + 34); }
+          if (e.setsStr) { ctx.font = '11.5px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.fillStyle = C.faint; ls(0.3); ctx.fillText(fitText(e.setsStr, innerW - 30), padX + 30, y + 34); }
           ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(padX, y + rowH); ctx.lineTo(padX + innerW, y + rowH); ctx.stroke();
         }
         y += rowH;
@@ -3569,12 +3625,71 @@ if (document.getElementById('subtab-expenses')) {
   }
 }
 
-// ---------- Photos tab: aligned progress-photo compare (private build only) ----------
+// ---------- Visual > Measurements: Hevy tape measurements (private build only) ----------
+// MEASUREMENTS comes from hevy_sync.py (weight-only Hevy entries are left out); it's stubbed to []
+// in the public build and the whole Visual tab is PUBLIC:EXCLUDE.
+if (document.getElementById('subtab-measurements')) {
+  const rows = MEASUREMENTS.slice().sort((a, b) => a.d.localeCompare(b.d));
+  const box = document.getElementById('msTable');
+  const fmtDate = d => new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  if (!rows.length) {
+    document.getElementById('msRangeLabel').textContent = 'No tape measurements yet';
+    document.getElementById('msControls').hidden = true;
+    box.innerHTML = '<p class="sub">Log measurements in Hevy (Profile → Measurements) — the daily sync picks them up.</p>';
+  } else {
+    const last = rows[rows.length - 1];
+    document.getElementById('msRangeLabel').textContent =
+      `${rows.length} entr${rows.length === 1 ? 'y' : 'ies'} · ${fmtDate(rows[0].d)} to ${fmtDate(last.d)}`;
+    // [key, label, wanted direction: -1 = down is good, +1 = up is good, 0 = not coloured, unit]
+    const GROUPS = [
+      ['Upper body', [['neck', 'Neck', 0], ['shoulders', 'Shoulders', 1], ['chest', 'Chest', 1],
+        ['bicepL', 'Bicep (L)', 1], ['bicepR', 'Bicep (R)', 1], ['forearmL', 'Forearm (L)', 1], ['forearmR', 'Forearm (R)', 1]]],
+      ['Core', [['abdomen', 'Abdomen', -1], ['waist', 'Waist', -1], ['hips', 'Hips', 0]]],
+      ['Legs', [['thighL', 'Thigh (L)', 1], ['thighR', 'Thigh (R)', 1], ['calfL', 'Calf (L)', 1], ['calfR', 'Calf (R)', 1]]],
+      ['Body', [['weightKg', 'Weight (kg)', 0]]],
+    ];
+    const sel = document.getElementById('msCompare');
+    const earlier = rows.slice(0, -1);
+    // Default: the Winter arc benchmark (first entry on/after its start); until there's a newer
+    // entry than the benchmark, the one before it.
+    const bench = rows.find(r => r.d >= WINTER_ARC.start);
+    const defaultCmp = bench && bench !== last ? bench.d : (earlier.length ? earlier[earlier.length - 1].d : null);
+    const tag = d => bench && d === bench.d ? ' · benchmark' : '';
+    sel.innerHTML = earlier.map(r => `<option value="${r.d}" ${r.d === defaultCmp ? 'selected' : ''}>${fmtDate(r.d)}${tag(r.d)}</option>`).join('');
+    if (!earlier.length) document.getElementById('msControls').hidden = true;
+    const num = v => v === undefined || v === null ? '—' : (Number.isInteger(v) ? String(v) : v.toFixed(1));
+    const render = () => {
+      const base = rows.find(r => r.d === sel.value);
+      const change = (key, want) => {
+        const a = base && base[key], b = last[key];
+        if (a === undefined || a === null || b === undefined || b === null) return '<td>—</td>';
+        const d = Math.round((b - a) * 10) / 10;
+        if (Math.abs(d) < 0.5) return '<td style="color:var(--text-muted)">0</td>';
+        // A jump this big is a change in how the site was measured (e.g. shoulders: width across
+        // the front before 1 Oct 2026, full circumference since), not real change - don't colour it.
+        if (Math.abs(d) > 0.2 * Math.abs(a)) return `<td style="color:var(--text-muted)" title="Over 20% change - probably measured a different way">${d > 0 ? '+' : '−'}${num(Math.abs(d))} ?</td>`;
+        const color = want === 0 ? 'var(--text-secondary)' : (Math.sign(d) === want ? 'var(--good)' : 'var(--critical)');
+        return `<td style="color:${color};font-weight:600">${d > 0 ? '+' : '−'}${num(Math.abs(d))}</td>`;
+      };
+      const head = `<tr><th>Site</th>${rows.map(r => `<th>${fmtDate(r.d)}${tag(r.d) ? '<br><span style="font-weight:600;color:var(--series-1)">benchmark</span>' : ''}</th>`).join('')}${base ? `<th>Change vs ${fmtDate(base.d)}</th>` : ''}</tr>`;
+      const body = GROUPS.map(([g, sites]) =>
+        `<tr><td colspan="${rows.length + 2}" style="color:var(--text-muted);font-weight:600;padding-top:10px">${g}</td></tr>`
+        + sites.filter(([k]) => rows.some(r => r[k] !== undefined)).map(([k, label, want]) =>
+          `<tr><td>${label}</td>${rows.map(r => `<td>${num(r[k])}</td>`).join('')}${base ? change(k, want) : ''}</tr>`).join('')
+      ).join('');
+      box.innerHTML = `<table class="tv"><thead>${head}</thead><tbody>${body}</tbody></table>`;
+    };
+    sel.addEventListener('change', render);
+    render();
+  }
+}
+
+// ---------- Visual > Photos: aligned progress-photo compare (private build only) ----------
 // photo_sync.py writes one aligned 800x1000 JPEG per day to hevy/data/photos/<date>.jpg (all
 // normalised onto the oldest photo's shoulders/hips) plus the PHOTOS index. Images are
 // referenced by relative path, never embedded, so the page stays small and photos never
 // reach git or the public build (the tab is PUBLIC:EXCLUDE and PHOTOS is stubbed there).
-if (document.getElementById('tab-photos')) {
+if (document.getElementById('subtab-photos')) {
   const photos = (PHOTOS.photos || []).slice().sort((a, b) => a.d.localeCompare(b.d));
   const stage = document.getElementById('phStage');
   if (!photos.length) {
@@ -3633,7 +3748,8 @@ if (document.getElementById('tab-photos')) {
     // Quick compares: "N weeks ago" = the photo closest to (on or before) latest - N weeks, vs
     // latest. Only enabled once there IS a photo that far back — before that it would just fall
     // back to the baseline and look identical to "Baseline vs latest" (looked broken, 2026-09-24).
-    const quickPair = q => q === 'baseline' ? [first, last] : [onOrBefore(addDaysISO(last.d, -7 * +q)), last];
+    const arcStart = photos.find(p => p.d >= WINTER_ARC.start) || first;
+    const quickPair = q => q === 'baseline' ? [first, last] : q === 'arc' ? [arcStart, last] : [onOrBefore(addDaysISO(last.d, -7 * +q)), last];
     const syncQuickActive = () => document.querySelectorAll('#phControls [data-quick]').forEach(btn => {
       const [a, b] = quickPair(btn.dataset.quick);
       btn.classList.toggle('active', !btn.disabled && selA.value === a.d && selB.value === b.d);
@@ -3645,7 +3761,7 @@ if (document.getElementById('tab-photos')) {
     slider.addEventListener('input', render);
     document.querySelectorAll('#phControls [data-quick]').forEach(btn => {
       const q = btn.dataset.quick;
-      if (q !== 'baseline' && first.d > addDaysISO(last.d, -7 * +q)) {
+      if (q !== 'baseline' && q !== 'arc' && first.d > addDaysISO(last.d, -7 * +q)) {
         btn.disabled = true;
         btn.title = `Available once you have photos from ${q} week${q === '1' ? '' : 's'} back (from ${addDaysISO(first.d, 7 * +q)})`;
       }
@@ -3665,6 +3781,54 @@ if (document.getElementById('tab-photos')) {
     document.querySelectorAll('#phStrip .ph-thumb').forEach(t => t.addEventListener('click', () => { selB.value = t.dataset.d; render(); syncQuickActive(); }));
 
     setPair(first, last);
+  }
+
+  // Winter arc check-ins: four views per weekly check-in, Before / After rows.
+  const checkins = (PHOTOS.checkins || []).slice().sort((a, b) => a.d.localeCompare(b.d));
+  const daysBetweenISO = (a, b) => Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000);
+  const VIEWS = [['front', 'Front'], ['right', 'Right side'], ['back', 'Back'], ['left', 'Left side']];
+  const fmtD = d => new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  const arcWeeks = Math.floor((daysBetweenISO(WINTER_ARC.start, WINTER_ARC.end) + 1) / 7);   // 13 weekly check-ins
+  const todayISO = (() => { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; })();
+  const arcWeek = Math.min(arcWeeks, Math.max(1, Math.floor(daysBetweenISO(WINTER_ARC.start, todayISO) / 7) + 1));
+  const ciLabel = document.getElementById('ciLabel');
+  const ciGrid = document.getElementById('ciGrid');
+  const head = `Winter arc · ${fmtD(WINTER_ARC.start)} – ${fmtD(WINTER_ARC.end)} · week ${arcWeek} of ${arcWeeks}`;
+  if (!checkins.length) {
+    ciLabel.textContent = `${head} · no check-in yet — take front, right, back and left photos within a few minutes of each other.`;
+    document.getElementById('ciControls').hidden = true;
+  } else {
+    const lastCi = checkins[checkins.length - 1];
+    const due = addDaysISO(lastCi.d, 7);
+    const dueTxt = todayISO > due ? `check-in overdue (was due ${fmtD(due)})` : todayISO === due ? 'check-in due today' : `next check-in ${fmtD(due)}`;
+    ciLabel.textContent = `${head} · ${checkins.length} check-in${checkins.length === 1 ? '' : 's'} · ${dueTxt}`;
+    const bench = checkins.find(c => c.d >= WINTER_ARC.start) || checkins[0];
+    const body = new Map(dailyBodyLog(BODYLOG).map(d => [d.date, d]));
+    const tape = d => MEASUREMENTS.filter(m => m.d <= d && daysBetweenISO(m.d, d) <= 3).pop();
+    const caption = c => {
+      const b = body.get(c.d), m = tape(c.d), parts = [];
+      if (b && b.weightKg != null) parts.push(`${b.weightKg.toFixed(1)} kg`);
+      if (b && b.bodyFatPct != null) parts.push(`${b.bodyFatPct.toFixed(1)}% fat`);
+      if (m && m.waist != null) parts.push(`waist ${m.waist} cm`);
+      return parts.join(' · ');
+    };
+    const label = c => `${fmtD(c.d)}${c === bench ? ' · benchmark' : ''}`;
+    const opts = checkins.map(c => `<option value="${c.d}">${label(c)}</option>`).join('');
+    const ciA = document.getElementById('ciBefore'), ciB = document.getElementById('ciAfter');
+    ciA.innerHTML = opts; ciB.innerHTML = opts;
+    ciA.value = bench.d; ciB.value = lastCi.d;
+    if (checkins.length === 1) document.getElementById('ciControls').hidden = true;
+    const row = (title, c) => `<div class="ci-row"><b>${title}</b> ${label(c)}${caption(c) ? ' · ' + caption(c) : ''}</div>`
+      + VIEWS.map(([v]) => c.views[v]
+        ? `<figure><img loading="lazy" src="hevy/data/photos/checkins/${c.d}-${v}.jpg" alt="${v}"></figure>`
+        : `<figure class="ci-missing">no ${v} photo</figure>`).join('');
+    const renderCi = () => {
+      const a = checkins.find(c => c.d === ciA.value), b = checkins.find(c => c.d === ciB.value);
+      ciGrid.innerHTML = VIEWS.map(([, l]) => `<div class="ci-head">${l}</div>`).join('')
+        + (a === b ? row('', a) : row('Before', a) + row('After', b));
+    };
+    ciA.addEventListener('change', renderCi); ciB.addEventListener('change', renderCi);
+    renderCi();
   }
 }
 
