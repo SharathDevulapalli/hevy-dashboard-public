@@ -474,6 +474,19 @@
               </details>
             </div>
           </div>
+          <div>
+            <h3 style="font-size:14px;margin:0 0 8px;">Running</h3>
+            <div class="card">
+              <div id="runSummary" style="margin-bottom:12px;"></div>
+              <div id="runChart"></div>
+              <details class="tableview"><summary>Table view</summary>
+                <table class="tv">
+                  <thead><tr><th>Date</th><th>Distance</th><th>Duration</th><th>Pace</th><th>Avg HR</th><th>Cadence</th><th>Verdict</th></tr></thead>
+                  <tbody id="runTable"></tbody>
+                </table>
+              </details>
+            </div>
+          </div>
         </div>
       </section>
     </div>
@@ -1082,6 +1095,9 @@ const HEARTRATE = [
 {"d": "2026-07-12", "resting": 61, "min": 59, "max": 103},
 {"d": "2026-07-11", "resting": 60, "min": 53, "max": 118}
 ];
+const RUNS = [
+{"d": "2026-10-02", "km": 5.04, "min": 38.7, "avgHR": 146, "maxHR": 163, "cadence": 160, "elev": 8}
+];
 const NUTRITION = [
 {"d": "2026-10-02", "calories": 1757, "goal": 1900, "protein": 195, "proteinGoal": 190, "carbs": 176, "carbsGoal": 166, "fat": 40, "fatGoal": 53},
 {"d": "2026-10-01", "calories": 1796, "goal": 1900, "protein": 197, "proteinGoal": 190, "carbs": 139, "carbsGoal": 166, "fat": 49, "fatGoal": 53},
@@ -1360,6 +1376,21 @@ function cardioSessions(workouts, id) {
       sessions[i].verdict = 'same';
     }
   }
+  return sessions;
+}
+
+function runSessions(runs) {
+  // date-ascending {date, km, min, paceMinPerKm, avgHR, maxHR, cadence, verdict} from runs.json
+  // (outdoor Garmin runs, not logged in Hevy). Same pace verdict as cardioSessions.
+  const sessions = (runs || []).filter(r => r.km > 0).map(r => ({
+    date: r.d, km: r.km, min: r.min, paceMinPerKm: r.min / r.km,
+    avgHR: r.avgHR, maxHR: r.maxHR, cadence: r.cadence,
+  })).sort((a, b) => a.date.localeCompare(b.date));
+  sessions.forEach((s, i) => {
+    const prev = sessions[i - 1];
+    s.verdict = !prev ? 'baseline' : s.paceMinPerKm < prev.paceMinPerKm ? 'faster'
+      : s.paceMinPerKm > prev.paceMinPerKm ? 'slower' : 'same';
+  });
   return sessions;
 }
 
@@ -2959,6 +2990,54 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
         : r.verdict === 'same' ? `<span class="badge baseline">same</span>`
         : `<span class="badge baseline">baseline</span>`;
       return `<tr><td>${r.date}</td><td>${r.min} min</td><td>${r.km} km</td><td>${r.paceMinPerKm.toFixed(2)}</td><td>${badge}</td></tr>`;
+    }).join('');
+  }
+}
+
+// ---------- running cardio trend (outdoor Garmin runs, runs.json) ----------
+{
+  const runs = runSessions(RUNS);
+  const mmss = p => { const s = Math.round(p * 60); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+  if (runs.length === 0) {
+    document.getElementById('runChart').innerHTML = '<p class="sub">No runs recorded on Garmin yet.</p>';
+  } else {
+    const latest = runs[runs.length - 1];
+    const prev = runs.length >= 2 ? runs[runs.length - 2] : null;
+    const verdictBadge = latest.verdict === 'faster' ? `<span class="badge progress">↑ progress — pace improved</span>`
+      : latest.verdict === 'slower' ? `<span class="badge plateau">pace slower than last run</span>`
+      : latest.verdict === 'same' ? `<span class="badge baseline">pace unchanged</span>`
+      : `<span class="badge baseline">first logged run</span>`;
+    const deltaStr = prev ? ` vs ${mmss(prev.paceMinPerKm)} last time` : '';
+    document.getElementById('runSummary').innerHTML = `${verdictBadge}<span style="color:var(--text-muted);font-size:12px;margin-left:8px;">${latest.date} &middot; ${latest.km} km in ${mmss(latest.min)} &middot; ${mmss(latest.paceMinPerKm)} /km${deltaStr}${latest.avgHR ? ` &middot; avg HR ${latest.avgHR}` : ''}</span>`;
+    const w = 1000, h = 140, pad = 28;
+    const svg = svgEl('svg', { width: '100%', height: h, viewBox: `0 0 ${w} ${h}`, preserveAspectRatio: 'none' });
+    const max = Math.max(...runs.map(r => r.km), 1);
+    const bw = Math.min((w - 2*pad) / runs.length, 80);
+    for (let g = 0; g <= 4; g++) {
+      const gy = pad + (h - 2*pad) * (1 - g/4);
+      svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: gy, y2: gy, class: 'gridline' }));
+    }
+    runs.forEach((r, i) => {
+      const bh = (r.km / max) * (h - 2*pad);
+      const rect = svgEl('rect', { x: pad + i*bw + 1, y: h - pad - bh, width: Math.max(bw-2,1), height: Math.max(bh,0), fill: 'var(--series-1)', rx: 2 });
+      const title = svgEl('title', {});
+      title.textContent = `${r.date}: ${r.km} km in ${mmss(r.min)} (${mmss(r.paceMinPerKm)} /km${r.avgHR ? ', avg HR ' + r.avgHR : ''})`;
+      rect.appendChild(title);
+      svg.appendChild(rect);
+    });
+    svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: h-pad, y2: h-pad, class: 'axisline' }));
+    const runWk = runs.filter(r => inThisWeek(r.date));
+    const runKm = meanOf(runWk.map(r => r.km)), runPace = meanOf(runWk.map(r => r.paceMinPerKm));
+    addWeekAvgLine(document.getElementById('runChart'), svg, { w, h, pad, max, value: runKm,
+      label: runKm == null ? '' : `${runKm.toFixed(2)} km/run · ${mmss(runPace)} /km` });
+    document.getElementById('runChart').appendChild(svg);
+
+    document.getElementById('runTable').innerHTML = runs.slice().reverse().map(r => {
+      const badge = r.verdict === 'faster' ? `<span class="badge progress">faster</span>`
+        : r.verdict === 'slower' ? `<span class="badge plateau">slower</span>`
+        : r.verdict === 'same' ? `<span class="badge baseline">same</span>`
+        : `<span class="badge baseline">baseline</span>`;
+      return `<tr><td>${r.date}</td><td>${r.km} km</td><td>${mmss(r.min)}</td><td>${mmss(r.paceMinPerKm)} /km</td><td>${r.avgHR ?? '—'}</td><td>${r.cadence ? r.cadence + ' spm' : '—'}</td><td>${badge}</td></tr>`;
     }).join('');
   }
 }
