@@ -22,7 +22,7 @@
     --critical: #d03b3b;
   }
   @media (prefers-color-scheme: dark) {
-    :root:where(:not([data-theme="light"])) {
+    :root:where(:not([data-theme="light"])), :root:where(:not([data-theme="light"])) .viz-root {
       color-scheme: dark;
       --surface-1: #1a1a19;
       --page: #0d0d0d;
@@ -41,7 +41,7 @@
       --critical: #e66767;
     }
   }
-  :root[data-theme="dark"] {
+  :root[data-theme="dark"], :root[data-theme="dark"] .viz-root {
     color-scheme: dark;
     --surface-1: #1a1a19;
     --page: #0d0d0d;
@@ -60,6 +60,7 @@
     --critical: #e66767;
   }
   * { box-sizing: border-box; }
+  .viz-root { color: var(--text-primary); } /* .viz-root re-declares the tokens, so its text must re-read them too */
   body {
     margin: 0;
     background: var(--page);
@@ -215,7 +216,9 @@
     background: color-mix(in srgb, var(--series-1) 18%, transparent);
   }
   .vol-group-panel[hidden] { display: none; }
-  .tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+  .tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar, .subtabs::-webkit-scrollbar { display: none; }
+  .tab-btn, .subtab-btn, #pdfExportBtn { flex: 0 0 auto; white-space: nowrap; }
   .tab-btn {
     appearance: none; background: none; border: none; cursor: pointer; font: inherit;
     font-size: 13.5px; font-weight: 600; color: var(--text-muted);
@@ -223,8 +226,9 @@
   }
   .tab-btn:hover { color: var(--text-primary); }
   .tab-btn.active { color: var(--text-primary); border-bottom-color: var(--series-1); }
+  .tab-num { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; font-weight: 600; color: var(--series-2); margin-right: 6px; vertical-align: 1px; }
   .tabpanel[hidden] { display: none; }
-  .subtabs { display: flex; gap: 4px; margin: 4px 0 24px; border-bottom: 1px solid var(--border); }
+  .subtabs { display: flex; gap: 4px; margin: 4px 0 24px; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
   .subtab-btn {
     appearance: none; background: none; border: none; cursor: pointer; font: inherit;
     font-size: 13px; font-weight: 600; color: var(--text-muted);
@@ -240,7 +244,7 @@
   }
   .cal-nav button:hover { border-color: var(--axis); }
   .cal-nav .label { font-size: 14px; font-weight: 600; min-width: 130px; text-align: center; }
-  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
   .cal-dow { color: var(--text-muted); font-size: 11px; text-align: center; padding-bottom: 2px; }
   .cal-cell {
     border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; min-height: 56px;
@@ -249,9 +253,62 @@
   .cal-cell.out { opacity: 0.35; }
   .cal-cell .d { font-size: 11px; color: var(--text-muted); }
   .cal-cell .amt { font-size: 12.5px; font-weight: 600; margin-top: 4px; font-variant-numeric: tabular-nums; }
-  .cal-cell.has { border-color: var(--series-2); }
-  .cal-cell .note { font-size: 10.5px; color: var(--text-secondary); line-height: 1.25; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .cal-nav button:disabled { opacity: 0.35; cursor: default; }
+  /* Overview: Inputs -> Process -> Results */
+  .flow { margin-top: 18px; }
+  .flow-grid { display: grid; grid-template-columns: minmax(0,1fr) 34px minmax(0,1fr) 34px minmax(0,1fr); align-items: stretch; }
+  .flow-arrow { display: flex; align-items: center; justify-content: center; color: var(--axis); }
+  .flow-arrow svg { width: 22px; height: 22px; }
+  .stage { background: var(--surface-1); border: 1px solid var(--border); border-radius: 14px; padding: 18px 18px 14px; display: flex; flex-direction: column; gap: 14px; position: relative; overflow: hidden; }
+  .stage::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--series-2); opacity: var(--stage-o, .35); }
+  .stage.s1 { --stage-o: .3; } .stage.s2 { --stage-o: .6; } .stage.s3 { --stage-o: 1; }
+  .stage-hd { display: flex; align-items: baseline; gap: 10px; }
+  .stage-hd .num { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: var(--series-2); letter-spacing: .06em; }
+  .stage-hd .name { font-family: 'IBM Plex Serif', serif; font-size: 21px; font-weight: 500; }
+  .stage-hd .sub2 { margin-left: auto; font-size: 11px; color: var(--text-muted); text-align: right; }
+  .m { display: grid; grid-template-columns: 1fr auto; row-gap: 6px; }
+  .m-l { font-size: 12.5px; color: var(--text-secondary); align-self: end; }
+  .m-v { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; line-height: 1.1; white-space: nowrap; }
+  .m-v small { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+  .m-viz { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; }
+  .m-note { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+  .m-st { margin-left: auto; font-size: 11px; font-weight: 600; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; color: var(--text-secondary); }
+  .m-st i { font-style: normal; display: inline-flex; width: 15px; height: 15px; border-radius: 50%; align-items: center; justify-content: center; font-size: 9.5px; color: #fff; }
+  .m-st.good i { background: var(--good); } .m-st.warn i { background: var(--warning); color: #0b0b0b; } .m-st.none i { background: var(--axis); }
+  .meter { position: relative; flex: 1 1 auto; height: 6px; border-radius: 3px; background: var(--grid); min-width: 60px; }
+  .meter > span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--text-secondary); }
+  .meter.good > span { background: var(--good); } .meter.warn > span { background: var(--warning); }
+  .meter > b { position: absolute; top: -3px; bottom: -3px; border-radius: 2px; background: color-mix(in srgb, var(--good) 22%, transparent); outline: 1px dashed color-mix(in srgb, var(--good) 60%, transparent); }
+  .meter > em { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--text-primary); opacity: .55; }
+  .pips { display: flex; gap: 4px; flex: 1 1 auto; }
+  .pips span { flex: 1 1 0; height: 8px; border-radius: 3px; background: var(--grid); max-width: 34px; }
+  .pips span.hit { background: var(--good); } .pips span.miss { background: var(--warning); }
+  .pips span.todo { background: transparent; box-shadow: inset 0 0 0 1px var(--axis); }
+  .pips.days { margin-bottom: 12px; }
+  .pips.days span { position: relative; }
+  .pips.days u { position: absolute; top: 11px; left: 0; right: 0; text-align: center; text-decoration: none; font-size: 9px; color: var(--text-muted); line-height: 1; }
+  .spark { flex: 1 1 auto; height: 28px; min-width: 80px; }
+  .delta { font-size: 11.5px; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .delta.good { color: var(--good); } .delta.bad { color: var(--critical); } .delta.flat { color: var(--text-muted); }
+  @media (max-width: 860px) {
+    .flow-grid { grid-template-columns: minmax(0,1fr); }
+    .flow-arrow { height: 30px; } .flow-arrow svg { transform: rotate(90deg); }
+  }
+  .ledger-card { padding: 6px 0 4px; }
+  .ledger-scroll { overflow-x: auto; }
+  .ledger { border-collapse: separate; border-spacing: 3px; width: 100%; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .ledger th { font-weight: 500; font-size: 11px; color: var(--text-muted); padding: 4px 6px; text-align: center; white-space: nowrap; }
+  .ledger th.now { color: var(--text-primary); font-weight: 600; }
+  .ledger td { text-align: center; padding: 6px 4px; border-radius: 6px; white-space: nowrap; min-width: 58px; }
+  .ledger td.rl { text-align: left; color: var(--text-secondary); padding-left: 14px; min-width: 150px; position: sticky; left: 0; background: var(--surface-1); z-index: 1; }
+  .ledger td.rl small { display: block; color: var(--text-muted); font-size: 10.5px; }
+  .ledger td.good { background: color-mix(in srgb, var(--good) 16%, transparent); }
+  .ledger td.warn { background: color-mix(in srgb, var(--warning) 22%, transparent); }
+  .ledger td.na { color: var(--text-muted); }
+  .ledger td.cur { box-shadow: inset 0 0 0 1px var(--axis); }
+  .ledger tr.lg td { text-align: left; padding: 12px 14px 2px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; letter-spacing: .06em; color: var(--series-2); background: none; position: sticky; left: 0; }
+  .ledger tr.lg td span { color: var(--text-muted); font-family: 'IBM Plex Sans', sans-serif; font-weight: 500; letter-spacing: 0; margin-left: 8px; }
+  .chart-h { font-size: 14px; margin: 0 0 8px; } .chart-h span { font-weight: 400; color: var(--text-muted); font-size: 12px; margin-left: 6px; }
   /* Calendar tab (all activity per day) */
   .act-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--text-secondary); margin: 0 0 12px; }
   .act-legend > span { display: inline-flex; align-items: center; gap: 5px; }
@@ -269,13 +326,16 @@
   .act-pill.hit { background: color-mix(in srgb, var(--good) 22%, transparent); border-color: color-mix(in srgb, var(--good) 55%, transparent); }
   .act-pill.miss { background: color-mix(in srgb, var(--warning) 22%, transparent); border-color: color-mix(in srgb, var(--warning) 60%, transparent); }
   .act-pill.none { opacity: 0.3; }
-  .act-detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 24px; }
+  .act-day { display: grid; grid-template-columns: minmax(0, 460px) minmax(0, 1fr); gap: 20px; margin-top: 18px; align-items: start; }
+  .act-day .tl-wrap { margin: 0; }
+  @media (max-width: 900px) { .act-day { grid-template-columns: minmax(0, 1fr); } .act-day .tl-wrap { margin: 0 auto; } }
+  .act-detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px 24px; }
   .act-detail-grid h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); margin: 0 0 6px; }
   .act-detail-grid .row { font-size: 13px; line-height: 1.5; }
   .act-detail-grid .ex { font-size: 12.5px; line-height: 1.45; color: var(--text-secondary); }
   .act-detail-grid .ex b { color: var(--text-primary); font-weight: 600; }
   @media (max-width: 600px) { .act-grid .sess, .act-grid .meta { display: none; } .act-grid .cal-cell { min-height: 64px; } .act-pill { min-width: 0; font-size: 9px; height: 14px; padding: 0 1px; } .act-grid .pills { flex-wrap: wrap; gap: 2px; } }
-  @media (max-width: 600px) { .cal-grid { gap: 3px; } .cal-cell { padding: 4px; min-height: 48px; } .cal-cell .note { display: none; } }
+  @media (max-width: 600px) { .cal-grid { gap: 3px; } .cal-cell { padding: 4px; min-height: 48px; } }
   .cat-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--text-secondary); }
   .cat-legend .sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
   /* Accountability tab's daily card: deliberately its own fixed dark theme (not tied to the
@@ -337,6 +397,13 @@
   .tl-exrow .name { font-weight: 700; font-size: 13.5px; color: var(--tlc-fg); }
   .tl-exrow .sets { color: var(--tlc-faint); font-size: 11.5px; margin-top: 2px; }
   .tl-exrow .best { flex: 0 0 auto; font-weight: 800; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; color: var(--tlc-fg); }
+  .tl-exrow .vd { font-size: 10px; font-weight: 700; margin-right: 6px; vertical-align: 1px; }
+  .tl-exrow .vd.up { color: var(--tlc-good); } .tl-exrow .vd.down { color: var(--tlc-bad); } .tl-exrow .vd.new { color: var(--tlc-faint); letter-spacing: .05em; }
+  .tl-verdict { margin-top: 8px; font-size: 11.5px; font-weight: 600; color: var(--tlc-muted); }
+  .tl-week { display: flex; align-items: center; gap: 12px; margin-top: 16px; font-size: 9.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--tlc-faint); position: relative; z-index: 1; }
+  .tl-week .dots { display: inline-flex; gap: 6px; flex: 1 1 auto; }
+  .tl-week .wd { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.14); }
+  .tl-week .wd.on { background: var(--tlc-accent); }
 
   /* PDF export (see pdfExportBtn below): each .pdf-page (a top-level tab, or a subtab within
      Training) printed on its own page, auto-scaled via JS-set zoom (not transform - zoom
@@ -346,7 +413,7 @@
   @page { size: A4 landscape; margin: 10mm; }
   @media print {
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    body.pdf-export-mode .tabs, body.pdf-export-mode .subtabs, body.pdf-export-mode #tlSaveImgBtn { display: none !important; }
+    body.pdf-export-mode .tabs, body.pdf-export-mode .subtabs, body.pdf-export-mode #tlSaveImgBtn, body.pdf-export-mode .cal-nav button { display: none !important; }
     body.pdf-export-mode .tabpanel, body.pdf-export-mode .subtabpanel { display: block !important; }
     body.pdf-export-mode .pdf-page { break-after: page; }
   }
@@ -366,70 +433,121 @@
 
   <div class="tabs" role="tablist">
     <button class="tab-btn active" data-tab="overview" type="button">Overview</button>
-    <button class="tab-btn" data-tab="training" type="button">Training</button>
-    <button class="tab-btn" data-tab="nutrition" type="button">Nutrition</button>
-    <button class="tab-btn" data-tab="reward" type="button">Recovery</button>
-    <button class="tab-btn" data-tab="calendar" type="button">Calendar</button>
-    
-    
+    <button class="tab-btn" data-tab="inputs" type="button"><span class="tab-num">01</span>Inputs</button>
+    <button class="tab-btn" data-tab="process" type="button"><span class="tab-num">02</span>Process</button>
+    <button class="tab-btn" data-tab="results" type="button"><span class="tab-num">03</span>Results</button>
     <button id="pdfExportBtn" type="button" style="margin-left:auto;appearance:none;background:var(--surface-1);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);cursor:pointer;font:inherit;font-size:13px;padding:7px 14px;align-self:center;">&darr; Download as PDF</button>
   </div>
 
-  <div id="tab-overview" class="tabpanel pdf-page">
+  <div id="tab-overview" class="tabpanel">
+    <div class="subtabs" role="tablist">
+      <button class="subtab-btn active" data-subtab="weekly" type="button">Weekly</button>
+      <button class="subtab-btn" data-subtab="calendar" type="button">Calendar</button>
+    </div>
+
+  <div id="subtab-weekly" class="subtabpanel pdf-page">
   <header class="top">
     <p id="ovWeekLabel">This week</p>
-    <div class="stat-row" id="ovInputsRow"></div>
   </header>
 
-  <section>
-    <h2>Weekly body fat % trend</h2>
-    <p class="sub">📉 Average of logged daily readings per calendar week, dashed line is that week's reward-schedule target.</p>
-    <div class="card"><div id="weeklyFatChart"></div>
-      <details class="tableview"><summary>Table view</summary><div id="weeklyFatTable"></div></details>
-    </div>
-  </section>
+  <!-- Inputs -> Process -> Results (2026-10-06): this week's flow, then the same three stages
+       week by week. (Separate body-fat/weight charts removed — the Results sparklines and the
+       ledger cover them; no body-fat target is tracked for now.) -->
+  <section class="flow" id="ovFlow" aria-label="This week: inputs, process, results"></section>
 
   <section>
-    <h2>Weekly weight trend</h2>
-    <p class="sub">Average of logged daily weigh-ins per calendar week.</p>
-    <div class="card"><div id="weeklyWeightChart"></div>
-      <details class="tableview"><summary>Table view</summary><div id="weeklyWeightTable"></div></details>
-    </div>
-  </section>
-
-  <section>
-    <h2>Fat mass vs lean mass</h2>
-    <p class="sub">Weekly average of weight × body fat % (fat mass) and the remainder (lean mass), from days with both logged.</p>
-    <div class="grid-2">
-      <div>
-        <h3 style="font-size:14px;margin:0 0 8px;">Fat mass</h3>
-        <div class="card"><div id="weeklyFatMassChart"></div></div>
-      </div>
-      <div>
-        <h3 style="font-size:14px;margin:0 0 8px;">Lean mass</h3>
-        <div class="card"><div id="weeklyLeanMassChart"></div></div>
-      </div>
-    </div>
-    <details class="tableview"><summary>Table view</summary><div id="weeklyCompTable"></div></details>
+    <h2>Week by week</h2>
+    <p class="sub">Read down a column: what went in, the work done, what moved. Green met its target, amber missed it.</p>
+    <div class="card ledger-card"><div class="ledger-scroll" id="ovLedger"></div></div>
   </section>
 
   </div>
 
-  <div id="tab-training" class="tabpanel" hidden>
+  <div id="subtab-calendar" class="subtabpanel pdf-page" hidden>
+    <div class="cal-nav">
+      <button type="button" id="actCalPrev" aria-label="Previous month">‹</button>
+      <span class="label" id="actCalLabel"></span>
+      <button type="button" id="actCalNext" aria-label="Next month">›</button>
+      <span class="sub" id="actCalSummary" style="margin:0 0 0 auto;"></span>
+    </div>
+    <div class="act-legend">
+      <span><span class="act-pill hit">👣</span>steps goal</span>
+      <span><span class="act-pill hit">🍽</span>calories 85–105% of goal + protein ≥ 90%</span>
+      <span><span class="act-pill hit">😴</span>sleep goal (that night)</span>
+      <span><span class="act-pill hit">&nbsp;</span>hit</span>
+      <span><span class="act-pill miss">&nbsp;</span>missed</span>
+    </div>
+    <div class="cal-grid act-grid" id="actCalGrid"></div>
+    <div class="act-day">
+      <div>
+        <div id="trainingLogCard"></div>
+        <div class="tl-wrap" style="margin-top:12px;text-align:center;">
+          <button id="tlSaveImgBtn" type="button" style="appearance:none;background:var(--surface-1);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);cursor:pointer;font:inherit;font-size:13px;padding:8px 16px;">&darr; Save as image</button>
+        </div>
+      </div>
+      <div class="card" id="actDayDetail"></div>
+    </div>
+  </div>
+  </div>
+
+  <!-- 01 Inputs / 02 Process / 03 Results (2026-10-06): the tab order follows the Overview's
+       flow. Inputs = Nutrition + Sleep (+ private Supplements, Expenses); Process = training
+       and cardio; Results = Resting HR (+ private Measurements, Labs). -->
+  <div id="tab-inputs" class="tabpanel" hidden>
+    <div class="subtabs" role="tablist">
+      <button class="subtab-btn active" data-subtab="calories" type="button">Nutrition</button>
+      
+      <button class="subtab-btn" data-subtab="sleep" type="button">Sleep</button>
+      
+    </div>
+
+    <div id="subtab-calories" class="subtabpanel pdf-page">
+      <header class="top">
+        <p id="nutWeekLabel">—</p>
+      </header>
+      <section style="margin-top:20px;">
+        <div class="card" id="nutWeekBars"></div>
+      </section>
+      <section>
+        <h2>Weekly average calories vs goal</h2>
+        <p class="sub">Average calories per logged day each week. The dark tick is that week's average daily goal.</p>
+        <div class="card"><div id="nutWeeklyChart"></div></div>
+      </section>
+      <section>
+        <h2>Daily log</h2>
+        <p class="sub">Intake / goal per day, grouped by week with the week's per-day average on top. ▲ over goal, ▼ protein short of goal.</p>
+        <div id="nutTable"></div>
+      </section>
+    </div>
+
+    
+
+    <div id="subtab-sleep" class="subtabpanel pdf-page" hidden>
+      <section>
+        <h2>Weekly sleep trend</h2>
+        <p class="sub">😴 Average of logged nightly sleep per calendar week, dashed line is the current sleep goal.</p>
+        <div class="card"><div id="weeklySleepChart"></div>
+          <details class="tableview"><summary>Table view</summary><div id="weeklySleepTable"></div></details>
+        </div>
+      </section>
+
+    </div>
+
+    
+  </div>
+
+  <div id="tab-process" class="tabpanel" hidden>
     <div class="subtabs" role="tablist">
       <button class="subtab-btn active" data-subtab="summary" type="button">Summary</button>
       <button class="subtab-btn" data-subtab="strength" type="button">Strength</button>
       <button class="subtab-btn" data-subtab="cardio" type="button">Cardio</button>
       <button class="subtab-btn" data-subtab="volumelog" type="button">Progress</button>
-      <button class="subtab-btn" data-subtab="traininglog" type="button">Accountability</button>
     </div>
 
     <div id="subtab-summary" class="subtabpanel pdf-page">
     <header class="top">
       <p id="dateRangeLabel">—</p>
       <div class="stat-row" id="statRow"></div>
-      <p class="sub" id="thisWeekLabel" style="margin:16px 0 0;">This week</p>
-      <div class="stat-row" id="statRowWeek"></div>
     </header>
 
     <section>
@@ -453,7 +571,6 @@
           <div>
             <h3 style="font-size:14px;margin:0 0 8px;">Bodyweight</h3>
             <div class="card">
-              <div id="bwRoutineSummary" style="margin-bottom:12px;"></div>
               <div id="bwRoutineChart"></div>
               <details class="tableview"><summary>Table view</summary>
                 <table class="tv">
@@ -466,7 +583,6 @@
           <div>
             <h3 style="font-size:14px;margin:0 0 8px;">Steps Count</h3>
             <div class="card">
-              <div id="stepsSummary" style="margin-bottom:12px;"></div>
               <div id="stepsChart"></div>
               <details class="tableview"><summary>Table view</summary>
                 <table class="tv">
@@ -529,59 +645,33 @@
       </section>
     </div>
 
-    <div id="subtab-traininglog" class="subtabpanel pdf-page" hidden>
-      <section style="margin-top:4px;">
-        <div id="trainingLogCard"></div>
-        <div class="tl-wrap" style="margin-top:12px;text-align:center;">
-          <button id="tlSaveImgBtn" type="button" style="appearance:none;background:var(--surface-1);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);cursor:pointer;font:inherit;font-size:13px;padding:8px 16px;">&darr; Save as image</button>
-        </div>
-      </section>
-    </div>
   </div>
 
-  <div id="tab-nutrition" class="tabpanel" hidden>
+  <div id="tab-results" class="tabpanel" hidden>
     <div class="subtabs" role="tablist">
-      <button class="subtab-btn active" data-subtab="calories" type="button">Calories</button>
+      <button class="subtab-btn active" data-subtab="bodycomp" type="button">Body fat &amp; weight</button>
+      <button class="subtab-btn" data-subtab="rhr" type="button">Resting HR</button>
       
     </div>
 
-    <div id="subtab-calories" class="subtabpanel pdf-page">
-      <header class="top">
-        <p id="nutWeekLabel">—</p>
-      </header>
-      <section style="margin-top:20px;">
-        <div class="card" id="nutWeekBars"></div>
-      </section>
+    <div id="subtab-bodycomp" class="subtabpanel pdf-page">
       <section>
-        <h2>Weekly average calories vs goal</h2>
-        <p class="sub">Average calories per logged day each week. The dark tick is that week's average daily goal.</p>
-        <div class="card"><div id="nutWeeklyChart"></div></div>
-      </section>
-      <section>
-        <h2>Daily log</h2>
-        <p class="sub">Intake / goal per day, grouped by week with the week's per-day average on top. ▲ over goal, ▼ protein short of goal.</p>
-        <div id="nutTable"></div>
-      </section>
-    </div>
-
-    
-  </div>
-
-  <div id="tab-reward" class="tabpanel" hidden>
-    <div class="subtabs" role="tablist">
-      <button class="subtab-btn active" data-subtab="sleep" type="button">Sleep</button>
-      
-    </div>
-
-    <div id="subtab-sleep" class="subtabpanel pdf-page">
-      <section>
-        <h2>Weekly sleep trend</h2>
-        <p class="sub">😴 Average of logged nightly sleep per calendar week, dashed line is the current sleep goal.</p>
-        <div class="card"><div id="weeklySleepChart"></div>
-          <details class="tableview"><summary>Table view</summary><div id="weeklySleepTable"></div></details>
+        <h2>Weekly body fat %</h2>
+        <p class="sub">Average of logged daily readings per calendar week — lower is better.</p>
+        <div class="card"><div id="weeklyFatChart"></div>
+          <details class="tableview"><summary>Table view</summary><div id="weeklyFatTable"></div></details>
         </div>
       </section>
+      <section>
+        <h2>Weekly weight</h2>
+        <p class="sub">Average of logged daily weigh-ins per calendar week.</p>
+        <div class="card"><div id="weeklyWeightChart"></div>
+          <details class="tableview"><summary>Table view</summary><div id="weeklyWeightTable"></div></details>
+        </div>
+      </section>
+    </div>
 
+    <div id="subtab-rhr" class="subtabpanel pdf-page" hidden>
       <section>
         <h2>Weekly resting heart rate</h2>
         <p class="sub">Average Garmin resting heart rate per calendar week — lower is better.</p>
@@ -594,32 +684,12 @@
     
   </div>
 
-  <div id="tab-calendar" class="tabpanel pdf-page" hidden>
-    <div class="cal-nav">
-      <button type="button" id="actCalPrev" aria-label="Previous month">‹</button>
-      <span class="label" id="actCalLabel"></span>
-      <button type="button" id="actCalNext" aria-label="Next month">›</button>
-      <span class="sub" id="actCalSummary" style="margin:0 0 0 auto;"></span>
-    </div>
-    <div class="act-legend">
-      <span><span class="act-pill hit">👣</span>steps goal</span>
-      <span><span class="act-pill hit">🍽</span>calories 85–105% of goal + protein ≥ 90%</span>
-      <span><span class="act-pill hit">😴</span>sleep goal</span>
-      <span><span class="act-pill hit">&nbsp;</span>hit</span>
-      <span><span class="act-pill miss">&nbsp;</span>missed</span>
-    </div>
-    <div class="cal-grid act-grid" id="actCalGrid"></div>
-    <div class="card" id="actDayDetail" style="margin-top:16px;"></div>
-  </div>
-
-  
-
-  
-
 </div>
 
 <script>
 const WORKOUTS = [
+{"d": "2026-10-06", "t": "Bodyweight Routine", "ex": [{"i": "392887AA", "s": [[0, 20], [0, 20], [0, 20], [0, 6], [0, 6], [0, 10], [0, 10], [0, 8]]}]},
+{"d": "2026-10-06", "t": "Chest & Shoulders", "ex": [{"i": "50DFDFAB", "s": [[5, 40], [10, 15], [15, 15], [20, 10]]}, {"i": "293483AD", "s": [[6, 20], [6, 10], [9, 10], [12, 10], [9, 10]]}, {"i": "651F844C", "s": [[18, 15], [24, 10], [27, 10], [15, 15]]}, {"i": "67280085", "s": [[50, 15], [60, 10], [60, 10]]}, {"i": "3601968B", "s": [[25, 15], [30, 10], [35, 10]]}, {"i": "7B8D84E8", "s": [[15, 20], [15, 20], [15, 20]]}, {"i": "422B08F1", "s": [[10, 10], [15, 10], [15, 10], [5, 20]]}, {"i": "E5988A0A", "s": [[10, 10], [15, 10], [15, 10], [5, 20]]}, {"i": "8293E554", "s": [[10, 10], [15, 10], [15, 10], [5, 20]]}]},
 {"d": "2026-10-01", "t": "Bodyweight Routine", "ex": [{"i": "022DF610", "s": [[0, 15], [0, 15]]}, {"i": "09C9F635", "s": [[0, 15], [0, 15]]}, {"i": "6BE68B62", "s": [[0, 15], [0, 15]], "n": "Tuck in"}]},
 {"d": "2026-10-01", "t": "Hamstrings, Calves & Forearms", "ex": [{"i": "8BEBFED6", "s": [[50, 15], [55, 15], [55, 15]]}, {"i": "F4B4C6EE", "s": [[45, 15], [50, 10], [55, 10]]}, {"i": "4180C405", "s": [[80, 12], [120, 12], [160, 12]]}, {"i": "48f5c3f5-c628-486f-8b21-5857033c580f", "s": [[150, 20], [200, 20], [250, 10], [200, 10], [150, 10], [100, 10], [50, 10]], "n": "10 close 10 wide"}, {"i": "91237BDD", "s": [[50, 20], [100, 20], [100, 20]]}, {"i": "72CFFAD5", "s": [[60, 10], [70, 10], [80, 10]]}, {"i": "B8127AD1", "s": [[20, 14], [25, 14], [30, 7], [25, 7]], "n": "7 fast 7 slow"}, {"i": "1006DF48", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "D8460FA6", "s": [[10, 15], [15, 10], [15, 10]]}, {"i": "0E4523F4", "s": [[15, 15], [15, 15], [15, 15]]}]},
 {"d": "2026-09-30", "t": "Bodyweight Routine", "ex": [{"i": "022DF610", "s": [[0, 15]]}, {"i": "09C9F635", "s": [[0, 15]]}, {"i": "6BE68B62", "s": [[0, 15]], "n": "Tuck i"}]},
@@ -970,6 +1040,7 @@ const EXMETA = {
 "D8460FA6":{"name": "Reverse Wrist Curl (Dumbbell)", "primary": "forearms"}
 };
 const STEPS = [
+{"d": "2026-10-06", "steps": 7152, "goal": 11990},
 {"d": "2026-10-05", "steps": 7047, "goal": 13220},
 {"d": "2026-10-04", "steps": 8115, "goal": 13780},
 {"d": "2026-10-03", "steps": 15462, "goal": 13360},
@@ -1059,6 +1130,7 @@ const STEPS = [
 {"d": "2026-07-11", "steps": 10238, "goal": 5590}
 ];
 const HEARTRATE = [
+{"d": "2026-10-06", "resting": 52, "min": 47, "max": 132},
 {"d": "2026-10-05", "resting": 49, "min": 44, "max": 99},
 {"d": "2026-10-04", "resting": 48, "min": 45, "max": 98},
 {"d": "2026-10-03", "resting": 55, "min": 53, "max": 158},
@@ -1152,6 +1224,7 @@ const RUNS = [
 {"d": "2026-10-02", "km": 5.04, "min": 38.7, "avgHR": 146, "maxHR": 163, "cadence": 160, "elev": 8}
 ];
 const NUTRITION = [
+{"d": "2026-10-06", "calories": 1899, "goal": 1900, "protein": 200, "proteinGoal": 190, "carbs": 192, "carbsGoal": 166, "fat": 37, "fatGoal": 53},
 {"d": "2026-10-05", "calories": 1800, "goal": 1900, "protein": 163, "proteinGoal": 190, "carbs": 184, "carbsGoal": 166, "fat": 50, "fatGoal": 53},
 {"d": "2026-10-04", "calories": 1174, "goal": 1900, "protein": 84, "proteinGoal": 190, "carbs": 154, "carbsGoal": 166, "fat": 20, "fatGoal": 53},
 {"d": "2026-10-03", "calories": 1674, "goal": 1900, "protein": 155, "proteinGoal": 190, "carbs": 153, "carbsGoal": 166, "fat": 53, "fatGoal": 53},
@@ -1706,13 +1779,22 @@ function expenseCalendarMonth(expensesData, year, month) {
 // AND protein reaches 90% of its goal.
 const CAL_KCAL_RANGE = [0.85, 1.05];
 const CAL_PROTEIN_MIN = 0.9;
+// Single nutrition "hit" rule for the whole dashboard (Calendar pills, the day card, the
+// Overview tile). Works on a day's row or on per-day averages ({calories, goal, protein, proteinGoal}).
+function nutritionHit(n) {
+  if (!n || !n.calories || !n.goal) return null;
+  const kcalOk = n.calories >= n.goal * CAL_KCAL_RANGE[0] && n.calories <= n.goal * CAL_KCAL_RANGE[1];
+  const protOk = !n.proteinGoal || n.protein >= n.proteinGoal * CAL_PROTEIN_MIN;
+  return kcalOk && protOk;
+}
 
 function activityCalendarMonth(src, year, month) {
   // Mon-Sun grid for `month` (1-12) of `year` with everything logged per day, for the
   // Calendar tab. `src` = {workouts, meta, steps, heartRate, runs, nutrition, bodyLog,
   // supplements, supplementMeta, expenses, photos}; any may be empty (the public build stubs
   // the private ones). Each cell: {date, day, inMonth, sessions, runs, steps, rhr, nutrition,
-  // body, supplements, expenses, photo, checkin, status: {steps, food, sleep}} where each
+  // body (next morning's entry, see bodyDate), supplements, expenses, photo, checkin,
+  // status: {steps, food, sleep}} where each
   // status is 'hit' | 'miss' | null (nothing logged). `summary` counts in-month days only.
   const meta = src.meta || {};
   const byDate = (arr) => { const m = new Map(); for (const x of arr || []) { if (!m.has(x.d)) m.set(x.d, []); m.get(x.d).push(x); } return m; };
@@ -1754,12 +1836,15 @@ function activityCalendarMonth(src, year, month) {
     const sessions = (W.get(date) || []).map(describe);
     const st = (S.get(date) || [])[0] || null;
     const nu = (N.get(date) || [])[0] || null;
-    const bo = (B.get(date) || [])[0] || null;
+    // Body metrics come from the NEXT morning's MFP entry (weigh-in + the night's sleep after
+    // this day) — same "morning after" convention as the day card (trainingLogDay).
+    const bodyDate = addDaysISO(date, 1);
+    const bo = (B.get(bodyDate) || [])[0] || null;
+    const food = nutritionHit(nu);
     const status = {
       steps: st ? (st.steps >= st.goal ? 'hit' : 'miss') : null,
-      food: nu && nu.calories ? ((nu.calories >= nu.goal * CAL_KCAL_RANGE[0] && nu.calories <= nu.goal * CAL_KCAL_RANGE[1] &&
-        (!nu.proteinGoal || nu.protein >= nu.proteinGoal * CAL_PROTEIN_MIN)) ? 'hit' : 'miss') : null,
-      sleep: bo && bo.sleepMin != null ? (bo.sleepMin >= sleepGoalMin(bodyDays, date) ? 'hit' : 'miss') : null,
+      food: food == null ? null : food ? 'hit' : 'miss',
+      sleep: bo && bo.sleepMin != null ? (bo.sleepMin >= sleepGoalMin(bodyDays, bodyDate) ? 'hit' : 'miss') : null,
     };
     if (inMonth) {
       summary.sessions += sessions.filter(s => s.kind === 'strength' || s.kind === 'boxing').length;
@@ -1769,7 +1854,7 @@ function activityCalendarMonth(src, year, month) {
       date, day: d.getUTCDate(), inMonth, sessions,
       runs: R.get(date) || [],
       steps: st, rhr: ((H.get(date) || [])[0] || {}).resting ?? null, nutrition: nu, body: bo,
-      sleepGoal: bo && bo.sleepMin != null ? sleepGoalMin(bodyDays, date) : null,
+      bodyDate, sleepGoal: bo && bo.sleepMin != null ? sleepGoalMin(bodyDays, bodyDate) : null,
       supplements: ((SU.get(date) || [])[0] || { items: [] }).items.map(id => supLabel.get(id) || id),
       expenses: E.get(date) || [],
       photo: P.has(date), checkin: C.has(date),
@@ -2479,6 +2564,63 @@ function trainingLogCard(workouts, meta, bodyLogData, stepsData, today) {
   // So a session is also excluded when its title says it's a bodyweight/morning routine, or
   // when every exercise is Hevy "reps_only" (meta.bodyweight) — either catches new moves
   // without needing the id set updated first.
+  return trainingLogDay(workouts, meta, bodyLogData, stepsData, null, workoutDate, today);
+}
+
+const WEEKLY_SESSION_TARGET = 4; // strength or Boxing sessions per Mon-Sun week (Strength/Strength-Boxing x2 split)
+const WEEKLY_DAYS_HIT_TARGET = 5; // steps / 100-bodyweight-rep days per full week that count as "hit" in the weekly flow
+
+function weeklyFlow(src, weekStarts) {
+  // Overview's Inputs -> Process -> Results numbers (2026-10-06), one object per Mon-start week:
+  //   inputs:  kcal / kcalGoal (avg per logged day), protein / proteinGoal (avg), sleepMin (avg)
+  //   process: sessions (strength or Boxing), stepsHit / stepsDays, bwHit / bwDays (>=100 reps)
+  //   results: fatPct, weightKg (weekly avgs), lifts {up, down, flat} = every strength exercise
+  //            logged that week vs its own previous session (weeklySnapshot's rule)
+  // `src` = {workouts, meta, steps, nutrition, bodyLog}. Missing data stays null, never 0.
+  const meta = src.meta || {};
+  const mean = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+  const inWeek = (d, wk) => d >= wk && d <= addDaysISO(wk, 6);
+  const byEx = buildExerciseSessions(src.workouts, meta);
+  const bw = bodyweightRoutineSessions(src.workouts, BODYWEIGHT_ROUTINE_EXERCISE_IDS, meta);
+  const body = dailyBodyLog(src.bodyLog);
+  return weekStarts.map(wk => {
+    const nut = (src.nutrition || []).filter(n => inWeek(n.d, wk) && n.calories);
+    const bodyW = body.filter(b => inWeek(b.date, wk));
+    const steps = (src.steps || []).filter(s => inWeek(s.d, wk));
+    const wkWorkouts = src.workouts.filter(w => inWeek(w.d, wk));
+    const lifts = { up: 0, down: 0, flat: 0 };
+    for (const w of wkWorkouts) {
+      if (isBodyweightSession(w)) continue;
+      for (const [id] of mergeWorkoutExercises(w)) {
+        if ((meta[id] && meta[id].primary === 'cardio') || BODYWEIGHT_ROUTINE_EXERCISE_IDS.has(id)) continue;
+        const hist = byEx.get(id) || [];
+        const idx = hist.findIndex(h => h.date === w.d);
+        if (idx < 1) continue;
+        const v = hist[idx].volume, p = hist[idx - 1].volume;
+        lifts[v > p ? 'up' : v < p ? 'down' : 'flat']++;
+      }
+    }
+    const pick = (arr, f) => arr.map(f).filter(v => v != null);
+    return {
+      week: wk,
+      kcal: mean(nut.map(n => n.calories)), kcalGoal: mean(pick(nut, n => n.goal)),
+      protein: mean(nut.map(n => n.protein)), proteinGoal: mean(pick(nut, n => n.proteinGoal)),
+      sleepMin: mean(pick(bodyW, b => b.sleepMin)),
+      sessions: new Set(wkWorkouts.filter(w => isStrengthDay(w, meta) || w.ex.some(e => e.i === BOXING_EXERCISE_ID)).map(w => w.d + '|' + w.t)).size,
+      stepsHit: steps.filter(s => s.steps >= s.goal).length, stepsDays: steps.length,
+      bwHit: new Set(bw.filter(r => inWeek(r.date, wk) && r.totalReps >= 100).map(r => r.date)).size,
+      fatPct: mean(pick(bodyW, b => b.bodyFatPct)), weightKg: mean(pick(bodyW, b => b.weightKg)),
+      lifts,
+    };
+  });
+}
+
+function trainingLogDay(workouts, meta, bodyLogData, stepsData, nutritionData, workoutDate, bodyDate) {
+  // The day card for any `workoutDate` (Calendar tab, 2026-10-06 — replaces the yesterday-only
+  // Accountability subtab). Weight/fat/sleep read `bodyDate`, normally workoutDate + 1: the
+  // next morning's MFP entry carries that day's after-effects (weigh-in, the night's sleep).
+  // trainingLogCard passes `today` as bodyDate for the default (latest) day.
+  bodyDate = bodyDate || addDaysISO(workoutDate, 1);
   const isExcludedFromCard = w =>
     isBodyweightSession(w) ||
     w.ex.every(e => BODYWEIGHT_ROUTINE_EXERCISE_IDS.has(e.i) || e.i === ROWING_EXERCISE_ID || (meta[e.i] && meta[e.i].bodyweight));
@@ -2488,7 +2630,6 @@ function trainingLogCard(workouts, meta, bodyLogData, stepsData, today) {
   const { dayNumber } = programDayInfo(workouts, workoutDate);
   const streak = loggingStreak(workouts, workoutDate);
   const bodyDays = dailyBodyLog(bodyLogData);
-  const bodyDate = today;
   const prevBodyDate = addDaysISO(bodyDate, -1);
   const weightAvg = trailingAvg(bodyDays, 'weightKg', bodyDate, 7);
   const weightAvgPrev = trailingAvg(bodyDays, 'weightKg', prevBodyDate, 7);
@@ -2497,12 +2638,41 @@ function trainingLogCard(workouts, meta, bodyLogData, stepsData, today) {
   const latest = bodyDays.find(d => d.date === bodyDate) || null;
   const stepsRow = (stepsData || []).find(s => s.d === workoutDate) || null;
   const sessions = dayWorkouts.map(w => trainingLogSession(w, meta)).filter(s => s.exercises.length);
+  // Per-exercise volume vs that exercise's own previous session (same rule as the Strength
+  // tab's weeklySnapshot); cardio rows carry no verdict.
+  const byEx = buildExerciseSessions(workouts, meta);
+  const verdicts = { up: 0, down: 0, flat: 0, new: 0 };
+  for (const s of sessions) for (const e of s.exercises) {
+    if (e.cardio || (meta[e.id] && meta[e.id].primary === 'cardio')) continue;
+    const hist = byEx.get(e.id) || [];
+    const idx = hist.findIndex(h => h.date === workoutDate);
+    if (idx < 0) continue;
+    const prior = idx > 0 ? hist[idx - 1] : null;
+    e.verdict = !prior ? 'new' : hist[idx].volume > prior.volume ? 'up' : hist[idx].volume < prior.volume ? 'down' : 'flat';
+    verdicts[e.verdict]++;
+  }
+  const nutritionRow = (nutritionData || []).find(n => n.d === workoutDate) || null;
+  const sleepGoal = sleepGoalMin(bodyDays, bodyDate);
+  const food = nutritionHit(nutritionRow);
+  const wk = isoWeekStart(workoutDate);
+  const weekSessions = new Set(workouts.filter(w => w.d >= wk && w.d <= workoutDate &&
+    (isStrengthDay(w, meta) || w.ex.some(e => e.i === BOXING_EXERCISE_ID))).map(w => w.d + '|' + w.t)).size;
   return {
+    verdicts, weekSessions, weekTarget: WEEKLY_SESSION_TARGET,
+    nutrition: nutritionRow ? { calories: nutritionRow.calories, goal: nutritionRow.goal, protein: nutritionRow.protein, proteinGoal: nutritionRow.proteinGoal } : null,
+    status: {
+      steps: stepsRow ? (stepsRow.steps >= stepsRow.goal ? 'hit' : 'miss') : null,
+      food: food == null ? null : food ? 'hit' : 'miss',
+      sleep: latest && latest.sleepMin != null ? (latest.sleepMin >= sleepGoal ? 'hit' : 'miss') : null,
+      // the card's two nutrition bars, each judged on its own half of nutritionHit
+      kcal: nutritionRow && nutritionRow.calories && nutritionRow.goal ? (nutritionHit({ calories: nutritionRow.calories, goal: nutritionRow.goal }) ? 'hit' : 'miss') : null,
+      protein: nutritionRow && nutritionRow.proteinGoal ? (nutritionRow.protein >= nutritionRow.proteinGoal * CAL_PROTEIN_MIN ? 'hit' : 'miss') : null,
+    },
     date: workoutDate, bodyDate, dayNumber, streak, sessions,
     weightAvg, weightDelta: (weightAvg != null && weightAvgPrev != null) ? weightAvg - weightAvgPrev : null,
     fatAvg, fatDelta: (fatAvg != null && fatAvgPrev != null) ? fatAvg - fatAvgPrev : null,
     sleepMin: latest ? latest.sleepMin : null,
-    sleepGoalMin: sleepGoalMin(bodyDays, bodyDate),
+    sleepGoalMin: sleepGoal,
     steps: stepsRow ? stepsRow.steps : null,
     stepsGoal: stepsRow ? stepsRow.goal : null,
   };
@@ -2609,33 +2779,6 @@ function statTile(v, l) { return `<div class="stat-tile"><div class="v">${v}</di
     statTile(Math.round(totalVol/1000)+'k', 'lifetime volume (kg·reps)') +
     statTile(avgPerActiveWeek.toLocaleString(), 'avg volume / active week');
 }
-{
-  // currentWeek must track latestSyncedDate, not weekKeys[weekKeys.length-1] (the week of
-  // the last logged WORKOUT) — on a rest day/gap the latter freezes "this week" on the
-  // previous week even after a new week has actually started, same bug class as the old
-  // Rewards-ledger anchor (see hevy_dashboard_latest_synced_date memory).
-  const currentWeek = isoWeekStart(currentWeekAnchor);
-  document.getElementById('thisWeekLabel').textContent = `This week · ${currentWeek} to ${addDaysISO(currentWeek, 6)}`;
-  const thisWeekWorkouts = WORKOUTS.filter(w => isoWeekStart(w.d) === currentWeek);
-  // Strength + Boxing only (same rule as the Accountability card): Bodyweight Routine,
-  // Rowing, HIIT/Treadmill/Cycling-only and abs-only sessions don't count as a workout here.
-  const countedThisWeek = thisWeekWorkouts.filter(w => isStrengthDay(w, EXMETA) || w.ex.some(e => e.i === BOXING_EXERCISE_ID));
-  const countableThisWeek = countedThisWeek.length;
-  // Sets follow the same sessions, and also skip Bodyweight Routine moves logged inside them
-  // (e.g. push-ups on a Chest day) — no bodyweight work in these tiles at all.
-  const setsThisWeek = countedThisWeek.reduce((sum, w) => sum + w.ex.reduce((s2, e) =>
-    s2 + (BODYWEIGHT_ROUTINE_EXERCISE_IDS.has(e.i) ? 0 : e.s.length), 0), 0);
-  const volThisWeek = weeklyVol.get(currentWeek) || 0;
-  const agg = snapshot.reduce((a, s) => ({
-    up: a.up + s.summary.up, down: a.down + s.summary.down, flat: a.flat + s.summary.flat, new: a.new + s.summary.new
-  }), { up: 0, down: 0, flat: 0, new: 0 });
-  const hypertrophyStr = `${agg.up} up · ${agg.down} down · ${agg.flat} flat` + (agg.new ? ` · ${agg.new} new` : '');
-  document.getElementById('statRowWeek').innerHTML =
-    statTile(countableThisWeek, 'workouts this week') +
-    statTile(setsThisWeek, 'sets this week') +
-    statTile(Math.round(volThisWeek).toLocaleString(), 'volume this week (kg·reps)') +
-    statTile(hypertrophyStr, 'exercises vs. last time');
-}
 
 // ---------- SVG helpers ----------
 // Dashed "this week's average" line across a cardio bar chart (2026-09-23, replacing the
@@ -2659,23 +2802,10 @@ function addWeekAvgLine(chartEl, svg, { w, h, pad, max, value, label }) {
   chartEl.appendChild(tag);
 }
 const inThisWeek = d => isoWeekStart(d) === isoWeekStart(currentWeekAnchor);
-// "X of Y days hit" badge for this week — Y = days of this week that are fully synced (Monday
-// up to the latest Garmin steps day, i.e. "yesterday"), so a day with nothing logged counts as
-// a miss, but today — not synced yet — doesn't. (latestSyncedDate can already be today when a
+// Last fully synced day (the latest Garmin steps day, i.e. "yesterday") — the Overview's weekday
+// pips count a day with nothing logged up to here as a miss, but not today. (latestSyncedDate can already be today when a
 // same-day recovery expense or supplement entry lands, so it's not used here.)
 const lastCompleteDay = STEPS.length ? STEPS.map(r => r.d).sort().pop() : latestSyncedDate;
-function daysHitCount(hitDates) {
-  const wkStart = isoWeekStart(currentWeekAnchor);
-  let elapsed = 0;
-  for (let d = wkStart; d <= lastCompleteDay && elapsed < 7; d = addDaysISO(d, 1)) elapsed++;
-  return { hit: new Set(hitDates.filter(inThisWeek)).size, elapsed };
-}
-function daysHitBadge(hitDates, what) {
-  const { hit, elapsed } = daysHitCount(hitDates);
-  if (elapsed === 0) return `<span class="badge baseline">new week — nothing logged yet</span>`;
-  const cls = hit === elapsed ? 'progress' : hit === 0 ? 'surplus' : 'plateau';
-  return `<span class="badge ${cls}">${hit} of ${elapsed} day${elapsed === 1 ? '' : 's'} hit ${what} this week</span>`;
-}
 const meanOf = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
 const NS = "http://www.w3.org/2000/svg";
 function svgEl(tag, attrs) {
@@ -2774,67 +2904,6 @@ function addEndLabels(el, pts, h, fmt) {
   };
   if (pts.length > 1) tagAt(pts[0], `${pts[0].k.slice(5)}: ${fmt(pts[0].v)}`, false);
   tagAt(pts[pts.length - 1], `this week: ${fmt(pts[pts.length - 1].v)}`, true);
-}
-
-// ---------- weekly body fat % trend ----------
-{
-  const fatWeeks = weeklyBodyLogAvg(BODYLOG, 'bodyFatPct');
-  const fatWeekKeys = [...fatWeeks.keys()].sort();
-  if (fatWeekKeys.length === 0) {
-    document.getElementById('weeklyFatChart').innerHTML = '<p class="sub">No body-fat % logged yet.</p>';
-  } else {
-
-    const w = 1000, h = 160, pad = 28;
-    const svg = svgEl('svg', { width: '100%', height: h, viewBox: `0 0 ${w} ${h}`, preserveAspectRatio: 'none' });
-    const vals = fatWeekKeys.map(k => fatWeeks.get(k));
-    const targetVals = fatWeekKeys.map(k => { const t = fatTargetForWeek(k); return t ? t.targetFatPct : null; }).filter(v => v != null);
-    const allVals = vals.concat(targetVals);
-    const lo0 = Math.min(...allVals), hi0 = Math.max(...allVals);
-    const rangePad = Math.max((hi0 - lo0) * 0.15, 0.5);
-    const lo = lo0 - rangePad, hi = hi0 + rangePad;
-    const yFor = v => pad + (h - 2*pad) * (1 - (v - lo) / (hi - lo));
-    for (let g = 0; g <= 4; g++) {
-      const gy = pad + (h - 2*pad) * (g / 4);
-      svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: gy, y2: gy, class: 'gridline' }));
-    }
-    const stepX = fatWeekKeys.length > 1 ? (w - 2*pad) / (fatWeekKeys.length - 1) : 0;
-    const targetPoints = fatWeekKeys.map((k, i) => { const t = fatTargetForWeek(k); return t ? { x: pad + i*stepX, y: yFor(t.targetFatPct) } : null; }).filter(Boolean);
-    if (targetPoints.length > 1) {
-      const pathD = targetPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-      svg.appendChild(svgEl('path', { d: pathD, fill: 'none', stroke: 'var(--text-muted)', 'stroke-width': 1.5, 'stroke-dasharray': '4 3' }));
-    }
-    const points = fatWeekKeys.map((k, i) => ({ x: pad + i*stepX, y: yFor(fatWeeks.get(k)), k, v: fatWeeks.get(k) }));
-    if (points.length > 1) {
-      const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-      svg.appendChild(svgEl('path', { d: pathD, fill: 'none', stroke: 'var(--series-1)', 'stroke-width': 2 }));
-    }
-    points.forEach(p => {
-      const dot = svgEl('circle', { cx: p.x, cy: p.y, r: points.length > 1 ? 4 : 5, fill: 'var(--series-1)' });
-      const title = svgEl('title', {});
-      const t = fatTargetForWeek(p.k);
-      title.textContent = `Week of ${p.k}: ${p.v.toFixed(1)}% avg body fat${t ? ` (target ${t.targetFatPct.toFixed(1)}%)` : ''}`;
-      dot.appendChild(title);
-      svg.appendChild(dot);
-    });
-    svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: h-pad, y2: h-pad, class: 'axisline' }));
-    document.getElementById('weeklyFatChart').appendChild(svg);
-    addEndLabels(document.getElementById('weeklyFatChart'), points, h, v => `${v.toFixed(1)}%`);
-
-    const fatRows = fatWeekKeys.map((k, i) => {
-      const v = fatWeeks.get(k);
-      const prev = i > 0 ? fatWeeks.get(fatWeekKeys[i - 1]) : null;
-      let badge = '<span class="badge baseline">—</span>';
-      if (prev != null) {
-        if (v < prev) badge = '<span class="badge progress">down</span>';
-        else if (v > prev) badge = '<span class="badge plateau">up</span>';
-        else badge = '<span class="badge baseline">same</span>';
-      }
-      const t = fatTargetForWeek(k);
-      return `<tr><td>${k}</td><td>${v.toFixed(1)}%</td><td>${t ? t.targetFatPct.toFixed(1) + '%' : '—'}</td><td>${badge}</td></tr>`;
-    });
-    document.getElementById('weeklyFatTable').innerHTML =
-      `<table class="tv"><thead><tr><th>Week of</th><th>Avg body fat %</th><th>Target</th><th>vs. prior week</th></tr></thead><tbody>${fatRows.slice().reverse().join('')}</tbody></table>`;
-  }
 }
 
 // ---------- weekly sleep trend ----------
@@ -3008,19 +3077,13 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   const sortedRows = volRows.slice().sort((a, b) =>
     muscleRank(a) - muscleRank(b) || ((arcLive ? b.arcDeltaPct : b.deltaPct) ?? -Infinity) - ((arcLive ? a.arcDeltaPct : a.deltaPct) ?? -Infinity));
 
-  // Latest workout first (2026-09-23 user request): the exercises from the most recent
-  // session on the Strength tab (same weeklySnapshot source, so bodyweight/cardio are
-  // already excluded) are pinned to the top in the order they were done, then everything
-  // else in the anatomical order above — so the latest session reads at a glance.
-  const latestSession = snapshot.length ? snapshot[snapshot.length - 1] : null;
-  const latestIds = latestSession ? latestSession.exercises.map(e => e.id) : [];
+  // (The pinned "Latest workout" group was removed 2026-10-06 — the latest session already
+  // lives on the Strength tab and the Calendar day card.)
   // Bodyweight exercises (Hevy reps-only + the Bodyweight Routine set) get their own section
   // at the bottom (2026-09-24 user request) — their "volume" is total reps, not kg x reps.
   const isBwRow = r => r.bodyweight || BODYWEIGHT_ROUTINE_EXERCISE_IDS.has(r.id);
   const bwRows = sortedRows.filter(isBwRow);
   const weightedRows = sortedRows.filter(r => !isBwRow(r));
-  const latestRows = latestIds.map(id => weightedRows.find(r => r.id === id)).filter(Boolean);
-  const otherRows = weightedRows.filter(r => !latestIds.includes(r.id));
 
   const VOL_COLGROUP = '<colgroup><col style="width:21%"><col style="width:10%"><col style="width:4%"><col style="width:10%"><col style="width:4%"><col style="width:11%"><col style="width:10%"><col style="width:4%"><col style="width:12%"><col style="width:14%"></colgroup>';
 
@@ -3075,8 +3138,7 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
 
   document.getElementById('volumeLogTables').innerHTML =
     `<div class="day-section">${rowsToTable([
-      [latestRows.length ? `Latest workout: ${latestSession.title} &mdash; ${latestSession.date}` : null, latestRows],
-      [latestRows.length ? 'All other exercises' : null, otherRows],
+      [null, weightedRows],
       ['Bodyweight &mdash; volume is total reps', bwRows],
     ])}${rowingPanelHtml}</div>`;
 }
@@ -3225,7 +3287,6 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
   if (days.length === 0) {
     document.getElementById('stepsChart').innerHTML = '<p class="sub">No step data logged yet.</p>';
   } else {
-    document.getElementById('stepsSummary').innerHTML = daysHitBadge(days.filter(d => d.hitGoal).map(d => d.date), 'step goal');
 
     const w = 1000, h = 140, pad = 28;
     const svg = svgEl('svg', { width: '100%', height: h, viewBox: `0 0 ${w} ${h}`, preserveAspectRatio: 'none' });
@@ -3273,7 +3334,6 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     // the summary use the same hit/miss colours as the Steps card.
     const BW_DAILY_REP_TARGET = 100;
     const bwHit = r => r.totalReps >= BW_DAILY_REP_TARGET;
-    document.getElementById('bwRoutineSummary').innerHTML = daysHitBadge(bwRoutine.filter(bwHit).map(r => r.date), `${BW_DAILY_REP_TARGET} reps`);
 
     const w = 1000, h = 140, pad = 28;
     const svg = svgEl('svg', { width: '100%', height: h, viewBox: `0 0 ${w} ${h}`, preserveAspectRatio: 'none' });
@@ -3557,7 +3617,7 @@ if (document.getElementById('supplementsGrid')) {
 // ---------- recovery expenses (was the legacy Rs reward ledger; simplified 2026-08-24 to a
 // plain spend tracker; the session-based body-fat reward track that used to headline this tab
 // was removed 2026-09-05 — Recovery Expenses is now the only content on the tab) ----------
-// Guarded on #tab-reward existing: the public build (see build-dashboard.js's PUBLIC:EXCLUDE
+// Guarded on #subtab-expenses existing: the public build (see build-dashboard.js's PUBLIC:EXCLUDE
 // stripping) removes the whole tab from the HTML but reuses this same script unmodified, so
 // this would otherwise throw on the first getElementById('...').innerHTML = ... against a
 // null element.
@@ -3580,34 +3640,11 @@ if (document.getElementById('subtab-expenses')) {
         `<tr><td>${e.date}</td><td>${inr(e.amount)}</td><td>${e.note || '—'}</td></tr>`
       ).join('')
     : `<tr><td colspan="3" style="color:var(--text-muted);">No recovery expenses logged yet.</td></tr>`;
-
-  // Month calendar (Mon-Sun), opens on the current month; each day shows its total + one line per entry's note.
-  const recoveryRows = EXPENSES.filter(e => (e.category || 'other') === REWARD_REDEEM_CATEGORY);
-  const [curY, curM] = latestSyncedDate.split('-').map(Number);
-  let calY = curY, calM = curM;
-  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const renderExpCal = () => {
-    const cal = expenseCalendarMonth(recoveryRows, calY, calM);
-    document.getElementById('expCalLabel').textContent =
-      new Date(Date.UTC(calY, calM - 1, 1)).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-    document.getElementById('expCalTotal').textContent = cal.monthTotal ? `${inr(cal.monthTotal)} this month` : 'nothing this month';
-    document.getElementById('expCalNext').disabled = calY === curY && calM === curM;
-    document.getElementById('expCalGrid').innerHTML =
-      ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => `<div class="cal-dow">${d}</div>`).join('') +
-      cal.cells.map(c => `<div class="cal-cell${c.inMonth ? '' : ' out'}${c.total ? ' has' : ''}">
-        <div class="d"${c.date === latestSyncedDate ? ' style="color:var(--series-1);font-weight:700;"' : ''}>${c.day}</div>
-        ${c.total ? `<div class="amt">${inr(c.total)}</div>` +
-          c.entries.map(e => `<div class="note" title="${esc(inr(e.amount) + ' · ' + (e.note || ''))}">${esc(e.note || '—')}</div>`).join('') : ''}
-      </div>`).join('');
-  };
-  const shiftMonth = delta => { const t = calY * 12 + (calM - 1) + delta; calY = Math.floor(t / 12); calM = t % 12 + 1; renderExpCal(); };
-  document.getElementById('expCalPrev').addEventListener('click', () => shiftMonth(-1));
-  document.getElementById('expCalNext').addEventListener('click', () => shiftMonth(1));
-  renderExpCal();
 }
 
 // ---------- Calendar tab: everything logged per day (2026-10-06) ----------
-// Month grid built by calc.js's activityCalendarMonth; click a day for its full detail below.
+// Month grid built by calc.js's activityCalendarMonth; click a day to show its card (the
+// shareable training log, renderTrainingLogCard) plus everything else logged beside it.
 // Private-only sources (supplements, expenses, photos) are stubbed empty in the public build,
 // so they simply don't appear there.
 {
@@ -3618,7 +3655,7 @@ if (document.getElementById('subtab-expenses')) {
   const hm = m => `${Math.floor(m / 60)}h${String(Math.round(m % 60)).padStart(2, '0')}`;
   const k = n => n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n);
   const [curY, curM] = latestSyncedDate.split('-').map(Number);
-  let calY = curY, calM = curM, selected = addDaysISO(latestSyncedDate, -1), cal = null;
+  let calY = curY, calM = curM, selected = null, cal = null, renderedCardDate = null;
 
   const pill = (st, icon, title) => `<span class="act-pill ${st || 'none'}" title="${title}">${icon}</span>`;
   const cellHtml = c => {
@@ -3633,7 +3670,7 @@ if (document.getElementById('subtab-expenses')) {
       c.expenses.length ? '₹' : '',
       c.checkin ? '📸' : (c.photo ? '📷' : ''),
     ].join('');
-    const meta = [c.steps ? `${k(c.steps.steps)} steps` : '', c.body && c.body.weightKg ? `${c.body.weightKg} kg` : ''].filter(Boolean).join(' · ');
+    const meta = c.steps ? `${k(c.steps.steps)} steps` : '';
     return `<div class="cal-cell${c.inMonth ? '' : ' out'}${future ? ' future' : ''}${c.date === selected ? ' sel' : ''}" data-date="${c.date}">
       <div class="top"><span class="d"${c.date === latestSyncedDate ? ' style="color:var(--series-1);font-weight:700;"' : ''}>${c.day}</span><span class="icons">${icons}</span></div>
       ${main.map(s => `<div class="sess ${s.kind}" title="${esc(s.title)}">${esc(s.title)}</div>`).join('')}
@@ -3642,30 +3679,39 @@ if (document.getElementById('subtab-expenses')) {
     </div>`;
   };
 
+  // "Also logged": everything the day card above doesn't show — bodyweight/other cardio,
+  // runs, resting HR, carbs/fat, supplements, spend, photos. No number appears in both.
+  const CARD_HIDDEN_CARDIO = /rowing|hiit|treadmill|cycling/i;
   const detailHtml = c => {
     const blocks = [];
-    const train = c.sessions.map(s => `<div class="row"><b>${esc(s.title)}</b>${s.kind === 'bodyweight' && s.bodyweightReps ? ` — ${s.bodyweightReps} reps` : ''}</div>` +
-      s.exercises.map(e => `<div class="ex"><b>${esc(e.name)}</b> ${esc(e.detail)}${e.note ? ` <i>(${esc(e.note)})</i>` : ''}</div>`).join(''));
-    const runs = c.runs.map(r => `<div class="row">🏃 Run ${r.km} km in ${Math.round(r.min)} min (${(p => `${Math.floor(p)}:${String(Math.round((p % 1) * 60)).padStart(2, '0')}`)(r.min / r.km)} /km)${r.avgHR ? ` · avg HR ${r.avgHR}` : ''}</div>`);
-    blocks.push(`<div><h3>Training</h3>${train.concat(runs).join('<div style="height:8px"></div>') || '<div class="row" style="color:var(--text-muted)">Rest day</div>'}</div>`);
-    const act = [];
-    if (c.steps) act.push(`<div class="row">👣 ${c.steps.steps.toLocaleString('en-IN')} / ${c.steps.goal.toLocaleString('en-IN')} steps</div>`);
-    if (c.rhr != null) act.push(`<div class="row">❤️ Resting HR ${c.rhr}</div>`);
-    if (act.length) blocks.push(`<div><h3>Activity</h3>${act.join('')}</div>`);
-    if (c.nutrition) { const n = c.nutrition; blocks.push(`<div><h3>Nutrition</h3>
-      <div class="row">${n.calories} / ${n.goal} kcal</div>
-      <div class="row">Protein ${n.protein} / ${n.proteinGoal} g</div>
-      <div class="row">Carbs ${n.carbs} / ${n.carbsGoal} g · Fat ${n.fat} / ${n.fatGoal} g</div></div>`); }
-    if (c.body) { const b = c.body; blocks.push(`<div><h3>Body (morning)</h3>
-      ${b.weightKg != null ? `<div class="row">Weight ${b.weightKg} kg</div>` : ''}
-      ${b.bodyFatPct != null ? `<div class="row">Body fat ${b.bodyFatPct}%</div>` : ''}
-      ${b.sleepMin != null ? `<div class="row">Sleep ${hm(b.sleepMin)} (goal ${hm(c.sleepGoal)})</div>` : ''}</div>`); }
+    const other = [];
+    for (const s of c.sessions) {
+      if (s.kind === 'bodyweight') {
+        other.push(`<div class="row"><b>${esc(s.title)}</b>${s.bodyweightReps ? ` — ${s.bodyweightReps} reps` : ''}</div>` +
+          s.exercises.map(e => `<div class="ex">${esc(e.name)} ${esc(e.detail)}</div>`).join(''));
+      } else {
+        for (const e of s.exercises) if (CARD_HIDDEN_CARDIO.test(e.name)) other.push(`<div class="row">${esc(e.name)} — ${esc(e.detail || 'logged')}${e.note ? ` <i>(${esc(e.note)})</i>` : ''}</div>`);
+      }
+    }
+    for (const r of c.runs) other.push(`<div class="row">🏃 Run ${r.km} km in ${Math.round(r.min)} min (${(p => `${Math.floor(p)}:${String(Math.round((p % 1) * 60)).padStart(2, '0')}`)(r.min / r.km)} /km)${r.avgHR ? ` · avg HR ${r.avgHR}` : ''}</div>`);
+    if (c.rhr != null) other.push(`<div class="row">❤️ Resting HR ${c.rhr}</div>`);
+    if (other.length) blocks.push(`<div><h3>Activity</h3>${other.join('')}</div>`);
+    if (c.nutrition) blocks.push(`<div><h3>Macros</h3><div class="row">Carbs ${c.nutrition.carbs} / ${c.nutrition.carbsGoal} g</div><div class="row">Fat ${c.nutrition.fat} / ${c.nutrition.fatGoal} g</div></div>`);
     if (c.supplements.length) blocks.push(`<div><h3>Supplements</h3>${c.supplements.map(s => `<div class="row">${esc(s)}</div>`).join('')}</div>`);
     if (c.expenses.length) blocks.push(`<div><h3>Recovery spend</h3>${c.expenses.map(e => `<div class="row">${inr(e.amount)}${e.note ? ` — ${esc(e.note)}` : ''}</div>`).join('')}</div>`);
     if (c.photo || c.checkin) blocks.push(`<div><h3>Photos</h3><div class="row">${c.checkin ? '📸 Winter arc check-in (4 views)' : '📷 Progress photo'}</div></div>`);
-    const title = new Date(c.date + 'T00:00:00Z').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-    return `<h2 style="margin:0 0 12px;">${title}</h2><div class="act-detail-grid">${blocks.join('')}</div>`;
+    return `<h2 style="margin:0 0 12px;font-size:15px;">Also logged</h2>` +
+      (blocks.length ? `<div class="act-detail-grid">${blocks.join('')}</div>` : '<p class="sub" style="margin:0;">Nothing else logged this day.</p>');
   };
+
+  // Default day = the card's own "latest" day (yesterday's workout + this morning's body entry);
+  // any other selected day reads its next morning's body entry.
+  const latestCard = trainingLogCard(WORKOUTS, EXMETA, BODYLOG, STEPS, latestSyncedDate);
+  selected = latestCard.date;
+  [calY, calM] = selected.split('-').map(Number);
+  const cardFor = date => date === latestCard.date
+    ? trainingLogDay(WORKOUTS, EXMETA, BODYLOG, STEPS, NUTRITION, date, latestCard.bodyDate)
+    : trainingLogDay(WORKOUTS, EXMETA, BODYLOG, STEPS, NUTRITION, date);
 
   const render = () => {
     cal = activityCalendarMonth(src, calY, calM);
@@ -3679,6 +3725,7 @@ if (document.getElementById('subtab-expenses')) {
       ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => `<div class="cal-dow">${d}</div>`).join('') + cal.cells.map(cellHtml).join('');
     const selCell = cal.cells.find(c => c.date === selected);
     document.getElementById('actDayDetail').innerHTML = selCell ? detailHtml(selCell) : '<p class="sub" style="margin:0;">Click a day to see everything logged.</p>';
+    if (selected !== renderedCardDate) { renderTrainingLogCard(cardFor(selected)); renderedCardDate = selected; }
   };
   document.getElementById('actCalGrid').addEventListener('click', ev => {
     const el = ev.target.closest('.cal-cell');
@@ -3694,15 +3741,15 @@ if (document.getElementById('subtab-expenses')) {
   render();
 }
 
-// ---------- training log card ----------
-{
-  // trainingLogCard splits "today" (latestSyncedDate) into two dates internally: workouts/
-  // steps review yesterday (the last fully-completed day), weight/fat/sleep read today's own
-  // entry (no sync lag to wait out — see the function's own comment for why). tl.date is the
-  // workout day (yesterday); tl.bodyDate is today.
-  const tl = trainingLogCard(WORKOUTS, EXMETA, BODYLOG, STEPS, latestSyncedDate);
+// ---------- day card (was the Accountability subtab; lives in the Calendar tab since 2026-10-06) ----------
+// renderTrainingLogCard(tl) draws calc.js's trainingLogDay() result into #trainingLogCard and
+// wires #tlSaveImgBtn to a matching PNG. The Calendar tab calls it for whichever day is selected.
+function renderTrainingLogCard(tl) {
   const el = document.getElementById('trainingLogCard');
   const saveBtn = document.getElementById('tlSaveImgBtn');
+  const dateLabel = new Date(tl.date + 'T00:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+  const v = tl.verdicts;
+  const verdictStr = (v.up + v.down + v.flat) ? `${v.up} up · ${v.down} down${v.flat ? ` · ${v.flat} flat` : ''} vs last time` : '';
 
   // A day can have more than one distinct Hevy session (e.g. a bodyweight routine in the
   // morning, real lifting later) — this card shows one combined view rather than picking
@@ -3715,54 +3762,60 @@ if (document.getElementById('subtab-expenses')) {
     exercises: tl.sessions.flatMap(s => s.exercises),
   } : { title: 'Rest day', groups: [], exercises: [] };
 
-  {
-    saveBtn.style.display = '';
-    const trendHtml = (delta) => {
-      if (delta == null || Math.abs(delta) < 0.005) return '';
-      const down = delta < 0;
-      const color = down ? 'var(--tlc-good)' : 'var(--tlc-bad)'; // decreasing weight/body fat reads as progress here
-      return `<div class="trend" style="color:${color};">${down ? '▼' : '▲'} ${Math.abs(delta).toFixed(2)}</div>`;
-    };
-    const weightStr = tl.weightAvg != null ? `${tl.weightAvg.toFixed(2)}<span class="unit"> kg</span>` : '—';
-    const fatStr = tl.fatAvg != null ? `${tl.fatAvg.toFixed(2)}<span class="unit"> %</span>` : '—';
-    const sleepStr = tl.sleepMin != null ? `${Math.floor(tl.sleepMin / 60)}h ${tl.sleepMin % 60}m` : '—';
-    const sleepPct = tl.sleepMin != null ? Math.min(100, Math.round(tl.sleepMin / tl.sleepGoalMin * 100)) : 0;
-    const stepsStr = tl.steps != null ? tl.steps.toLocaleString() : '—';
-    const stepsPct = (tl.steps != null && tl.stepsGoal) ? Math.min(100, Math.round(tl.steps / tl.stepsGoal * 100)) : 0;
+  // Six stats: body outcomes (7-day averages, next morning) + the day's three inputs. Input
+  // bars are teal when that goal was hit and coral when missed — same rule as the calendar pills.
+  const n = tl.nutrition;
+  const pct = (a, b) => (a != null && b) ? Math.min(100, Math.round(a / b * 100)) : 0;
+  const stats = [
+    { icon: '⚖️', v: tl.weightAvg != null ? tl.weightAvg.toFixed(2) : '—', unit: 'kg', l: 'Weight (7d avg)', delta: tl.weightDelta },
+    { icon: '📊', v: tl.fatAvg != null ? tl.fatAvg.toFixed(2) : '—', unit: '%', l: 'Body fat (7d avg)', delta: tl.fatDelta },
+    { icon: '👣', v: tl.steps != null ? tl.steps.toLocaleString() : '—', l: tl.stepsGoal ? `Steps / ${tl.stepsGoal.toLocaleString()}` : 'Steps', bar: pct(tl.steps, tl.stepsGoal), st: tl.status.steps },
+    { icon: '🌙', v: tl.sleepMin != null ? `${Math.floor(tl.sleepMin / 60)}h ${tl.sleepMin % 60}m` : '—', l: `Sleep / ${Math.floor(tl.sleepGoalMin / 60)}h${tl.sleepGoalMin % 60 ? ' ' + tl.sleepGoalMin % 60 + 'm' : ''}`, bar: pct(tl.sleepMin, tl.sleepGoalMin), st: tl.status.sleep },
+    { icon: '🍽️', v: n ? n.calories.toLocaleString() : '—', unit: 'kcal', l: n ? `Calories / ${n.goal.toLocaleString()}` : 'Calories', bar: n ? pct(n.calories, n.goal) : 0, st: tl.status.kcal },
+    { icon: '🥩', v: n ? String(n.protein) : '—', unit: 'g', l: n && n.proteinGoal ? `Protein / ${n.proteinGoal} g` : 'Protein', bar: n ? pct(n.protein, n.proteinGoal) : 0, st: tl.status.protein },
+  ];
+  tl.stats = stats; // reused by the PNG renderer below
+  const trendHtml = (delta) => {
+    if (delta == null || Math.abs(delta) < 0.005) return '<div class="trend" style="color:var(--tlc-faint);">— steady</div>';
+    const down = delta < 0;
+    const color = down ? 'var(--tlc-good)' : 'var(--tlc-bad)'; // decreasing weight/body fat reads as progress here
+    return `<div class="trend" style="color:${color};">${down ? '▼' : '▲'} ${Math.abs(delta).toFixed(2)}</div>`;
+  };
+  const statHtml = s => `<div class="tl-stat"><div class="v"><span class="icon">${s.icon}</span>${s.v}${s.unit && s.v !== '—' ? `<span class="unit"> ${s.unit}</span>` : ''}</div><div class="l">${s.l}</div>` +
+    (s.bar != null ? `<div class="tl-bar"><span style="width:${s.bar}%;background:${s.st === 'hit' ? 'var(--tlc-accent)' : s.st === 'miss' ? 'var(--tlc-bad)' : 'var(--tlc-muted)'};"></span></div>` : trendHtml(s.delta)) + `</div>`;
 
-    const chips = tlSession.groups.map(g => `<span class="tl-chip"><span class="ck">✓</span>${g}</span>`).join('');
-    const rows = tlSession.exercises.length ? tlSession.exercises.map(e => `
-      <div class="tl-exrow">
-        <div class="dot ${e.isFirstGroup ? 'primary' : 'secondary'}">✓</div>
-        <div class="body">
-          <div class="name">${e.name}</div>
-          ${e.setsStr ? `<div class="sets">${e.setsStr}</div>` : ''}
-        </div>
-        <div class="best">${e.best}</div>
-      </div>`).join('') : `<p class="sub">No workout logged for ${tl.date}.</p>`;
-
-    el.innerHTML = `
-      <div class="tl-wrap">
-      <div class="tl-card">
-        <div class="tl-eyebrow">Training Log</div>
-        <div class="tl-eyebrow-rule"></div>
-        <div class="tl-head">
-          <div class="tl-daybadge"><div class="n">${tl.dayNumber ?? '—'}</div></div>
-          <div>
-            <div class="tl-focus">${tl.date}</div>
-            <div class="tl-title">${tlSession.title}</div>
-            <div>${chips}</div>
-          </div>
-        </div>
-        <div class="tl-statgrid">
-          <div class="tl-stat"><div class="v"><span class="icon">⚖️</span>${weightStr}</div><div class="l">Weight (7d avg)</div>${trendHtml(tl.weightDelta)}</div>
-          <div class="tl-stat"><div class="v"><span class="icon">📊</span>${fatStr}</div><div class="l">Body fat (7d avg)</div>${trendHtml(tl.fatDelta)}</div>
-          <div class="tl-stat"><div class="v"><span class="icon">👣</span>${stepsStr}</div><div class="l">Steps</div><div class="tl-bar"><span style="width:${stepsPct}%;background:var(--tlc-muted);"></span></div></div>
-          <div class="tl-stat"><div class="v"><span class="icon">🌙</span>${sleepStr}</div><div class="l">Sleep</div><div class="tl-bar"><span style="width:${sleepPct}%;background:var(--tlc-accent);"></span></div></div>
-        </div>
-        <div class="tl-exlist">${rows}</div>
+  const chips = tlSession.groups.map(g => `<span class="tl-chip"><span class="ck">✓</span>${g}</span>`).join('');
+  const arrow = e => e.verdict === 'up' ? '<span class="vd up">▲</span>' : e.verdict === 'down' ? '<span class="vd down">▼</span>' : e.verdict === 'new' ? '<span class="vd new">NEW</span>' : '';
+  const rows = tlSession.exercises.length ? tlSession.exercises.map(e => `
+    <div class="tl-exrow">
+      <div class="dot ${e.isFirstGroup ? 'primary' : 'secondary'}">✓</div>
+      <div class="body">
+        <div class="name">${e.name}</div>
+        ${e.setsStr ? `<div class="sets">${e.setsStr}</div>` : ''}
       </div>
-      </div>`;
+      <div class="best">${arrow(e)}${e.best}</div>
+    </div>`).join('') : '';
+  const weekDots = Array.from({ length: Math.max(tl.weekTarget, tl.weekSessions) }, (_, i) => `<span class="wd${i < tl.weekSessions ? ' on' : ''}"></span>`).join('');
+
+  el.innerHTML = `
+    <div class="tl-wrap">
+    <div class="tl-card">
+      <div class="tl-eyebrow">Training Log</div>
+      <div class="tl-eyebrow-rule"></div>
+      <div class="tl-head">
+        <div class="tl-daybadge"><div class="n">${tl.dayNumber ?? '—'}</div></div>
+        <div>
+          <div class="tl-focus">${dateLabel}</div>
+          <div class="tl-title">${tlSession.title}</div>
+          <div>${chips}</div>
+          ${verdictStr ? `<div class="tl-verdict">${verdictStr}</div>` : ''}
+        </div>
+      </div>
+      <div class="tl-statgrid">${stats.map(statHtml).join('')}</div>
+      <div class="tl-week"><span>This week</span><span class="dots">${weekDots}</span><span>${tl.weekSessions} / ${tl.weekTarget} sessions</span></div>
+      ${rows ? `<div class="tl-exlist">${rows}</div>` : ''}
+    </div>
+    </div>`;
 
     // ---------- save-as-image: hand-drawn Canvas 2D render of the card above, since a
     // dependency-free way to rasterize arbitrary DOM/CSS (gradients, clip-path, emoji)
@@ -3868,22 +3921,23 @@ if (document.getElementById('subtab-expenses')) {
       let ty = headTop;
       if (draw) {
         ctx.textAlign = 'left'; ctx.fillStyle = C.faint; ctx.font = '700 10px system-ui, -apple-system, "Segoe UI", sans-serif'; ls(2);
-        ctx.fillText(("TODAY'S FOCUS — " + tl.date).toUpperCase(), textX, ty + 10);
+        ctx.fillText(dateLabel.toUpperCase(), textX, ty + 10);
       }
       ty += 22;
       if (draw) { ctx.fillStyle = C.fg; ctx.font = '800 20px system-ui, -apple-system, "Segoe UI", sans-serif'; ls(0.3); ctx.fillText(fitText(tlSession.title, textMaxW), textX, ty + 16); }
       ty += 30;
       ty = pillRow(tlSession.groups, textX, ty, textMaxW);
+      if (verdictStr) {
+        ty += 8;
+        if (draw) { ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = C.muted; ctx.font = '600 11.5px system-ui, -apple-system, "Segoe UI", sans-serif'; ls(0.3); ctx.fillText(verdictStr, textX, ty + 11); }
+        ty += 14;
+      }
       y = Math.max(headTop + badgeH, ty) + 22;
 
-      // stat grid (2x2)
+      // stat grid (2 x 3): body outcomes, then steps/sleep, then calories/protein
       const gap = 10, cellW = (innerW - gap) / 2, cellH = 78;
-      const stats = [
-        { icon: '⚖', v: tl.weightAvg != null ? tl.weightAvg.toFixed(2) + ' kg' : '—', l: 'WEIGHT (7D AVG)', delta: tl.weightDelta },
-        { icon: '📊', v: tl.fatAvg != null ? tl.fatAvg.toFixed(2) + ' %' : '—', l: 'BODY FAT (7D AVG)', delta: tl.fatDelta },
-        { icon: '👣', v: tl.steps != null ? tl.steps.toLocaleString() : '—', l: 'STEPS', bar: (tl.steps != null && tl.stepsGoal) ? Math.min(100, tl.steps / tl.stepsGoal * 100) : 0, barColor: C.muted },
-        { icon: '🌙', v: tl.sleepMin != null ? `${Math.floor(tl.sleepMin / 60)}h ${tl.sleepMin % 60}m` : '—', l: 'SLEEP', bar: tl.sleepMin != null ? Math.min(100, tl.sleepMin / tl.sleepGoalMin * 100) : 0, barColor: C.accent },
-      ];
+      const stats = tl.stats;
+      const stColor = st => st === 'hit' ? C.accent : st === 'miss' ? C.bad : C.muted;
       stats.forEach((s, i) => {
         const cx = padX + (i % 2) * (cellW + gap), cy = y + Math.floor(i / 2) * (cellH + gap);
         if (!draw) return;
@@ -3893,21 +3947,41 @@ if (document.getElementById('subtab-expenses')) {
         ctx.font = '800 17px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.fillStyle = C.fg; ls(0.5);
         const iw = icon(s.icon, cx + 14, cy + 28);
         ctx.fillText(s.v, cx + 14 + iw + 9, cy + 28);
+        if (s.unit && s.v !== '—') {
+          const vw = ctx.measureText(s.v).width;
+          ctx.font = '500 11px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.fillStyle = C.faint; ls(0);
+          ctx.fillText(' ' + s.unit, cx + 14 + iw + 9 + vw, cy + 28);
+        }
         ctx.font = '700 9.5px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.fillStyle = C.faint; ls(1.5);
-        ctx.fillText(s.l, cx + 14, cy + 46);
-        if (s.delta != null && Math.abs(s.delta) >= 0.005) {
-          const down = s.delta < 0;
-          ctx.fillStyle = down ? C.good : C.bad; ctx.font = '700 10.5px system-ui, -apple-system, "Segoe UI", sans-serif'; ls(0.5);
-          ctx.fillText((down ? '▼ ' : '▲ ') + Math.abs(s.delta).toFixed(2), cx + 14, cy + 62);
-        } else if (s.bar != null) {
+        ctx.fillText(s.l.toUpperCase(), cx + 14, cy + 46);
+        if (s.bar == null) {
+          const flat = s.delta == null || Math.abs(s.delta) < 0.005, down = !flat && s.delta < 0;
+          ctx.fillStyle = flat ? C.faint : down ? C.good : C.bad; ctx.font = '700 10.5px system-ui, -apple-system, "Segoe UI", sans-serif'; ls(0.5);
+          ctx.fillText(flat ? '— steady' : (down ? '▼ ' : '▲ ') + Math.abs(s.delta).toFixed(2), cx + 14, cy + 62);
+        } else {
           roundRect(cx + 14, cy + 56, cellW - 28, 4, 2); ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fill();
-          roundRect(cx + 14, cy + 56, Math.max(2, (cellW - 28) * s.bar / 100), 4, 2); ctx.fillStyle = s.barColor; ctx.fill();
+          roundRect(cx + 14, cy + 56, Math.max(2, (cellW - 28) * s.bar / 100), 4, 2); ctx.fillStyle = stColor(s.st); ctx.fill();
         }
       });
-      y += cellH * 2 + gap + 20;
+      y += cellH * 3 + gap * 2 + 16;
+
+      // this-week strip: label, one dot per target session, count
+      if (draw) {
+        ctx.textBaseline = 'middle';
+        ctx.font = '700 9.5px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.fillStyle = C.faint; ls(1.5);
+        ctx.textAlign = 'left'; ctx.fillText('THIS WEEK', padX, y + 8);
+        const lw = ctx.measureText('THIS WEEK').width;
+        const nDots = Math.max(tl.weekTarget, tl.weekSessions);
+        for (let i = 0; i < nDots; i++) {
+          ctx.beginPath(); ctx.arc(padX + lw + 18 + i * 16, y + 8, 5, 0, Math.PI * 2);
+          ctx.fillStyle = i < tl.weekSessions ? C.accent : 'rgba(255,255,255,0.14)'; ctx.fill();
+        }
+        ctx.textAlign = 'right'; ctx.fillStyle = C.faint; ctx.fillText(`${tl.weekSessions} / ${tl.weekTarget} SESSIONS`, padX + innerW, y + 8);
+      }
+      y += 16 + 14;
 
       // exercise rows
-      if (draw) { ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(padX, y); ctx.lineTo(padX + innerW, y); ctx.stroke(); }
+      if (draw && tlSession.exercises.length) { ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(padX, y); ctx.lineTo(padX + innerW, y); ctx.stroke(); }
       for (const e of tlSession.exercises) {
         const rowH = e.setsStr ? 46 : 40;
         if (draw) {
@@ -3918,7 +3992,14 @@ if (document.getElementById('subtab-expenses')) {
           ctx.fillText('✓', padX + 10, cy + 1);
           ctx.textAlign = 'right'; ctx.font = '800 13.5px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.fillStyle = C.fg; ls(0.4);
           ctx.fillText(e.best, padX + innerW, y + 18);
-          const bestW = ctx.measureText(e.best).width;
+          let bestW = ctx.measureText(e.best).width;
+          const mark = e.verdict === 'up' ? '▲' : e.verdict === 'down' ? '▼' : e.verdict === 'new' ? 'NEW' : '';
+          if (mark) {
+            ctx.font = '700 10px system-ui, -apple-system, "Segoe UI", sans-serif'; ls(0.5);
+            ctx.fillStyle = e.verdict === 'up' ? C.good : e.verdict === 'down' ? C.bad : C.faint;
+            ctx.fillText(mark, padX + innerW - bestW - 6, y + 17);
+            bestW += ctx.measureText(mark).width + 6;
+          }
           ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
           ctx.font = '700 13.5px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.fillStyle = C.fg; ls(0.2);
           ctx.fillText(fitText(e.name, innerW - 30 - bestW - 12), padX + 30, y + 18);
@@ -3955,12 +4036,11 @@ if (document.getElementById('subtab-expenses')) {
     }
     saveBtn.style.display = '';
     saveBtn.onclick = tlRenderPNG;
-  }
 }
 
-// ---------- Visual > Measurements: Hevy tape measurements (private build only) ----------
+// ---------- Medical > Measurements: Hevy tape measurements (private build only) ----------
 // MEASUREMENTS comes from hevy_sync.py (weight-only Hevy entries are left out); it's stubbed to []
-// in the public build and the whole Visual tab is PUBLIC:EXCLUDE.
+// in the public build and the Results > Measurements subtab is PUBLIC:EXCLUDE.
 if (document.getElementById('subtab-measurements')) {
   const rows = MEASUREMENTS.slice().sort((a, b) => a.d.localeCompare(b.d));
   const box = document.getElementById('msTable');
@@ -4017,160 +4097,15 @@ if (document.getElementById('subtab-measurements')) {
   }
 }
 
-// ---------- Visual > Photos: aligned progress-photo compare (private build only) ----------
-// photo_sync.py writes one aligned 800x1000 JPEG per day to hevy/data/photos/<date>.jpg (all
-// normalised onto the oldest photo's shoulders/hips) plus the PHOTOS index. Images are
-// referenced by relative path, never embedded, so the page stays small and photos never
-// reach git or the public build (the tab is PUBLIC:EXCLUDE and PHOTOS is stubbed there).
-if (document.getElementById('subtab-photos')) {
-  const photos = (PHOTOS.photos || []).slice().sort((a, b) => a.d.localeCompare(b.d));
-  const stage = document.getElementById('phStage');
-  if (!photos.length) {
-    document.getElementById('phRangeLabel').textContent = 'No progress photos yet';
-    stage.outerHTML = '<p class="sub">Add front, waist-up photos to <code>Fitness/Progress Photos</code> — the daily sync dates them from their metadata and aligns them to the oldest one.</p>';
-    document.getElementById('phControls').hidden = true;
-  } else {
-    const src = p => `hevy/data/photos/${p.d}.jpg`;
-    const first = photos[0], last = photos[photos.length - 1];
-    document.getElementById('phRangeLabel').textContent =
-      `${photos.length} photo${photos.length === 1 ? '' : 's'} · ${first.d} to ${last.d} · baseline ${PHOTOS.baseline || first.d}`;
-
-    const body = new Map(dailyBodyLog(BODYLOG).map(d => [d.date, d]));
-    const caption = p => {
-      const b = body.get(p.d);
-      const parts = [p.d];
-      if (b && b.weightKg != null) parts.push(`${b.weightKg.toFixed(1)} kg`);
-      if (b && b.bodyFatPct != null) parts.push(`${b.bodyFatPct.toFixed(1)}% fat`);
-      if (b && b.weightKg != null && b.bodyFatPct != null) parts.push(`${(b.weightKg * b.bodyFatPct / 100).toFixed(1)} kg fat mass`);
-      if (p.flagged) parts.push('⚠ ' + (p.note || 'check photo'));
-      return parts.join(' · ');
-    };
-    const opts = photos.map(p => `<option value="${p.d}">${p.d}</option>`).join('');
-    const selA = document.getElementById('phBefore'), selB = document.getElementById('phAfter');
-    selA.innerHTML = opts; selB.innerHTML = opts;
-    const imgA = document.getElementById('phImgBefore'), imgB = document.getElementById('phImgAfter');
-    const slider = document.getElementById('phSlider'), handle = document.getElementById('phHandle');
-    let mode = 'slider';
-
-    const byDate = d => photos.find(p => p.d === d);
-    // Closest photo on or before `d` (falls back to the oldest one).
-    const onOrBefore = d => photos.filter(p => p.d <= d).pop() || first;
-
-    const render = () => {
-      const a = byDate(selA.value), b = byDate(selB.value);
-      imgA.src = src(a); imgB.src = src(b);
-      document.getElementById('phCapBefore').textContent = caption(a);
-      document.getElementById('phCapAfter').textContent = caption(b);
-      const v = +slider.value;
-      if (mode === 'slider') {
-        imgB.style.opacity = 1;
-        imgB.style.clipPath = `inset(0 0 0 ${v}%)`;
-        handle.hidden = false; handle.style.left = `${v}%`;
-      } else {
-        imgB.style.clipPath = 'none';
-        imgB.style.opacity = v / 100;
-        handle.hidden = true;
-      }
-      document.querySelectorAll('#phStrip .ph-thumb').forEach(t => t.classList.toggle('active', t.dataset.d === selB.value));
-      const ba = body.get(a.d), bb = body.get(b.d);
-      const delta = [];
-      if (ba && bb && ba.weightKg != null && bb.weightKg != null) delta.push(`weight ${bb.weightKg - ba.weightKg >= 0 ? '+' : '−'}${Math.abs(bb.weightKg - ba.weightKg).toFixed(1)} kg`);
-      if (ba && bb && ba.bodyFatPct != null && bb.bodyFatPct != null) delta.push(`body fat ${bb.bodyFatPct - ba.bodyFatPct >= 0 ? '+' : '−'}${Math.abs(bb.bodyFatPct - ba.bodyFatPct).toFixed(1)} pts`);
-      document.getElementById('phDelta').textContent = delta.length ? `Change: ${delta.join(' · ')}` : '';
-    };
-    // Quick compares: "N weeks ago" = the photo closest to (on or before) latest - N weeks, vs
-    // latest. Only enabled once there IS a photo that far back — before that it would just fall
-    // back to the baseline and look identical to "Baseline vs latest" (looked broken, 2026-09-24).
-    const arcStart = photos.find(p => p.d >= WINTER_ARC.start) || first;
-    const quickPair = q => q === 'baseline' ? [first, last] : q === 'arc' ? [arcStart, last] : [onOrBefore(addDaysISO(last.d, -7 * +q)), last];
-    const syncQuickActive = () => document.querySelectorAll('#phControls [data-quick]').forEach(btn => {
-      const [a, b] = quickPair(btn.dataset.quick);
-      btn.classList.toggle('active', !btn.disabled && selA.value === a.d && selB.value === b.d);
-    });
-    const setPair = (a, b) => { selA.value = a.d; selB.value = b.d; render(); syncQuickActive(); };
-
-    selA.addEventListener('change', () => { render(); syncQuickActive(); });
-    selB.addEventListener('change', () => { render(); syncQuickActive(); });
-    slider.addEventListener('input', render);
-    document.querySelectorAll('#phControls [data-quick]').forEach(btn => {
-      const q = btn.dataset.quick;
-      if (q !== 'baseline' && q !== 'arc' && first.d > addDaysISO(last.d, -7 * +q)) {
-        btn.disabled = true;
-        btn.title = `Available once you have photos from ${q} week${q === '1' ? '' : 's'} back (from ${addDaysISO(first.d, 7 * +q)})`;
-      }
-      btn.addEventListener('click', () => { const [a, b] = quickPair(q); setPair(a, b); });
-    });
-    document.querySelectorAll('#phControls [data-mode]').forEach(btn => btn.addEventListener('click', () => {
-      mode = btn.dataset.mode;
-      document.querySelectorAll('#phControls [data-mode]').forEach(b => b.classList.toggle('active', b === btn));
-      document.getElementById('phLeftLbl').textContent = mode === 'slider' ? '◀ before' : 'before';
-      document.getElementById('phRightLbl').textContent = mode === 'slider' ? 'after ▶' : 'after (fade in →)';
-      slider.value = 50; render();
-    }));
-
-    document.getElementById('phStrip').innerHTML = photos.map(p =>
-      `<button type="button" class="ph-thumb${p.flagged ? ' flagged' : ''}" data-d="${p.d}" title="${caption(p)}"><img loading="lazy" src="${src(p)}" alt=""><span>${p.d.slice(5)}</span></button>`
-    ).join('');
-    document.querySelectorAll('#phStrip .ph-thumb').forEach(t => t.addEventListener('click', () => { selB.value = t.dataset.d; render(); syncQuickActive(); }));
-
-    setPair(first, last);
-  }
-
-  // Winter arc check-ins: four views per weekly check-in, Before / After rows.
-  const checkins = (PHOTOS.checkins || []).slice().sort((a, b) => a.d.localeCompare(b.d));
-  const daysBetweenISO = (a, b) => Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000);
-  const VIEWS = [['front', 'Front'], ['right', 'Right side'], ['back', 'Back'], ['left', 'Left side']];
-  const fmtD = d => new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
-  const arcWeeks = Math.floor((daysBetweenISO(WINTER_ARC.start, WINTER_ARC.end) + 1) / 7);   // 13 weekly check-ins
-  const todayISO = (() => { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; })();
-  const arcWeek = Math.min(arcWeeks, Math.max(1, Math.floor(daysBetweenISO(WINTER_ARC.start, todayISO) / 7) + 1));
-  const ciLabel = document.getElementById('ciLabel');
-  const ciGrid = document.getElementById('ciGrid');
-  const head = `Winter arc · ${fmtD(WINTER_ARC.start)} – ${fmtD(WINTER_ARC.end)} · week ${arcWeek} of ${arcWeeks}`;
-  if (!checkins.length) {
-    ciLabel.textContent = `${head} · no check-in yet — take front, right, back and left photos within a few minutes of each other.`;
-    document.getElementById('ciControls').hidden = true;
-  } else {
-    const lastCi = checkins[checkins.length - 1];
-    const due = addDaysISO(lastCi.d, 7);
-    const dueTxt = todayISO > due ? `check-in overdue (was due ${fmtD(due)})` : todayISO === due ? 'check-in due today' : `next check-in ${fmtD(due)}`;
-    ciLabel.textContent = `${head} · ${checkins.length} check-in${checkins.length === 1 ? '' : 's'} · ${dueTxt}`;
-    const bench = checkins.find(c => c.d >= WINTER_ARC.start) || checkins[0];
-    const body = new Map(dailyBodyLog(BODYLOG).map(d => [d.date, d]));
-    const tape = d => MEASUREMENTS.filter(m => m.d <= d && daysBetweenISO(m.d, d) <= 3).pop();
-    const caption = c => {
-      const b = body.get(c.d), m = tape(c.d), parts = [];
-      if (b && b.weightKg != null) parts.push(`${b.weightKg.toFixed(1)} kg`);
-      if (b && b.bodyFatPct != null) parts.push(`${b.bodyFatPct.toFixed(1)}% fat`);
-      if (m && m.waist != null) parts.push(`waist ${m.waist} cm`);
-      return parts.join(' · ');
-    };
-    const label = c => `${fmtD(c.d)}${c === bench ? ' · benchmark' : ''}`;
-    const opts = checkins.map(c => `<option value="${c.d}">${label(c)}</option>`).join('');
-    const ciA = document.getElementById('ciBefore'), ciB = document.getElementById('ciAfter');
-    ciA.innerHTML = opts; ciB.innerHTML = opts;
-    ciA.value = bench.d; ciB.value = lastCi.d;
-    if (checkins.length === 1) document.getElementById('ciControls').hidden = true;
-    const row = (title, c) => `<div class="ci-row"><b>${title}</b> ${label(c)}${caption(c) ? ' · ' + caption(c) : ''}</div>`
-      + VIEWS.map(([v]) => c.views[v]
-        ? `<figure><img loading="lazy" src="hevy/data/photos/checkins/${c.d}-${v}.jpg" alt="${v}"></figure>`
-        : `<figure class="ci-missing">no ${v} photo</figure>`).join('');
-    const renderCi = () => {
-      const a = checkins.find(c => c.d === ciA.value), b = checkins.find(c => c.d === ciB.value);
-      ciGrid.innerHTML = VIEWS.map(([, l]) => `<div class="ci-head">${l}</div>`).join('')
-        + (a === b ? row('', a) : row('Before', a) + row('After', b));
-    };
-    ciA.addEventListener('change', renderCi); ciB.addEventListener('change', renderCi);
-    renderCi();
-  }
-}
+// (Visual > Photos compare + winter-arc check-in grid removed 2026-10-06 at the user's request —
+// photo_sync.py still indexes photos/check-ins, which the Calendar tab shows as 📷/📸 icons.)
 
 // ---------- Medical tab: lab-report parameters over time (private build only) ----------
 // One row per parameter, one column per report (collection date). Each value is flagged
 // against THAT report's own reference range (p.r[date] when the lab/assay range differed,
 // else the latest range p.lo/p.hi), so a lab switching assays doesn't retro-flag old results.
-// Guarded on #tab-medical: the public build strips the tab and stubs MEDICAL to empty.
-if (document.getElementById('tab-medical') && MEDICAL.params.length) {
+// Guarded on #subtab-labs: the public build strips that subtab and stubs MEDICAL to empty.
+if (document.getElementById('subtab-labs') && MEDICAL.params.length) {
   const medDates = MEDICAL.reports.map(r => r.d).sort();
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const fmtD = d => { const [y, m, dd] = d.split('-'); return `${+dd} ${MONTHS[+m - 1]} ${y}`; };
@@ -4268,7 +4203,7 @@ if (document.getElementById('tab-medical') && MEDICAL.params.length) {
 }
 
 // ---------- Overview outcomes + Recovery resting HR (2026-09-24 restructure) ----------
-// Overview = outcomes (weight, body fat %, fat vs lean mass); Training/Nutrition/Recovery =
+// Overview = Inputs -> Process -> Results (fat vs lean mass removed 2026-10-06); Training/Nutrition/Recovery =
 // the inputs. Shared single-series weekly line chart, same look as the body fat / sleep charts:
 // one axis, dots coloured by week-over-week direction relative to `betterDown`.
 function weeklyLineChart(chartId, tableId, weeks, { fmt, label, betterDown = true }) {
@@ -4316,71 +4251,141 @@ function weeklyLineChart(chartId, tableId, weeks, { fmt, label, betterDown = tru
 }
 
 {
-  const kg = v => `${v.toFixed(2)} kg`;
-  weeklyLineChart('weeklyWeightChart', 'weeklyWeightTable', weeklyBodyLogAvg(BODYLOG, 'weightKg'), { fmt: kg, label: 'avg weight' });
 
-  // Fat / lean mass: per day with BOTH weight and body fat %, then averaged per week.
-  const fatW = new Map(), leanW = new Map();
-  for (const d of dailyBodyLog(BODYLOG)) {
-    if (d.weightKg == null || d.bodyFatPct == null) continue;
-    const wk = isoWeekStart(d.date), fat = d.weightKg * d.bodyFatPct / 100;
-    if (!fatW.has(wk)) { fatW.set(wk, []); leanW.set(wk, []); }
-    fatW.get(wk).push(fat); leanW.get(wk).push(d.weightKg - fat);
-  }
-  const avgMap = m => new Map([...m].map(([k, a]) => [k, a.reduce((x, y) => x + y, 0) / a.length]));
-  const fatAvg = avgMap(fatW), leanAvg = avgMap(leanW);
-  weeklyLineChart('weeklyFatMassChart', null, fatAvg, { fmt: kg, label: 'avg fat mass', betterDown: true });
-  weeklyLineChart('weeklyLeanMassChart', null, leanAvg, { fmt: kg, label: 'avg lean mass', betterDown: false });
-  const compKeys = [...fatAvg.keys()].sort();
-  document.getElementById('weeklyCompTable').innerHTML = compKeys.length
-    ? `<table class="tv"><thead><tr><th>Week of</th><th>Days</th><th>Fat mass</th><th>Lean mass</th><th>Fat change</th><th>Lean change</th></tr></thead><tbody>${compKeys.map((k, i) => {
-        const pk = i ? compKeys[i - 1] : null;
-        const dF = pk ? fatAvg.get(k) - fatAvg.get(pk) : null, dL = pk ? leanAvg.get(k) - leanAvg.get(pk) : null;
-        const sg = v => v == null ? '—' : `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(2)} kg`;
-        return `<tr><td>${k}</td><td>${fatW.get(k).length}</td><td>${kg(fatAvg.get(k))}</td><td>${kg(leanAvg.get(k))}</td><td>${sg(dF)}</td><td>${sg(dL)}</td></tr>`;
-      }).reverse().join('')}</tbody></table>`
-    : '<p class="sub">No days with both weight and body fat logged yet.</p>';
+  // Results > Body fat & weight (2026-10-06): plain weekly trends, no target line — the user
+  // hasn't settled on a body-fat target yet (FAT_TARGET_SCHEDULE is deliberately not drawn).
+  weeklyLineChart('weeklyFatChart', 'weeklyFatTable', weeklyBodyLogAvg(BODYLOG, 'bodyFatPct'), { fmt: v => `${v.toFixed(1)}%`, label: 'avg body fat' });
+  weeklyLineChart('weeklyWeightChart', 'weeklyWeightTable', weeklyBodyLogAvg(BODYLOG, 'weightKg'), { fmt: v => `${v.toFixed(2)} kg`, label: 'avg weight' });
 
-  // Recovery > Sleep: weekly resting HR (Garmin), lower = better.
+  // Results > Resting HR: weekly resting HR (Garmin), lower = better.
   const rhr = new Map([...weeklyRestingHR(HEARTRATE)].map(([k, v]) => [k, v.avg]));
   weeklyLineChart('weeklyRhrChart', 'weeklyRhrTable', rhr, { fmt: v => `${v.toFixed(1)} bpm`, label: 'avg resting HR' });
 }
 
-// ---------- Overview: this week's inputs strip ----------
-// One tile per input, each mirroring the rule its own tab uses (training = strength or Boxing
-// sessions vs the 4-session weekly schedule; nutrition = average per logged day vs average
-// goal; steps / bodyweight = days hit so far).
+// ---------- Overview: Inputs -> Process -> Results (2026-10-06) ----------
+// Three stage panels for this week (results measured over 4 weeks, since they lag the inputs),
+// then the same rows week by week so a column reads cause -> effect. Numbers come from
+// calc.js's weeklyFlow; hit rules are the dashboard-wide ones (nutritionHit, sleepGoalMin,
+// WEEKLY_SESSION_TARGET, WEEKLY_DAYS_HIT_TARGET). Body-fat/weight "good" = down (cutting).
 {
   const wk = isoWeekStart(currentWeekAnchor);
   document.getElementById('ovWeekLabel').textContent = `This week · ${wk} to ${addDaysISO(wk, 6)}`;
-  const WEEKLY_TRAINING_TARGET = 4;
-  const trainingDone = WORKOUTS.filter(w => isoWeekStart(w.d) === wk && (isStrengthDay(w, EXMETA) || w.ex.some(e => e.i === BOXING_EXERCISE_ID))).length;
+  const N_WEEKS = 9;
+  const weeks = Array.from({ length: N_WEEKS }, (_, i) => addDaysISO(wk, -7 * (N_WEEKS - 1 - i)));
+  const flow = weeklyFlow({ workouts: WORKOUTS, meta: EXMETA, steps: STEPS, nutrition: NUTRITION, bodyLog: BODYLOG }, weeks);
+  const cur = flow[flow.length - 1], base = flow[flow.length - 5]; // 4 weeks earlier
+  const sleepGoal = sleepGoalMin(dailyBodyLog(BODYLOG), latestSyncedDate);
+  const hm = m => `${Math.floor(m / 60)}h${String(Math.round(m % 60)).padStart(2, '0')}`;
+  const n0 = v => Math.round(v).toLocaleString();
+  const status = ok => ok == null ? 'none' : ok ? 'good' : 'warn';
+  const stLabel = { good: ['✓', 'on target'], warn: ['!', 'below target'], none: ['–', 'no data'] };
+  const stHtml = (st, text) => `<span class="m-st ${st}"><i>${stLabel[st][0]}</i>${text || stLabel[st][1]}</span>`;
+  const row = (label, valueHtml, vizHtml) => `<div class="m"><span class="m-l">${label}</span><span class="m-v">${valueHtml}</span><div class="m-viz">${vizHtml}</div></div>`;
+  // meter scaled 0..120% of goal; `band` = [lo, hi] fraction of goal shaded as the target zone, `tick` = single target line
+  const meter = (v, goal, st, { band, tick } = {}) => {
+    if (v == null || !goal) return '<div class="meter"></div>';
+    const x = f => Math.min(100, f / 1.2 * 100);
+    return `<div class="meter ${st}">${band ? `<b style="left:${x(band[0])}%;width:${x(band[1]) - x(band[0])}%"></b>` : ''}${tick ? `<em style="left:${x(tick)}%"></em>` : ''}<span style="width:${x(v / goal)}%"></span></div>`;
+  };
+  const pips = (hit, total, logged) => `<div class="pips">${Array.from({ length: total }, (_, i) =>
+    `<span class="${i < hit ? 'hit' : i < logged ? 'miss' : 'todo'}"></span>`).join('')}</div>`;
+  // One pip per weekday Mon..Sun: green = hit that day, amber = synced but missed, outline = not synced yet.
+  const dayPips = hitDates => {
+    const hit = new Set(hitDates);
+    return `<div class="pips days">${['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((l, i) => {
+      const d = addDaysISO(wk, i);
+      const cls = hit.has(d) ? 'hit' : d <= lastCompleteDay ? 'miss' : 'todo';
+      return `<span class="${cls}" title="${d}: ${cls === 'hit' ? 'hit' : cls === 'miss' ? 'missed' : 'not synced yet'}"><u>${l}</u></span>`;
+    }).join('')}</div>`;
+  };
+  const stepHitDates = STEPS.filter(r => r.steps >= r.goal).map(r => r.d);
+  const bwHitDates = bodyweightRoutineSessions(WORKOUTS, BODYWEIGHT_ROUTINE_EXERCISE_IDS, EXMETA).filter(r => r.totalReps >= 100).map(r => r.date);
+  const spark = (vals) => {
+    const pts = vals.map((v, i) => [i, v]).filter(([, v]) => v != null);
+    if (pts.length < 2) return '<svg class="spark"></svg>';
+    const lo = Math.min(...pts.map(p => p[1])), hi = Math.max(...pts.map(p => p[1])), span = hi - lo || 1;
+    const X = i => 4 + i / (vals.length - 1) * 112, Y = v => 4 + (1 - (v - lo) / span) * 20;
+    const d = pts.map(([i, v], k) => `${k ? 'L' : 'M'}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
+    const [li, lv] = pts[pts.length - 1];
+    return `<svg class="spark" viewBox="0 0 120 28" preserveAspectRatio="none"><path d="${d}" fill="none" stroke="var(--series-1)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/><circle cx="${X(li)}" cy="${Y(lv)}" r="2.6" fill="var(--series-1)"/></svg>`;
+  };
+  const delta = (now, then, betterDown, fmt) => {
+    if (now == null || then == null) return '<span class="delta flat">— vs 4 wks</span>';
+    const d = now - then;
+    if (Math.abs(d) < 0.05) return '<span class="delta flat">steady vs 4 wks</span>';
+    const good = betterDown ? d < 0 : d > 0;
+    return `<span class="delta ${good ? 'good' : 'bad'}">${d < 0 ? '▼' : '▲'} ${fmt(Math.abs(d))} vs 4 wks</span>`;
+  };
 
-  const nut = dailyNutrition(NUTRITION).filter(d => isoWeekStart(d.date) === wk);
-  const mean = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
-  const calAvg = mean(nut.map(d => d.calories)), calGoal = mean(nut.map(d => d.goal));
-  const protAvg = mean(nut.map(d => d.protein)), protGoal = mean(nut.map(d => d.proteinGoal).filter(v => v != null));
+  // --- 01 Inputs
+  const kcalSt = status(cur.kcal == null ? null : nutritionHit({ calories: cur.kcal, goal: cur.kcalGoal }));
+  const protSt = status(cur.protein == null || !cur.proteinGoal ? null : cur.protein >= cur.proteinGoal * 0.9);
+  const sleepSt = status(cur.sleepMin == null ? null : cur.sleepMin >= sleepGoal);
+  const inputs = [
+    row('Calories <small>avg / day</small>', cur.kcal == null ? '—' : `${n0(cur.kcal)}<small> / ${n0(cur.kcalGoal)}</small>`,
+      meter(cur.kcal, cur.kcalGoal, kcalSt, { band: [0.85, 1.05] }) + stHtml(kcalSt)),
+    row('Protein <small>avg / day</small>', cur.protein == null ? '—' : `${Math.round(cur.protein)}<small> / ${Math.round(cur.proteinGoal)} g</small>`,
+      meter(cur.protein, cur.proteinGoal, protSt, { tick: 0.9 }) + stHtml(protSt)),
+    row('Sleep <small>avg / night</small>', cur.sleepMin == null ? '—' : `${hm(cur.sleepMin)}<small> / ${hm(sleepGoal)}</small>`,
+      meter(cur.sleepMin, sleepGoal, sleepSt, { tick: 1 }) + stHtml(sleepSt)),
+  ];
+  // --- 02 Process (this week so far: misses only count for days already synced)
+  const sessSt = cur.sessions >= WEEKLY_SESSION_TARGET ? 'good' : 'none';
+  const process = [
+    row('Training sessions', `${cur.sessions}<small> / ${WEEKLY_SESSION_TARGET}</small>`, pips(cur.sessions, WEEKLY_SESSION_TARGET, 0) + stHtml(sessSt, sessSt === 'good' ? 'done' : `${WEEKLY_SESSION_TARGET - cur.sessions} to go`)),
+    row('Step goal days', `${cur.stepsHit}<small> / 7</small>`, dayPips(stepHitDates) + `<span class="m-note">aim ${WEEKLY_DAYS_HIT_TARGET}+</span>`),
+    row('100-rep bodyweight days', `${cur.bwHit}<small> / 7</small>`, dayPips(bwHitDates) + `<span class="m-note">aim ${WEEKLY_DAYS_HIT_TARGET}+</span>`),
+  ];
+  // --- 03 Results (4-week horizon)
+  const last4 = flow.slice(-4).reduce((a, w) => ({ up: a.up + w.lifts.up, down: a.down + w.lifts.down, flat: a.flat + w.lifts.flat }), { up: 0, down: 0, flat: 0 });
+  const liftTotal = last4.up + last4.down + last4.flat;
+  const results = [
+    row('Body fat <small>weekly avg</small>', cur.fatPct == null ? '—' : `${cur.fatPct.toFixed(1)}<small>%</small>`,
+      spark(flow.map(w => w.fatPct)) + delta(cur.fatPct, base.fatPct, true, v => v.toFixed(1) + '%')),
+    row('Weight <small>weekly avg</small>', cur.weightKg == null ? '—' : `${cur.weightKg.toFixed(1)}<small> kg</small>`,
+      spark(flow.map(w => w.weightKg)) + delta(cur.weightKg, base.weightKg, true, v => v.toFixed(1) + ' kg')),
+    row('Lifts progressing <small>last 4 wks</small>', liftTotal ? `${Math.round(last4.up / liftTotal * 100)}<small>%</small>` : '—',
+      spark(flow.map(w => { const t = w.lifts.up + w.lifts.down + w.lifts.flat; return t ? w.lifts.up / t * 100 : null; })) +
+      `<span class="delta ${last4.up >= last4.down ? 'good' : 'bad'}">${last4.up}▲ ${last4.down}▼</span>`),
+  ];
+  const arrow = '<div class="flow-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg></div>';
+  const stage = (cls, num, name, sub, rows) => `<div class="stage ${cls}"><div class="stage-hd"><span class="num">${num}</span><span class="name">${name}</span><span class="sub2">${sub}</span></div>${rows.join('')}</div>`;
+  document.getElementById('ovFlow').innerHTML = `<div class="flow-grid">${
+    stage('s1', '01', 'Inputs', 'fuel &amp; recovery<br>this week', inputs)}${arrow}${
+    stage('s2', '02', 'Process', 'the work<br>this week', process)}${arrow}${
+    stage('s3', '03', 'Results', 'what moved<br>4-week view', results)}</div>`;
 
-  const sleepDays = dailyBodyLog(BODYLOG).filter(d => isoWeekStart(d.date) === wk && d.sleepMin != null);
-  const sleepAvg = mean(sleepDays.map(d => d.sleepMin));
-  const goalMin = sleepGoalMin(dailyBodyLog(BODYLOG), latestSyncedDate);
-  const fmtHM = m => `${Math.floor(m / 60)}h${String(Math.round(m % 60)).padStart(2, '0')}m`;
-
-  const steps = daysHitCount(dailySteps(STEPS).filter(d => d.hitGoal).map(d => d.date));
-  const bw = daysHitCount(bodyweightRoutineSessions(WORKOUTS, BODYWEIGHT_ROUTINE_EXERCISE_IDS, EXMETA)
-    .filter(r => r.totalReps >= 100).map(r => r.date));
-
-  const tile = (v, l, state) => `<div class="stat-tile${state ? ' ' + state : ''}"><div class="v">${v}</div><div class="l">${l}</div></div>`;
-  const st = (ok, near) => ok ? 'is-good' : near ? '' : 'is-warn';
-  document.getElementById('ovInputsRow').innerHTML =
-    tile(`${trainingDone} / ${WEEKLY_TRAINING_TARGET}`, 'training sessions', trainingDone >= WEEKLY_TRAINING_TARGET ? 'is-good' : '') +
-    tile(calAvg == null ? '—' : `${Math.round(calAvg).toLocaleString()} / ${Math.round(calGoal).toLocaleString()}`, 'avg calories / goal',
-      calAvg == null ? '' : calAvg > calGoal ? 'is-warn' : calAvg >= calGoal * 0.9 ? 'is-good' : '') +
-    tile(protAvg == null || !protGoal ? '—' : `${Math.round(protAvg / protGoal * 100)}%`, 'of protein goal (avg)',
-      protAvg == null || !protGoal ? '' : st(protAvg >= protGoal * 0.9)) +
-    tile(sleepAvg == null ? '—' : fmtHM(sleepAvg), `avg sleep (goal ${fmtHM(goalMin)})`, sleepAvg == null ? '' : st(sleepAvg >= goalMin)) +
-    tile(`${steps.hit} / ${steps.elapsed}`, 'days hit step goal', steps.elapsed ? st(steps.hit === steps.elapsed, steps.hit > 0) : '') +
-    tile(`${bw.hit} / ${bw.elapsed}`, 'days hit 100 bodyweight reps', bw.elapsed ? st(bw.hit === bw.elapsed, bw.hit > 0) : '');
+  // --- Week by week ledger: same rows, one column per week (current week outlined, its
+  // misses not counted yet).
+  const fmtWk = k => new Date(k + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+  const isCur = i => i === flow.length - 1;
+  const cell = (text, cls, title) => `<td class="${cls || ''}" title="${title || ''}">${text}</td>`;
+  const passFail = (ok, i) => ok == null ? 'na' : ok ? 'good' : isCur(i) ? '' : 'warn';
+  const trend = (v, p) => p == null ? '' : v < p ? 'good' : v > p ? 'warn' : '';
+  const sgn = v => (v >= 0 ? '+' : '') + v.toFixed(2);
+  const rows = [
+    ['lg', '01 INPUTS', 'fuel &amp; recovery'],
+    ['Calories', '85–105% of goal', (w, i) => w.kcal == null ? cell('—', 'na') : cell(n0(w.kcal), passFail(nutritionHit({ calories: w.kcal, goal: w.kcalGoal }), i), `avg ${n0(w.kcal)} / ${n0(w.kcalGoal)} kcal`)],
+    ['Protein', '≥ 90% of goal', (w, i) => w.protein == null || !w.proteinGoal ? cell('—', 'na') : cell(`${Math.round(w.protein / w.proteinGoal * 100)}%`, passFail(w.protein >= w.proteinGoal * 0.9, i), `avg ${Math.round(w.protein)} / ${Math.round(w.proteinGoal)} g`)],
+    ['Sleep', `≥ ${hm(sleepGoal)} avg`, (w, i) => w.sleepMin == null ? cell('—', 'na') : cell(hm(w.sleepMin), passFail(w.sleepMin >= sleepGoal, i), `avg ${hm(w.sleepMin)} a night`)],
+    ['lg', '02 PROCESS', 'the work'],
+    ['Sessions', `${WEEKLY_SESSION_TARGET} / week`, (w, i) => cell(`${w.sessions}/${WEEKLY_SESSION_TARGET}`, passFail(w.sessions >= WEEKLY_SESSION_TARGET, i), `${w.sessions} strength/boxing sessions`)],
+    ['Step goal days', `${WEEKLY_DAYS_HIT_TARGET}+ of 7`, (w, i) => w.stepsDays ? cell(`${w.stepsHit}/7`, passFail(w.stepsHit >= WEEKLY_DAYS_HIT_TARGET, i), `${w.stepsHit} of ${w.stepsDays} synced days hit the step goal`) : cell('—', 'na')],
+    ['100-rep BW days', `${WEEKLY_DAYS_HIT_TARGET}+ of 7`, (w, i) => cell(`${w.bwHit}/7`, passFail(w.bwHit >= WEEKLY_DAYS_HIT_TARGET, i), `${w.bwHit} days with 100+ bodyweight reps`)],
+    ['lg', '03 RESULTS', 'what moved (vs the week before)'],
+    ['Body fat', 'lower is better', (w, i) => { if (w.fatPct == null) return cell('—', 'na'); const p = i ? flow[i - 1].fatPct : null;
+      return cell(`${w.fatPct.toFixed(1)}%`, trend(w.fatPct, p), p == null ? '' : `${sgn(w.fatPct - p)} pts vs prior week`); }],
+    ['Weight', 'lower is better', (w, i) => { if (w.weightKg == null) return cell('—', 'na'); const p = i ? flow[i - 1].weightKg : null;
+      return cell(w.weightKg.toFixed(1), trend(w.weightKg, p), p == null ? '' : `${sgn(w.weightKg - p)} kg vs prior week`); }],
+    ['Lifts up / down', 'vs previous session', (w) => { const t = w.lifts.up + w.lifts.down; if (!t) return cell('—', 'na');
+      return cell(`${w.lifts.up}▲ ${w.lifts.down}▼`, w.lifts.up > w.lifts.down ? 'good' : w.lifts.up < w.lifts.down ? 'warn' : '', `${w.lifts.up} exercises up, ${w.lifts.down} down, ${w.lifts.flat} same`); }],
+  ];
+  const head = `<tr><th></th>${flow.map((w, i) => `<th class="${isCur(i) ? 'now' : ''}">${isCur(i) ? 'This wk' : fmtWk(w.week)}</th>`).join('')}</tr>`;
+  const body = rows.map(r => r[0] === 'lg'
+    ? `<tr class="lg"><td colspan="${flow.length + 1}">${r[1]}<span>${r[2]}</span></td></tr>`
+    : `<tr><td class="rl">${r[0]}<small>${r[1]}</small></td>${flow.map((w, i) => r[2](w, i).replace('<td class="', `<td class="${isCur(i) ? 'cur ' : ''}`)).join('')}</tr>`).join('');
+  document.getElementById('ovLedger').innerHTML = `<table class="ledger"><thead>${head}</thead><tbody>${body}</tbody></table>`;
+  const ledgerEl = document.getElementById('ovLedger'); ledgerEl.scrollLeft = ledgerEl.scrollWidth; // narrow screens open on the latest weeks
 }
 
 // ---------- tab switching ----------
@@ -4403,7 +4408,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     // has to happen here, on reveal, not at initial render time. Without this the grid opens
     // showing early history instead of today/yesterday, which reads as "yesterday's
     // supplements aren't showing" when they're just off-screen to the right.
-    if (btn.dataset.tab === 'nutrition') scrollSupplementsToToday();
+    if (btn.dataset.tab === 'inputs') scrollSupplementsToToday();
   });
 });
 
@@ -4420,6 +4425,14 @@ document.querySelectorAll('.subtab-btn').forEach(btn => {
     if (btn.dataset.subtab === 'supplements') scrollSupplementsToToday();
   });
 });
+
+// Overview remembers its last subtab (Weekly / Calendar) per viewer — a convenience only, so
+// storage failures (private window, blocked site data) just fall back to Weekly.
+{
+  const KEY = 'ovSubtab';
+  try { const last = localStorage.getItem(KEY); if (last === 'calendar') document.querySelector('#tab-overview .subtab-btn[data-subtab="calendar"]').click(); } catch (e) {}
+  document.querySelectorAll('#tab-overview .subtab-btn').forEach(b => b.addEventListener('click', () => { try { localStorage.setItem(KEY, b.dataset.subtab); } catch (e) {} }));
+}
 
 // ---------- PDF export: every leaf tab/subtab on its own page, scaled to fit ----------
 document.getElementById('pdfExportBtn').addEventListener('click', () => {
