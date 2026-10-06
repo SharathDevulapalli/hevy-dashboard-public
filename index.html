@@ -249,6 +249,33 @@
   .cal-cell.out { opacity: 0.35; }
   .cal-cell .d { font-size: 11px; color: var(--text-muted); }
   .cal-cell .amt { font-size: 12.5px; font-weight: 600; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .cal-cell.has { border-color: var(--series-2); }
+  .cal-cell .note { font-size: 10.5px; color: var(--text-secondary); line-height: 1.25; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cal-nav button:disabled { opacity: 0.35; cursor: default; }
+  /* Calendar tab (all activity per day) */
+  .act-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--text-secondary); margin: 0 0 12px; }
+  .act-legend > span { display: inline-flex; align-items: center; gap: 5px; }
+  .act-grid .cal-cell { cursor: pointer; min-height: 92px; display: flex; flex-direction: column; gap: 3px; }
+  .act-grid .cal-cell:hover { border-color: var(--axis); }
+  .act-grid .cal-cell.sel { border-color: var(--series-1); box-shadow: 0 0 0 1px var(--series-1); }
+  .act-grid .cal-cell.future { cursor: default; }
+  .act-grid .top { display: flex; justify-content: space-between; align-items: baseline; gap: 4px; }
+  .act-grid .icons { font-size: 11px; letter-spacing: 1px; }
+  .act-grid .sess { font-size: 11.5px; font-weight: 600; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .act-grid .sess.boxing { color: var(--series-2); }
+  .act-grid .meta { font-size: 10.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .act-grid .pills { display: flex; gap: 3px; margin-top: auto; }
+  .act-pill { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 18px; padding: 0 3px; border-radius: 5px; font-size: 11px; border: 1px solid var(--border); }
+  .act-pill.hit { background: color-mix(in srgb, var(--good) 22%, transparent); border-color: color-mix(in srgb, var(--good) 55%, transparent); }
+  .act-pill.miss { background: color-mix(in srgb, var(--warning) 22%, transparent); border-color: color-mix(in srgb, var(--warning) 60%, transparent); }
+  .act-pill.none { opacity: 0.3; }
+  .act-detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 24px; }
+  .act-detail-grid h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); margin: 0 0 6px; }
+  .act-detail-grid .row { font-size: 13px; line-height: 1.5; }
+  .act-detail-grid .ex { font-size: 12.5px; line-height: 1.45; color: var(--text-secondary); }
+  .act-detail-grid .ex b { color: var(--text-primary); font-weight: 600; }
+  @media (max-width: 600px) { .act-grid .sess, .act-grid .meta { display: none; } .act-grid .cal-cell { min-height: 64px; } .act-pill { min-width: 0; font-size: 9px; height: 14px; padding: 0 1px; } .act-grid .pills { flex-wrap: wrap; gap: 2px; } }
+  @media (max-width: 600px) { .cal-grid { gap: 3px; } .cal-cell { padding: 4px; min-height: 48px; } .cal-cell .note { display: none; } }
   .cat-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--text-secondary); }
   .cat-legend .sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
   /* Accountability tab's daily card: deliberately its own fixed dark theme (not tied to the
@@ -342,6 +369,7 @@
     <button class="tab-btn" data-tab="training" type="button">Training</button>
     <button class="tab-btn" data-tab="nutrition" type="button">Nutrition</button>
     <button class="tab-btn" data-tab="reward" type="button">Recovery</button>
+    <button class="tab-btn" data-tab="calendar" type="button">Calendar</button>
     
     
     <button id="pdfExportBtn" type="button" style="margin-left:auto;appearance:none;background:var(--surface-1);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);cursor:pointer;font:inherit;font-size:13px;padding:7px 14px;align-self:center;">&darr; Download as PDF</button>
@@ -564,6 +592,24 @@
     </div>
 
     
+  </div>
+
+  <div id="tab-calendar" class="tabpanel pdf-page" hidden>
+    <div class="cal-nav">
+      <button type="button" id="actCalPrev" aria-label="Previous month">‹</button>
+      <span class="label" id="actCalLabel"></span>
+      <button type="button" id="actCalNext" aria-label="Next month">›</button>
+      <span class="sub" id="actCalSummary" style="margin:0 0 0 auto;"></span>
+    </div>
+    <div class="act-legend">
+      <span><span class="act-pill hit">👣</span>steps goal</span>
+      <span><span class="act-pill hit">🍽</span>calories 85–105% of goal + protein ≥ 90%</span>
+      <span><span class="act-pill hit">😴</span>sleep goal</span>
+      <span><span class="act-pill hit">&nbsp;</span>hit</span>
+      <span><span class="act-pill miss">&nbsp;</span>missed</span>
+    </div>
+    <div class="cal-grid act-grid" id="actCalGrid"></div>
+    <div class="card" id="actDayDetail" style="margin-top:16px;"></div>
   </div>
 
   
@@ -1653,6 +1699,84 @@ function expenseCalendarMonth(expensesData, year, month) {
     cells.push({ date: dateStr, day: d.getUTCDate(), inMonth, total, entries });
   }
   return { year, month, cells, monthTotal, categoryTotals };
+}
+
+// Calendar tab's goal rules (2026-10-06). Nutrition counts as hit when calories land within
+// 85-105% of that day's MFP goal (an under-eating day like 1,174/1,900 is a miss, not a win)
+// AND protein reaches 90% of its goal.
+const CAL_KCAL_RANGE = [0.85, 1.05];
+const CAL_PROTEIN_MIN = 0.9;
+
+function activityCalendarMonth(src, year, month) {
+  // Mon-Sun grid for `month` (1-12) of `year` with everything logged per day, for the
+  // Calendar tab. `src` = {workouts, meta, steps, heartRate, runs, nutrition, bodyLog,
+  // supplements, supplementMeta, expenses, photos}; any may be empty (the public build stubs
+  // the private ones). Each cell: {date, day, inMonth, sessions, runs, steps, rhr, nutrition,
+  // body, supplements, expenses, photo, checkin, status: {steps, food, sleep}} where each
+  // status is 'hit' | 'miss' | null (nothing logged). `summary` counts in-month days only.
+  const meta = src.meta || {};
+  const byDate = (arr) => { const m = new Map(); for (const x of arr || []) { if (!m.has(x.d)) m.set(x.d, []); m.get(x.d).push(x); } return m; };
+  const W = byDate(src.workouts), S = byDate(src.steps), H = byDate(src.heartRate), R = byDate(src.runs),
+    N = byDate(src.nutrition), B = byDate(src.bodyLog), SU = byDate(src.supplements), E = byDate(src.expenses),
+    P = byDate((src.photos && src.photos.photos) || []), C = byDate((src.photos && src.photos.checkins) || []);
+  const supLabel = new Map((src.supplementMeta || []).map(s => [s.id, s.label]));
+  const bodyDays = dailyBodyLog(src.bodyLog);
+
+  const kindOf = (w) => {
+    if (isBodyweightSession(w)) return 'bodyweight';
+    if (isStrengthDay(w, meta)) return 'strength';
+    if (w.ex.some(e => e.i === BOXING_EXERCISE_ID)) return 'boxing';
+    return 'cardio';
+  };
+  const describe = (w) => ({
+    title: w.t, kind: kindOf(w),
+    exercises: w.ex.map(e => {
+      const name = (meta[e.i] && meta[e.i].name) || e.i;
+      let detail;
+      if (e.c && (e.c.min || e.c.km)) detail = [e.c.min ? `${e.c.min} min` : '', e.c.km ? `${e.c.km} km` : ''].filter(Boolean).join(' · ');
+      else if (e.s.every(([kg]) => !kg)) detail = `${e.s.length} × ${e.s.map(([, r]) => r).join('/')} reps`;
+      else detail = e.s.map(([kg, r]) => `${kg}×${r}`).join(', ');
+      return { name, detail, note: e.n || '' };
+    }),
+    bodyweightReps: w.ex.filter(e => isBodyweightSession(w) || BODYWEIGHT_ROUTINE_EXERCISE_IDS.has(e.i))
+      .reduce((s, e) => s + e.s.reduce((t, [, r]) => t + (r || 0), 0), 0),
+  });
+
+  const first = new Date(Date.UTC(year, month - 1, 1));
+  const last = new Date(Date.UTC(year, month, 0));
+  const gridStart = new Date(first); gridStart.setUTCDate(1 - (first.getUTCDay() + 6) % 7);
+  const gridEnd = new Date(last); gridEnd.setUTCDate(last.getUTCDate() + (7 - ((last.getUTCDay() + 6) % 7) - 1) % 7);
+  const cells = [];
+  const summary = { sessions: 0, steps: [0, 0], food: [0, 0], sleep: [0, 0] }; // [hit, logged]
+  for (let d = new Date(gridStart); d <= gridEnd; d.setUTCDate(d.getUTCDate() + 1)) {
+    const date = d.toISOString().slice(0, 10);
+    const inMonth = d.getUTCMonth() === month - 1;
+    const sessions = (W.get(date) || []).map(describe);
+    const st = (S.get(date) || [])[0] || null;
+    const nu = (N.get(date) || [])[0] || null;
+    const bo = (B.get(date) || [])[0] || null;
+    const status = {
+      steps: st ? (st.steps >= st.goal ? 'hit' : 'miss') : null,
+      food: nu && nu.calories ? ((nu.calories >= nu.goal * CAL_KCAL_RANGE[0] && nu.calories <= nu.goal * CAL_KCAL_RANGE[1] &&
+        (!nu.proteinGoal || nu.protein >= nu.proteinGoal * CAL_PROTEIN_MIN)) ? 'hit' : 'miss') : null,
+      sleep: bo && bo.sleepMin != null ? (bo.sleepMin >= sleepGoalMin(bodyDays, date) ? 'hit' : 'miss') : null,
+    };
+    if (inMonth) {
+      summary.sessions += sessions.filter(s => s.kind === 'strength' || s.kind === 'boxing').length;
+      for (const k of ['steps', 'food', 'sleep']) if (status[k]) { summary[k][1]++; if (status[k] === 'hit') summary[k][0]++; }
+    }
+    cells.push({
+      date, day: d.getUTCDate(), inMonth, sessions,
+      runs: R.get(date) || [],
+      steps: st, rhr: ((H.get(date) || [])[0] || {}).resting ?? null, nutrition: nu, body: bo,
+      sleepGoal: bo && bo.sleepMin != null ? sleepGoalMin(bodyDays, date) : null,
+      supplements: ((SU.get(date) || [])[0] || { items: [] }).items.map(id => supLabel.get(id) || id),
+      expenses: E.get(date) || [],
+      photo: P.has(date), checkin: C.has(date),
+      status,
+    });
+  }
+  return { year, month, cells, summary };
 }
 
 // ---------- reward mechanism ----------
@@ -3456,6 +3580,118 @@ if (document.getElementById('subtab-expenses')) {
         `<tr><td>${e.date}</td><td>${inr(e.amount)}</td><td>${e.note || '—'}</td></tr>`
       ).join('')
     : `<tr><td colspan="3" style="color:var(--text-muted);">No recovery expenses logged yet.</td></tr>`;
+
+  // Month calendar (Mon-Sun), opens on the current month; each day shows its total + one line per entry's note.
+  const recoveryRows = EXPENSES.filter(e => (e.category || 'other') === REWARD_REDEEM_CATEGORY);
+  const [curY, curM] = latestSyncedDate.split('-').map(Number);
+  let calY = curY, calM = curM;
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const renderExpCal = () => {
+    const cal = expenseCalendarMonth(recoveryRows, calY, calM);
+    document.getElementById('expCalLabel').textContent =
+      new Date(Date.UTC(calY, calM - 1, 1)).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+    document.getElementById('expCalTotal').textContent = cal.monthTotal ? `${inr(cal.monthTotal)} this month` : 'nothing this month';
+    document.getElementById('expCalNext').disabled = calY === curY && calM === curM;
+    document.getElementById('expCalGrid').innerHTML =
+      ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => `<div class="cal-dow">${d}</div>`).join('') +
+      cal.cells.map(c => `<div class="cal-cell${c.inMonth ? '' : ' out'}${c.total ? ' has' : ''}">
+        <div class="d"${c.date === latestSyncedDate ? ' style="color:var(--series-1);font-weight:700;"' : ''}>${c.day}</div>
+        ${c.total ? `<div class="amt">${inr(c.total)}</div>` +
+          c.entries.map(e => `<div class="note" title="${esc(inr(e.amount) + ' · ' + (e.note || ''))}">${esc(e.note || '—')}</div>`).join('') : ''}
+      </div>`).join('');
+  };
+  const shiftMonth = delta => { const t = calY * 12 + (calM - 1) + delta; calY = Math.floor(t / 12); calM = t % 12 + 1; renderExpCal(); };
+  document.getElementById('expCalPrev').addEventListener('click', () => shiftMonth(-1));
+  document.getElementById('expCalNext').addEventListener('click', () => shiftMonth(1));
+  renderExpCal();
+}
+
+// ---------- Calendar tab: everything logged per day (2026-10-06) ----------
+// Month grid built by calc.js's activityCalendarMonth; click a day for its full detail below.
+// Private-only sources (supplements, expenses, photos) are stubbed empty in the public build,
+// so they simply don't appear there.
+{
+  const src = { workouts: WORKOUTS, meta: EXMETA, steps: STEPS, heartRate: HEARTRATE, runs: RUNS, nutrition: NUTRITION,
+    bodyLog: BODYLOG, supplements: SUPPLEMENTS, supplementMeta: SUPPLEMENT_META, expenses: EXPENSES, photos: PHOTOS };
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const inr = n => '₹' + Math.round(n).toLocaleString('en-IN');
+  const hm = m => `${Math.floor(m / 60)}h${String(Math.round(m % 60)).padStart(2, '0')}`;
+  const k = n => n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n);
+  const [curY, curM] = latestSyncedDate.split('-').map(Number);
+  let calY = curY, calM = curM, selected = addDaysISO(latestSyncedDate, -1), cal = null;
+
+  const pill = (st, icon, title) => `<span class="act-pill ${st || 'none'}" title="${title}">${icon}</span>`;
+  const cellHtml = c => {
+    const future = c.date > latestSyncedDate;
+    const main = c.sessions.filter(s => s.kind === 'strength' || s.kind === 'boxing');
+    const icons = [
+      c.sessions.some(s => s.exercises.some(e => e.name === 'Rowing Machine')) ? '🚣' : '',
+      c.runs.length ? '🏃' : '',
+      c.sessions.some(s => s.kind === 'bodyweight') ? '🤸' : '',
+      c.sessions.some(s => s.kind === 'cardio') ? '❤️' : '',
+      c.supplements.length ? '💊' : '',
+      c.expenses.length ? '₹' : '',
+      c.checkin ? '📸' : (c.photo ? '📷' : ''),
+    ].join('');
+    const meta = [c.steps ? `${k(c.steps.steps)} steps` : '', c.body && c.body.weightKg ? `${c.body.weightKg} kg` : ''].filter(Boolean).join(' · ');
+    return `<div class="cal-cell${c.inMonth ? '' : ' out'}${future ? ' future' : ''}${c.date === selected ? ' sel' : ''}" data-date="${c.date}">
+      <div class="top"><span class="d"${c.date === latestSyncedDate ? ' style="color:var(--series-1);font-weight:700;"' : ''}>${c.day}</span><span class="icons">${icons}</span></div>
+      ${main.map(s => `<div class="sess ${s.kind}" title="${esc(s.title)}">${esc(s.title)}</div>`).join('')}
+      ${meta ? `<div class="meta">${meta}</div>` : ''}
+      ${future ? '' : `<div class="pills">${pill(c.status.steps, '👣', 'steps')}${pill(c.status.food, '🍽', 'nutrition')}${pill(c.status.sleep, '😴', 'sleep')}</div>`}
+    </div>`;
+  };
+
+  const detailHtml = c => {
+    const blocks = [];
+    const train = c.sessions.map(s => `<div class="row"><b>${esc(s.title)}</b>${s.kind === 'bodyweight' && s.bodyweightReps ? ` — ${s.bodyweightReps} reps` : ''}</div>` +
+      s.exercises.map(e => `<div class="ex"><b>${esc(e.name)}</b> ${esc(e.detail)}${e.note ? ` <i>(${esc(e.note)})</i>` : ''}</div>`).join(''));
+    const runs = c.runs.map(r => `<div class="row">🏃 Run ${r.km} km in ${Math.round(r.min)} min (${(p => `${Math.floor(p)}:${String(Math.round((p % 1) * 60)).padStart(2, '0')}`)(r.min / r.km)} /km)${r.avgHR ? ` · avg HR ${r.avgHR}` : ''}</div>`);
+    blocks.push(`<div><h3>Training</h3>${train.concat(runs).join('<div style="height:8px"></div>') || '<div class="row" style="color:var(--text-muted)">Rest day</div>'}</div>`);
+    const act = [];
+    if (c.steps) act.push(`<div class="row">👣 ${c.steps.steps.toLocaleString('en-IN')} / ${c.steps.goal.toLocaleString('en-IN')} steps</div>`);
+    if (c.rhr != null) act.push(`<div class="row">❤️ Resting HR ${c.rhr}</div>`);
+    if (act.length) blocks.push(`<div><h3>Activity</h3>${act.join('')}</div>`);
+    if (c.nutrition) { const n = c.nutrition; blocks.push(`<div><h3>Nutrition</h3>
+      <div class="row">${n.calories} / ${n.goal} kcal</div>
+      <div class="row">Protein ${n.protein} / ${n.proteinGoal} g</div>
+      <div class="row">Carbs ${n.carbs} / ${n.carbsGoal} g · Fat ${n.fat} / ${n.fatGoal} g</div></div>`); }
+    if (c.body) { const b = c.body; blocks.push(`<div><h3>Body (morning)</h3>
+      ${b.weightKg != null ? `<div class="row">Weight ${b.weightKg} kg</div>` : ''}
+      ${b.bodyFatPct != null ? `<div class="row">Body fat ${b.bodyFatPct}%</div>` : ''}
+      ${b.sleepMin != null ? `<div class="row">Sleep ${hm(b.sleepMin)} (goal ${hm(c.sleepGoal)})</div>` : ''}</div>`); }
+    if (c.supplements.length) blocks.push(`<div><h3>Supplements</h3>${c.supplements.map(s => `<div class="row">${esc(s)}</div>`).join('')}</div>`);
+    if (c.expenses.length) blocks.push(`<div><h3>Recovery spend</h3>${c.expenses.map(e => `<div class="row">${inr(e.amount)}${e.note ? ` — ${esc(e.note)}` : ''}</div>`).join('')}</div>`);
+    if (c.photo || c.checkin) blocks.push(`<div><h3>Photos</h3><div class="row">${c.checkin ? '📸 Winter arc check-in (4 views)' : '📷 Progress photo'}</div></div>`);
+    const title = new Date(c.date + 'T00:00:00Z').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+    return `<h2 style="margin:0 0 12px;">${title}</h2><div class="act-detail-grid">${blocks.join('')}</div>`;
+  };
+
+  const render = () => {
+    cal = activityCalendarMonth(src, calY, calM);
+    document.getElementById('actCalLabel').textContent =
+      new Date(Date.UTC(calY, calM - 1, 1)).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+    const s = cal.summary, frac = ([h, n]) => n ? `${h}/${n}` : '—';
+    document.getElementById('actCalSummary').textContent =
+      `${s.sessions} session${s.sessions === 1 ? '' : 's'} · steps ${frac(s.steps)} · food ${frac(s.food)} · sleep ${frac(s.sleep)}`;
+    document.getElementById('actCalNext').disabled = calY === curY && calM === curM;
+    document.getElementById('actCalGrid').innerHTML =
+      ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => `<div class="cal-dow">${d}</div>`).join('') + cal.cells.map(cellHtml).join('');
+    const selCell = cal.cells.find(c => c.date === selected);
+    document.getElementById('actDayDetail').innerHTML = selCell ? detailHtml(selCell) : '<p class="sub" style="margin:0;">Click a day to see everything logged.</p>';
+  };
+  document.getElementById('actCalGrid').addEventListener('click', ev => {
+    const el = ev.target.closest('.cal-cell');
+    if (!el || el.classList.contains('future')) return;
+    selected = el.dataset.date;
+    const [y, m] = selected.split('-').map(Number);
+    if (y !== calY || m !== calM) { calY = y; calM = m; }
+    render();
+  });
+  const shift = d => { const t = calY * 12 + (calM - 1) + d; calY = Math.floor(t / 12); calM = t % 12 + 1; render(); };
+  document.getElementById('actCalPrev').addEventListener('click', () => shift(-1));
+  document.getElementById('actCalNext').addEventListener('click', () => shift(1));
+  render();
 }
 
 // ---------- training log card ----------
