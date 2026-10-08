@@ -76,6 +76,13 @@
   .masthead-row { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px; }
   .page-masthead { padding-bottom: 18px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
   .page-masthead h1 { font-family: 'IBM Plex Serif', serif; font-weight: 500; font-size: 30px; margin: 4px 0 0; }
+  /* Motto banner (2026-10-07, user request): big, above the tabs so it shows on every tab. */
+  .motto { margin: 6px 0 26px; padding: 22px 0 24px; border-bottom: 1px solid var(--border); text-align: center; }
+  .motto blockquote { margin: 0; font-family: 'IBM Plex Serif', serif; font-weight: 600; line-height: 1.05;
+    font-size: clamp(32px, 7vw, 76px); letter-spacing: .06em; color: var(--text-primary); }
+  .motto blockquote::before, .motto blockquote::after { color: var(--series-2); font-weight: 500; }
+  .motto blockquote::before { content: '“'; margin-right: .08em; }
+  .motto blockquote::after { content: '”'; margin-left: .04em; }
   .mark {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 12px; letter-spacing: 0.06em; color: var(--series-2); margin-bottom: 4px;
@@ -391,6 +398,8 @@
       <span class="day" id="mastheadDay"></span>
     </div>
   </header>
+
+  <div class="motto"><blockquote>TRUST THE PROCESS</blockquote></div>
 
   <div class="tabs" role="tablist">
     <button class="tab-btn active" data-tab="overview" type="button">Overview</button>
