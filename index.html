@@ -658,7 +658,7 @@
 
 <script>
 const WORKOUTS = [
-{"d": "2026-10-08", "t": "Bodyweight Routine", "ex": [{"i": "0222DB42", "s": [[0, 0]], "c": {"min": 12, "km": 2.62}}, {"i": "09C9F635", "s": [[0, 20], [0, 20], [0, 20], [0, 20], [0, 20]]}, {"i": "B9380898", "s": [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]], "c": {"min": 3, "km": 0.0}}]},
+{"d": "2026-10-08", "t": "Bodyweight Routine", "ex": [{"i": "0222DB42", "s": [[0, 0]], "c": {"min": 12, "km": 2.62}}, {"i": "09C9F635", "s": [[0, 20], [0, 20], [0, 20], [0, 20], [0, 20]]}, {"i": "B9380898", "s": [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]], "c": {"min": 3, "km": 0.0}}, {"i": "4F5866F8", "s": [[0, 15], [0, 15], [0, 15]]}]},
 {"d": "2026-10-08", "t": "Back", "ex": [{"i": "BC3492DA", "s": [[40, 15], [60, 10], [65, 10]]}, {"i": "D2387AB1", "s": [[25, 15], [30, 15], [35, 10]]}, {"i": "91FAFBA3", "s": [[15, 20], [20, 20], [25, 15]]}, {"i": "F1E57334", "s": [[30, 15], [40, 15], [45, 10]], "n": "Each side"}]},
 {"d": "2026-10-07", "t": "Bodyweight Routine", "ex": [{"i": "6BE68B62", "s": [[0, 20], [0, 20], [0, 20], [0, 20], [0, 20]], "n": "Tuck In"}]},
 {"d": "2026-10-07", "t": "Quads & Triceps", "ex": [{"i": "3D0C7C75", "s": [[40, 15], [50, 10], [50, 15]]}, {"i": "B537D09F", "s": [[20, 20], [20, 20], [20, 20]]}, {"i": "75A4F6C4", "s": [[35, 10], [45, 10], [50, 10]]}, {"i": "629AE73D", "s": [[10, 20], [10, 20], [10, 20]]}, {"i": "C7973E0E", "s": [[200, 15], [250, 15], [300, 10]]}, {"i": "68F8A292", "s": [[10, 30], [15, 15], [15, 15], [10, 15], [10, 15]], "n": "Each hand cross + straight"}, {"i": "CDC472B1", "s": [[20, 10], [25, 10], [30, 10]]}, {"i": "93A552C6", "s": [[20, 15], [25, 15], [30, 5], [25, 5], [20, 5], [15, 5]]}, {"i": "10347BAC", "s": [[45, 10], [50, 10], [55, 10]]}, {"i": "6127A3AD", "s": [[10, 20], [10, 20], [10, 20]]}]},
@@ -1015,10 +1015,11 @@ const EXMETA = {
 "629AE73D":{"name": "Single Leg Extensions", "primary": "quadriceps"},
 "10347BAC":{"name": "Triceps Dip (Weighted)", "primary": "triceps"},
 "B9380898":{"name": "Dead Hang", "primary": "upper_back"},
-"91FAFBA3":{"name": "Iso-Lateral Low Row", "primary": "upper_back"}
+"91FAFBA3":{"name": "Iso-Lateral Low Row", "primary": "upper_back"},
+"4F5866F8":{"name": "Back Extension (Hyperextension)", "primary": "lower_back", "bodyweight": true}
 };
 const STEPS = [
-{"d": "2026-10-08", "steps": 3791, "goal": 12210},
+{"d": "2026-10-08", "steps": 12138, "goal": 12210},
 {"d": "2026-10-07", "steps": 12451, "goal": 12140},
 {"d": "2026-10-06", "steps": 13453, "goal": 11990},
 {"d": "2026-10-05", "steps": 7047, "goal": 13220},
@@ -1110,7 +1111,7 @@ const STEPS = [
 {"d": "2026-07-11", "steps": 10238, "goal": 5590}
 ];
 const HEARTRATE = [
-{"d": "2026-10-08", "resting": 48, "min": 41, "max": 127},
+{"d": "2026-10-08", "resting": 48, "min": 41, "max": 142},
 {"d": "2026-10-07", "resting": 51, "min": 47, "max": 124},
 {"d": "2026-10-06", "resting": 52, "min": 46, "max": 132},
 {"d": "2026-10-05", "resting": 49, "min": 44, "max": 99},
@@ -1206,6 +1207,7 @@ const RUNS = [
 {"d": "2026-10-02", "km": 5.04, "min": 38.7, "avgHR": 146, "maxHR": 163, "cadence": 160, "elev": 8}
 ];
 const NUTRITION = [
+{"d": "2026-10-08", "calories": 1751, "goal": 1900, "protein": 196, "proteinGoal": 190, "carbs": 153, "carbsGoal": 166, "fat": 39, "fatGoal": 53},
 {"d": "2026-10-07", "calories": 1529, "goal": 1900, "protein": 165, "proteinGoal": 190, "carbs": 179, "carbsGoal": 166, "fat": 19, "fatGoal": 53},
 {"d": "2026-10-06", "calories": 1899, "goal": 1900, "protein": 200, "proteinGoal": 190, "carbs": 192, "carbsGoal": 166, "fat": 37, "fatGoal": 53},
 {"d": "2026-10-05", "calories": 1800, "goal": 1900, "protein": 163, "proteinGoal": 190, "carbs": 184, "carbsGoal": 166, "fat": 50, "fatGoal": 53},
