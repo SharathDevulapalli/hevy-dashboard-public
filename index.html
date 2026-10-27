@@ -658,6 +658,8 @@
 
 <script>
 const WORKOUTS = [
+{"d": "2026-10-27", "t": "Bodyweight Routine", "ex": [{"i": "DCF3B31B", "s": [[0, 25], [0, 25]]}, {"i": "D928C232", "s": [[5, 25], [5, 25]]}]},
+{"d": "2026-10-27", "t": "Quads & Triceps", "ex": [{"i": "0F24286A", "s": [[20, 16], [20, 20], [25, 16]], "n": "With Plate"}, {"i": "CC35A01F", "s": [[120, 15], [160, 10], [200, 10]]}, {"i": "75A4F6C4", "s": [[25, 20], [35, 20], [45, 20]]}, {"i": "C7973E0E", "s": [[150, 15], [200, 15], [250, 10]]}, {"i": "94B7239B", "s": [[25, 15], [30, 15], [35, 10]]}, {"i": "8B5BED30", "s": [[25, 15], [30, 15], [35, 10]]}, {"i": "B5EFBF9C", "s": [[25, 15], [30, 15], [35, 10]]}, {"i": "EC3B69A3", "s": [[10, 15], [10, 15], [10, 15]], "n": "Each side"}, {"i": "4B4BF8C2", "s": [[50, 15], [55, 15], [55, 10]]}]},
 {"d": "2026-10-26", "t": "Bodyweight Routine", "ex": [{"i": "392887AA", "s": [[0, 20], [0, 10], [0, 10], [0, 10]]}, {"i": "E9E4089F", "s": [[30, 10], [30, 10], [30, 10]]}]},
 {"d": "2026-10-26", "t": "Chest & Shoulders", "ex": [{"i": "DA0F0470", "s": [[20, 15], [30, 12], [40, 12]]}, {"i": "651F844C", "s": [[18, 20], [21, 15], [24, 10], [18, 10]]}, {"i": "7EB3F7C3", "s": [[10, 15], [20, 15], [30, 10]]}, {"i": "07B38369", "s": [[30, 10], [35, 10], [40, 10]]}, {"i": "67280085", "s": [[45, 10], [60, 10], [60, 10]]}, {"i": "8293E554", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "422B08F1", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "E5988A0A", "s": [[10, 15], [10, 15], [10, 15]]}, {"i": "ABEC557F", "s": [[40, 10], [50, 10], [60, 10]]}]},
 {"d": "2026-10-23", "t": "Bodyweight Routine", "ex": [{"i": "DCF3B31B", "s": [[0, 25], [0, 25]]}, {"i": "D928C232", "s": [[5, 25], [5, 25]]}]},
@@ -1037,9 +1039,11 @@ const EXMETA = {
 "0F24286A":{"name": "Bulgarian Split Squat (Barbell)", "primary": "quadriceps"},
 "8B5BED30":{"name": "Reverse Grip Triceps Pushdown", "primary": "triceps"},
 "091737FA":{"name": "Back Extension (Weighted Hyperextension)", "primary": "lower_back"},
-"3303376C":{"name": "Elliptical Trainer", "primary": "cardio"}
+"3303376C":{"name": "Elliptical Trainer", "primary": "cardio"},
+"EC3B69A3":{"name": "Triceps Kickback (Cable)", "primary": "triceps"}
 };
 const STEPS = [
+{"d": "2026-10-27", "steps": 8624, "goal": 13460},
 {"d": "2026-10-26", "steps": 14889, "goal": 13100},
 {"d": "2026-10-25", "steps": 13139, "goal": 13090},
 {"d": "2026-10-24", "steps": 12719, "goal": 13180},
@@ -1149,6 +1153,7 @@ const STEPS = [
 {"d": "2026-07-11", "steps": 10238, "goal": 5590}
 ];
 const HEARTRATE = [
+{"d": "2026-10-27", "resting": 52, "min": 47, "max": 126},
 {"d": "2026-10-26", "resting": 48, "min": 44, "max": 124},
 {"d": "2026-10-25", "resting": 54, "min": 49, "max": 101},
 {"d": "2026-10-24", "resting": 52, "min": 46, "max": 96},
@@ -1264,6 +1269,7 @@ const RUNS = [
 {"d": "2026-10-02", "km": 5.04, "min": 38.7, "avgHR": 146, "maxHR": 163, "cadence": 160, "elev": 8}
 ];
 const NUTRITION = [
+{"d": "2026-10-27", "calories": 1184, "goal": 1900, "protein": 127, "proteinGoal": 190, "carbs": 127, "carbsGoal": 166, "fat": 18, "fatGoal": 53},
 {"d": "2026-10-26", "calories": 1593, "goal": 1900, "protein": 125, "proteinGoal": 190, "carbs": 144, "carbsGoal": 166, "fat": 63, "fatGoal": 53},
 {"d": "2026-10-23", "calories": 955, "goal": 1900, "protein": 101, "proteinGoal": 190, "carbs": 76, "carbsGoal": 166, "fat": 30, "fatGoal": 53},
 {"d": "2026-10-22", "calories": 1781, "goal": 1900, "protein": 193, "proteinGoal": 190, "carbs": 132, "carbsGoal": 166, "fat": 54, "fatGoal": 53},
