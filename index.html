@@ -122,6 +122,9 @@
   table.tv th, table.tv td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
   table.tv th { color: var(--text-muted); font-weight: 500; }
   table.tv-aligned { table-layout: fixed; }
+  th[data-sort] { cursor: pointer; user-select: none; }
+  th[data-sort]:hover { color: var(--text); }
+  th[data-sort] .sort-ind { font-size: 10px; margin-left: 3px; color: var(--text-muted); }
   .vol-win { display: block; font-weight: 400; font-size: 10.5px; color: var(--text-muted); }
   tr.vol-group-row td { font-weight: 600; font-size: 12px; color: var(--text-secondary); padding-top: 14px; border-bottom: 1px solid var(--text-muted); }
   ul.vol-insights { margin: 4px 0 14px; padding-left: 0; list-style: none; font-size: 13px; line-height: 1.6; }
@@ -563,14 +566,27 @@
             </div>
           </div>
           <div>
-            <h3 style="font-size:14px;margin:0 0 8px;">Boxing</h3>
+            <h3 style="font-size:14px;margin:0 0 8px;">Running</h3>
             <div class="card">
-              <div id="boxingSummary" style="margin-bottom:12px;"></div>
-              <div id="boxingChart"></div>
+              <div id="runSummary" style="margin-bottom:12px;"></div>
+              <div id="runChart"></div>
               <details class="tableview"><summary>Table view</summary>
                 <table class="tv">
-                  <thead><tr><th>Date</th><th>Duration</th><th>Notes</th></tr></thead>
-                  <tbody id="boxingTable"></tbody>
+                  <thead><tr><th>Date</th><th>Distance</th><th>Duration</th><th>Pace</th><th>Avg HR</th><th>Cadence</th><th>Verdict</th></tr></thead>
+                  <tbody id="runTable"></tbody>
+                </table>
+              </details>
+            </div>
+          </div>
+          <div>
+            <h3 style="font-size:14px;margin:0 0 8px;">Cross Train</h3>
+            <div class="card">
+              <div id="crossTrainSummary" style="margin-bottom:12px;"></div>
+              <div id="crossTrainChart"></div>
+              <details class="tableview"><summary>Table view</summary>
+                <table class="tv">
+                  <thead><tr><th>Date</th><th>Machine</th><th>Duration</th><th>Distance</th><th>Notes</th></tr></thead>
+                  <tbody id="crossTrainTable"></tbody>
                 </table>
               </details>
             </div>
@@ -589,14 +605,14 @@
             </div>
           </div>
           <div>
-            <h3 style="font-size:14px;margin:0 0 8px;">Running</h3>
+            <h3 style="font-size:14px;margin:0 0 8px;">Boxing</h3>
             <div class="card">
-              <div id="runSummary" style="margin-bottom:12px;"></div>
-              <div id="runChart"></div>
+              <div id="boxingSummary" style="margin-bottom:12px;"></div>
+              <div id="boxingChart"></div>
               <details class="tableview"><summary>Table view</summary>
                 <table class="tv">
-                  <thead><tr><th>Date</th><th>Distance</th><th>Duration</th><th>Pace</th><th>Avg HR</th><th>Cadence</th><th>Verdict</th></tr></thead>
-                  <tbody id="runTable"></tbody>
+                  <thead><tr><th>Date</th><th>Duration</th><th>Notes</th></tr></thead>
+                  <tbody id="boxingTable"></tbody>
                 </table>
               </details>
             </div>
@@ -1554,6 +1570,22 @@ function cardioDurationSessions(workouts, id) {
   return sessions;
 }
 
+function crossTrainSessions(workouts, meta) {
+  // date-ascending {date, id, name, min, km, note} for cross-training machines (Elliptical,
+  // Cycling, Treadmill, ...): any cardio-primary exercise except the ones with their own card
+  // (Rowing, Boxing) and HIIT (logged as a warm-up tag, not a machine). Old entries without
+  // a `c` field still show up, with null min/km.
+  const sessions = [];
+  for (const w of workouts) {
+    for (const e of w.ex) {
+      const m = meta[e.i] || {};
+      if (m.primary !== 'cardio' || CROSS_TRAIN_EXCLUDED_IDS.has(e.i)) continue;
+      sessions.push({ date: w.d, id: e.i, name: m.name || e.i, min: e.c ? e.c.min : null, km: e.c && e.c.km > 0 ? e.c.km : null, note: e.n || '' });
+    }
+  }
+  return sessions.sort((a, b) => a.date.localeCompare(b.date));
+}
+
 function bodyweightRoutineSessions(workouts, ids, meta) {
   // date-ascending {date, totalReps, exercises: [{id, name, reps}], verdict} — cardio-style
   // tracking (like cardioDurationSessions above) for the Bodyweight Routine exercises in
@@ -1895,6 +1927,8 @@ const REWARD_REDEEM_CATEGORY = 'recovery';
 const REWARD_START_DATE = '2026-08-02'; // the mechanism itself started here — weeks/redemptions before it aren't scored
 const ROWING_EXERCISE_ID = '0222DB42'; // Rowing Machine — tracked (see cardioSessions) but, like ab work, doesn't count toward total-workout or reward minimums
 const BOXING_EXERCISE_ID = 'A0D8FA1B'; // the only cardio exercise trainingLogSession shows on the Accountability card — see its own exclusion note
+const HIIT_EXERCISE_ID = '023947AB';
+const CROSS_TRAIN_EXCLUDED_IDS = new Set([ROWING_EXERCISE_ID, BOXING_EXERCISE_ID, HIIT_EXERCISE_ID]); // own cards / warm-up tag - see crossTrainSessions
 
 // Exercise ids for the "Bodyweight Routine" warm-up/mobility work (added 2026-08-24; Hevy
 // session titled "Morning Routine" is just what the user happens to name it there — the
@@ -3101,8 +3135,28 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
     : r.arcN > 0 ? `<span class="badge baseline">new</span>`
     : r.recentN > 0 ? `<span class="badge baseline">not yet</span>` : '—';
   // sections: [[heading or null, rows], ...] — rendered as one table so columns stay aligned.
+  // Click-to-sort headers (2026-10-28 user request): click = sort by that column (numbers
+  // high→low, names A→Z), click again = reverse, third click = back to the default muscle
+  // order. Sorts within each section (weighted / bodyweight); empty values always last.
+  const VOL_SORT_KEYS = ['name', 'baseAvg', 'baseN', 'recentAvg', 'recentN', 'deltaPct', 'arcAvg', 'arcN', 'arcDeltaPct', 'maxWeight'];
+  let volSort = null; // {key, dir: 1 | -1}
+  const applyVolSort = rows => {
+    if (!volSort) return rows;
+    const { key, dir } = volSort;
+    const val = r => { const v = r[key]; return key.endsWith('N') && !v ? null : v; };
+    return rows.slice().sort((a, b) => {
+      const va = val(a), vb = val(b);
+      if (va == null || vb == null) return (va == null) - (vb == null);
+      return (typeof va === 'string' ? va.localeCompare(vb) : va - vb) * dir;
+    });
+  };
+  const sortTh = (i, html) => {
+    const key = VOL_SORT_KEYS[i];
+    const ind = volSort && volSort.key === key ? (volSort.dir === 1 ? '▲' : '▼') : '⇅';
+    return `<th data-sort="${key}" title="Sort by this column">${html}<span class="sort-ind">${ind}</span></th>`;
+  };
   const rowsToTable = sections => {
-    const trs = sections.filter(([, rows]) => rows.length).map(([heading, rows]) => (heading ? groupRow(heading) : '') + rows.map(r => {
+    const trs = sections.filter(([, rows]) => rows.length).map(([heading, rows]) => (heading ? groupRow(heading) : '') + applyVolSort(rows).map(r => {
       let statusCell;
       if (r.deltaPct != null) {
         statusCell = `<span class="badge ${r.deltaPct >= 0 ? 'progress' : 'surplus'}">${fmtPct(r.deltaPct)}</span>`;
@@ -3114,7 +3168,8 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
       const oneRM = r.maxWeight != null ? `${r.maxWeight} kg` : '—';
       return `<tr><td>${r.name}</td><td>${fmtVol(r.baseAvg)}</td><td>${r.baseN || '—'}</td><td>${fmtVol(r.recentAvg)}</td><td>${r.recentN || '—'}</td><td>${statusCell}</td><td>${fmtVol(r.arcAvg)}</td><td>${r.arcN || '—'}</td><td>${arcCell(r)}</td><td>${oneRM}</td></tr>`;
     }).join('')).join('');
-    return `<table class="tv tv-aligned">${VOL_COLGROUP}<thead><tr><th>Exercise</th><th>${baseTh('Baseline avg')}</th><th>N</th><th>${recentTh('Recent avg')}</th><th>N</th><th>Recent vs baseline</th><th>${arcTh('Winter Arc avg')}</th><th>N</th><th>Winter Arc vs recent</th><th>Max weight (all-time)</th></tr></thead><tbody>${trs}</tbody></table>`;
+    const heads = ['Exercise', baseTh('Baseline avg'), 'N', recentTh('Recent avg'), 'N', 'Recent vs baseline', arcTh('Winter Arc avg'), 'N', 'Winter Arc vs recent', 'Max weight (all-time)'];
+    return `<table class="tv tv-aligned">${VOL_COLGROUP}<thead><tr>${heads.map((h, i) => sortTh(i, h)).join('')}</tr></thead><tbody>${trs}</tbody></table>`;
   };
 
   // Rowing has no weight/reps, so it can't join the volume table — shown as its own
@@ -3143,11 +3198,24 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
      <table class="tv tv-aligned">${VOL_COLGROUP}<thead><tr><th>Exercise</th><th>${baseTh('Baseline pace')}</th><th>N</th><th>${recentTh('Recent pace')}</th><th>N</th><th>Recent vs baseline</th><th>${arcTh('Winter Arc pace')}</th><th>N</th><th>Winter Arc vs recent</th><th></th></tr></thead>
      <tbody><tr><td>Rowing Machine</td><td>${fmtPace(rowingBaseAvgPace)}</td><td>${rowingCoreBase.length || '—'}</td><td>${fmtPace(rowingRecentAvgPace)}</td><td>${rowingCoreRecent.length || '—'}</td><td>${rowingPaceBadge}</td><td>${fmtPace(rowingArcAvgPace)}</td><td>${rowingCoreArc.length || '—'}</td><td>${rowingArcBadge}</td><td></td></tr></tbody></table>`;
 
-  document.getElementById('volumeLogTables').innerHTML =
-    `<div class="day-section">${rowsToTable([
-      [null, weightedRows],
-      ['Bodyweight &mdash; volume is total reps', bwRows],
-    ])}${rowingPanelHtml}</div>`;
+  const volTablesEl = document.getElementById('volumeLogTables');
+  const renderVolTables = () => {
+    volTablesEl.innerHTML =
+      `<div class="day-section">${rowsToTable([
+        [null, weightedRows],
+        ['Bodyweight &mdash; volume is total reps', bwRows],
+      ])}${rowingPanelHtml}</div>`;
+  };
+  volTablesEl.addEventListener('click', ev => {
+    const th = ev.target.closest('th[data-sort]');
+    if (!th) return;
+    const key = th.dataset.sort;
+    if (!volSort || volSort.key !== key) volSort = { key, dir: key === 'name' ? 1 : -1 };
+    else if (volSort.dir === (key === 'name' ? 1 : -1)) volSort.dir *= -1;
+    else volSort = null;
+    renderVolTables();
+  });
+  renderVolTables();
 }
 
 // ---------- rowing machine cardio trend ----------
@@ -3245,6 +3313,44 @@ const MUSCLE_LABEL = { chest:'Chest', shoulders:'Shoulders', lats:'Lats', upper_
         : `<span class="badge baseline">baseline</span>`;
       return `<tr><td>${r.date}</td><td>${r.km} km</td><td>${mmss(r.min)}</td><td>${mmss(r.paceMinPerKm)} /km</td><td>${r.avgHR ?? '—'}</td><td>${r.cadence ? r.cadence + ' spm' : '—'}</td><td>${badge}</td></tr>`;
     }).join('');
+  }
+}
+
+// ---------- cross-train cardio trend (Elliptical, Cycling, Treadmill, ... from Hevy) ----------
+{
+  const cross = crossTrainSessions(WORKOUTS, EXMETA);
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  if (cross.length === 0) {
+    document.getElementById('crossTrainChart').innerHTML = '<p class="sub">No cross-training sessions logged yet.</p>';
+  } else {
+    const latest = cross[cross.length - 1];
+    document.getElementById('crossTrainSummary').innerHTML = `<span class="badge baseline">${esc(latest.name)}</span><span style="color:var(--text-muted);font-size:12px;margin-left:8px;">${latest.date}${latest.min != null ? ` &middot; ${latest.min} min` : ''}${latest.km != null ? ` &middot; ${latest.km} km` : ''}</span>`;
+    const timed = cross.filter(r => r.min != null);
+    const w = 1000, h = 140, pad = 28;
+    const svg = svgEl('svg', { width: '100%', height: h, viewBox: `0 0 ${w} ${h}`, preserveAspectRatio: 'none' });
+    const max = Math.max(...timed.map(r => r.min), 1);
+    const bw = Math.min((w - 2*pad) / Math.max(timed.length, 1), 80);
+    for (let g = 0; g <= 4; g++) {
+      const gy = pad + (h - 2*pad) * (1 - g/4);
+      svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: gy, y2: gy, class: 'gridline' }));
+    }
+    timed.forEach((r, i) => {
+      const bh = (r.min / max) * (h - 2*pad);
+      const rect = svgEl('rect', { x: pad + i*bw + 1, y: h - pad - bh, width: Math.max(bw-2,1), height: Math.max(bh,0), fill: 'var(--series-1)', rx: 2 });
+      const title = svgEl('title', {});
+      title.textContent = `${r.date}: ${r.name} — ${r.min} min${r.km != null ? ', ' + r.km + ' km' : ''}`;
+      rect.appendChild(title);
+      svg.appendChild(rect);
+    });
+    svg.appendChild(svgEl('line', { x1: pad, x2: w-pad, y1: h-pad, y2: h-pad, class: 'axisline' }));
+    const crossMin = meanOf(timed.filter(r => inThisWeek(r.date)).map(r => r.min));
+    addWeekAvgLine(document.getElementById('crossTrainChart'), svg, { w, h, pad, max, value: crossMin,
+      label: crossMin == null ? '' : `${Math.round(crossMin)} min/session` });
+    document.getElementById('crossTrainChart').appendChild(svg);
+
+    document.getElementById('crossTrainTable').innerHTML = cross.slice().reverse().map(r =>
+      `<tr><td>${r.date}</td><td>${esc(r.name)}</td><td>${r.min != null ? r.min + ' min' : '—'}</td><td>${r.km != null ? r.km + ' km' : '—'}</td><td>${esc(r.note) || '—'}</td></tr>`
+    ).join('');
   }
 }
 
