@@ -2612,15 +2612,20 @@ function trainingLogCard(workouts, meta, bodyLogData, stepsData, today) {
 }
 
 const WEEKLY_SESSION_TARGET = 4; // strength or Boxing sessions per Mon-Sun week (Strength/Strength-Boxing x2 split)
-const WEEKLY_DAYS_HIT_TARGET = 5; // steps / 100-bodyweight-rep days per full week that count as "hit" in the weekly flow
+// Minimum "hit" days per Mon-Sun week in the weekly flow (BW lowered 5 -> 3 and runs added
+// 2026-10-29, user request). The Overview shows each count out of its own target, not out of 7.
+const WEEKLY_STEP_DAYS_TARGET = 5;
+const WEEKLY_BW_DAYS_TARGET = 3;
+const WEEKLY_RUN_DAYS_TARGET = 3;
 
 function weeklyFlow(src, weekStarts) {
   // Overview's Inputs -> Process -> Results numbers (2026-10-06), one object per Mon-start week:
   //   inputs:  kcal / kcalGoal (avg per logged day), protein / proteinGoal (avg), sleepMin (avg)
-  //   process: sessions (strength or Boxing), stepsHit / stepsDays, bwHit / bwDays (>=100 reps)
+  //   process: sessions (strength or Boxing), stepsHit / stepsDays, bwHit / bwDays (>=100 reps),
+  //            runHit (distinct outdoor-run dates from runs.json)
   //   results: fatPct, weightKg (weekly avgs), lifts {up, down, flat} = every strength exercise
   //            logged that week vs its own previous session (weeklySnapshot's rule)
-  // `src` = {workouts, meta, steps, nutrition, bodyLog}. Missing data stays null, never 0.
+  // `src` = {workouts, meta, steps, nutrition, bodyLog, runs}. Missing data stays null, never 0.
   const meta = src.meta || {};
   const mean = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
   const inWeek = (d, wk) => d >= wk && d <= addDaysISO(wk, 6);
@@ -2653,6 +2658,7 @@ function weeklyFlow(src, weekStarts) {
       sessions: new Set(wkWorkouts.filter(w => isStrengthDay(w, meta) || w.ex.some(e => e.i === BOXING_EXERCISE_ID)).map(w => w.d + '|' + w.t)).size,
       stepsHit: steps.filter(s => s.steps >= s.goal).length, stepsDays: steps.length,
       bwHit: new Set(bw.filter(r => inWeek(r.date, wk) && r.totalReps >= 100).map(r => r.date)).size,
+      runHit: new Set((src.runs || []).filter(r => r.km > 0 && inWeek(r.d, wk)).map(r => r.d)).size,
       fatPct: mean(pick(bodyW, b => b.bodyFatPct)), weightKg: mean(pick(bodyW, b => b.weightKg)),
       lifts,
     };
@@ -4221,13 +4227,13 @@ function weeklyLineChart(chartId, tableId, weeks, { fmt, label, betterDown = tru
 // Three stage panels for this week (results measured over 4 weeks, since they lag the inputs),
 // then the same rows week by week so a column reads cause -> effect. Numbers come from
 // calc.js's weeklyFlow; hit rules are the dashboard-wide ones (nutritionHit, sleepGoalMin,
-// WEEKLY_SESSION_TARGET, WEEKLY_DAYS_HIT_TARGET). Body-fat/weight "good" = down (cutting).
+// WEEKLY_SESSION_TARGET, WEEKLY_STEP/BW/RUN_DAYS_TARGET). Body-fat/weight "good" = down (cutting).
 {
   const wk = isoWeekStart(currentWeekAnchor);
   document.getElementById('ovWeekLabel').textContent = `This week · ${wk} to ${addDaysISO(wk, 6)}`;
   const N_WEEKS = 9;
   const weeks = Array.from({ length: N_WEEKS }, (_, i) => addDaysISO(wk, -7 * (N_WEEKS - 1 - i)));
-  const flow = weeklyFlow({ workouts: WORKOUTS, meta: EXMETA, steps: STEPS, nutrition: NUTRITION, bodyLog: BODYLOG }, weeks);
+  const flow = weeklyFlow({ workouts: WORKOUTS, meta: EXMETA, steps: STEPS, nutrition: NUTRITION, bodyLog: BODYLOG, runs: RUNS }, weeks);
   const cur = flow[flow.length - 1], base = flow[flow.length - 5]; // 4 weeks earlier
   const sleepGoal = sleepGoalMin(dailyBodyLog(BODYLOG), latestSyncedDate);
   const hm = m => `${Math.floor(m / 60)}h${String(Math.round(m % 60)).padStart(2, '0')}`;
@@ -4255,6 +4261,7 @@ function weeklyLineChart(chartId, tableId, weeks, { fmt, label, betterDown = tru
   };
   const stepHitDates = STEPS.filter(r => r.steps >= r.goal).map(r => r.d);
   const bwHitDates = bodyweightRoutineSessions(WORKOUTS, BODYWEIGHT_ROUTINE_EXERCISE_IDS, EXMETA).filter(r => r.totalReps >= 100).map(r => r.date);
+  const runHitDates = RUNS.filter(r => r.km > 0).map(r => r.d);
   const spark = (vals) => {
     const pts = vals.map((v, i) => [i, v]).filter(([, v]) => v != null);
     if (pts.length < 2) return '<svg class="spark"></svg>';
@@ -4286,10 +4293,16 @@ function weeklyLineChart(chartId, tableId, weeks, { fmt, label, betterDown = tru
   ];
   // --- 02 Process (this week so far: misses only count for days already synced)
   const sessSt = cur.sessions >= WEEKLY_SESSION_TARGET ? 'good' : 'none';
+  const daysRow = (label, hit, target, dates) => {
+    const st = hit >= target ? 'good' : 'none';
+    return row(label, `${hit}<small> / ${target}</small>`, dayPips(dates) + stHtml(st, st === 'good' ? 'done' : `${target - hit} to go`));
+  };
   const process = [
     row('Training sessions', `${cur.sessions}<small> / ${WEEKLY_SESSION_TARGET}</small>`, pips(cur.sessions, WEEKLY_SESSION_TARGET, 0) + stHtml(sessSt, sessSt === 'good' ? 'done' : `${WEEKLY_SESSION_TARGET - cur.sessions} to go`)),
-    row('Step goal days', `${cur.stepsHit}<small> / 7</small>`, dayPips(stepHitDates) + `<span class="m-note">aim ${WEEKLY_DAYS_HIT_TARGET}+</span>`),
-    row('100-rep bodyweight days', `${cur.bwHit}<small> / 7</small>`, dayPips(bwHitDates) + `<span class="m-note">aim ${WEEKLY_DAYS_HIT_TARGET}+</span>`),
+    // Day counts read against their minimum target (e.g. 2 / 3), not / 7; the weekday pips still show which days hit.
+    daysRow('Step goal days', cur.stepsHit, WEEKLY_STEP_DAYS_TARGET, stepHitDates),
+    daysRow('100-rep bodyweight days', cur.bwHit, WEEKLY_BW_DAYS_TARGET, bwHitDates),
+    daysRow('Run days', cur.runHit, WEEKLY_RUN_DAYS_TARGET, runHitDates),
   ];
   // --- 03 Results (4-week horizon)
   const last4 = flow.slice(-4).reduce((a, w) => ({ up: a.up + w.lifts.up, down: a.down + w.lifts.down, flat: a.flat + w.lifts.flat }), { up: 0, down: 0, flat: 0 });
@@ -4325,8 +4338,9 @@ function weeklyLineChart(chartId, tableId, weeks, { fmt, label, betterDown = tru
     ['Sleep', `≥ ${hm(sleepGoal)} avg`, (w, i) => w.sleepMin == null ? cell('—', 'na') : cell(hm(w.sleepMin), passFail(w.sleepMin >= sleepGoal, i), `avg ${hm(w.sleepMin)} a night`)],
     ['lg', '02 PROCESS', 'the work'],
     ['Sessions', `${WEEKLY_SESSION_TARGET} / week`, (w, i) => cell(`${w.sessions}/${WEEKLY_SESSION_TARGET}`, passFail(w.sessions >= WEEKLY_SESSION_TARGET, i), `${w.sessions} strength/boxing sessions`)],
-    ['Step goal days', `${WEEKLY_DAYS_HIT_TARGET}+ of 7`, (w, i) => w.stepsDays ? cell(`${w.stepsHit}/7`, passFail(w.stepsHit >= WEEKLY_DAYS_HIT_TARGET, i), `${w.stepsHit} of ${w.stepsDays} synced days hit the step goal`) : cell('—', 'na')],
-    ['100-rep BW days', `${WEEKLY_DAYS_HIT_TARGET}+ of 7`, (w, i) => cell(`${w.bwHit}/7`, passFail(w.bwHit >= WEEKLY_DAYS_HIT_TARGET, i), `${w.bwHit} days with 100+ bodyweight reps`)],
+    ['Step goal days', `${WEEKLY_STEP_DAYS_TARGET}+ / week`, (w, i) => w.stepsDays ? cell(`${w.stepsHit}/${WEEKLY_STEP_DAYS_TARGET}`, passFail(w.stepsHit >= WEEKLY_STEP_DAYS_TARGET, i), `${w.stepsHit} of ${w.stepsDays} synced days hit the step goal`) : cell('—', 'na')],
+    ['100-rep BW days', `${WEEKLY_BW_DAYS_TARGET}+ / week`, (w, i) => cell(`${w.bwHit}/${WEEKLY_BW_DAYS_TARGET}`, passFail(w.bwHit >= WEEKLY_BW_DAYS_TARGET, i), `${w.bwHit} days with 100+ bodyweight reps`)],
+    ['Run days', `${WEEKLY_RUN_DAYS_TARGET}+ / week`, (w, i) => cell(`${w.runHit}/${WEEKLY_RUN_DAYS_TARGET}`, passFail(w.runHit >= WEEKLY_RUN_DAYS_TARGET, i), `${w.runHit} outdoor runs`)],
     ['lg', '03 RESULTS', 'what moved (vs the week before)'],
     ['Body fat', 'lower is better', (w, i) => { if (w.fatPct == null) return cell('—', 'na'); const p = i ? flow[i - 1].fatPct : null;
       return cell(`${w.fatPct.toFixed(1)}%`, trend(w.fatPct, p), p == null ? '' : `${sgn(w.fatPct - p)} pts vs prior week`); }],
