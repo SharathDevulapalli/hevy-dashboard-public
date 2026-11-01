@@ -2557,11 +2557,37 @@ function trainingLogSession(workout, meta) {
   return { title: workout.t, groups: groupsSeen, exercises };
 }
 
+const SLEEP_FLAT_FROM = '2026-11-01';
+
+// Weight plan (set 2026-11-01): weekly weight AVERAGE checkpoints, read on the week's Sunday.
+// Start = the week of 26 Oct average; straight-line between checkpoints, held after the last.
+// Calories ~1,700 / protein 170 g / fat 45 g / carbs <=155 g live in MFP's goals, not here.
+const WEIGHT_PLAN = [
+  { d: '2026-11-01', kg: 68.3, note: 'Start (week of 26 Oct avg)' },
+  { d: '2026-11-15', kg: 67.8, note: 'Decision date' },
+  { d: '2026-12-01', kg: 67.2, note: '' },
+  { d: '2026-12-31', kg: 66.2, note: '~18–18.5% body fat, waist ~83.5 cm' },
+];
+
+function weightTargetFor(date) {
+  // null before the plan starts; linear between checkpoints; last value after the end.
+  if (date < WEIGHT_PLAN[0].d) return null;
+  const ms = s => Date.parse(s + 'T00:00:00Z');
+  for (let i = 1; i < WEIGHT_PLAN.length; i++) {
+    const a = WEIGHT_PLAN[i - 1], b = WEIGHT_PLAN[i];
+    if (date <= b.d) return a.kg + (b.kg - a.kg) * (ms(date) - ms(a.d)) / (ms(b.d) - ms(a.d));
+  }
+  return WEIGHT_PLAN[WEIGHT_PLAN.length - 1].kg;
+}
+
 function sleepGoalMin(bodyDays, date) {
   // Base sleep target is 7h (420min). Bumps permanently to 7h30 (450min) the first time the
   // trailing 4 weeks (28 consecutive calendar days, no gaps) have all hit the 7h target —
   // once earned it stays bumped even if a later day misses it.
+  // From 2026-11-01 the target is a flat 7h, no bump (user's new targets); earlier days keep
+  // the old rule so history doesn't re-score.
   const BASE = 420, BUMPED = 450, STREAK_DAYS = 28;
+  if (date >= SLEEP_FLAT_FROM) return BASE;
   const sleepByDate = new Map(bodyDays.filter(d => d.sleepMin != null).map(d => [d.date, d.sleepMin]));
   if (sleepByDate.size === 0) return BASE;
   const earliest = [...sleepByDate.keys()].sort()[0];
@@ -4179,13 +4205,15 @@ if (document.getElementById('subtab-labs') && MEDICAL.params.length) {
 // Overview = Inputs -> Process -> Results (fat vs lean mass removed 2026-10-06); Training/Nutrition/Recovery =
 // the inputs. Shared single-series weekly line chart, same look as the body fat / sleep charts:
 // one axis, dots coloured by week-over-week direction relative to `betterDown`.
-function weeklyLineChart(chartId, tableId, weeks, { fmt, label, betterDown = true }) {
+function weeklyLineChart(chartId, tableId, weeks, { fmt, label, betterDown = true, target }) {
+  // `target(weekStart)` (optional) -> plan value for that week or null; drawn as a dashed line.
   const keys = [...weeks.keys()].sort();
   const el = document.getElementById(chartId);
   if (!keys.length) { el.innerHTML = '<p class="sub">Nothing logged yet.</p>'; return; }
   const w = 1000, h = 160, pad = 28;
   const svg = svgEl('svg', { width: '100%', height: h, viewBox: `0 0 ${w} ${h}`, preserveAspectRatio: 'none' });
-  const vals = keys.map(k => weeks.get(k));
+  const tgt = keys.map(k => target ? target(k) : null);
+  const vals = keys.map(k => weeks.get(k)).concat(tgt.filter(v => v != null));
   const lo0 = Math.min(...vals), hi0 = Math.max(...vals);
   const rangePad = Math.max((hi0 - lo0) * 0.15, Math.abs(hi0) * 0.005, 0.1);
   const lo = lo0 - rangePad, hi = hi0 + rangePad;
@@ -4199,6 +4227,15 @@ function weeklyLineChart(chartId, tableId, weeks, { fmt, label, betterDown = tru
   if (pts.length > 1) {
     svg.appendChild(svgEl('path', { d: pts.map((p, i) => `${i ? 'L' : 'M'} ${p.x} ${p.y}`).join(' '), fill: 'none', stroke: 'var(--series-1)', 'stroke-width': 2 }));
   }
+  const tPts = pts.map((p, i) => tgt[i] == null ? null : { x: p.x, y: yFor(tgt[i]), k: p.k, v: tgt[i] }).filter(Boolean);
+  if (tPts.length > 1) {
+    svg.appendChild(svgEl('path', { d: tPts.map((p, i) => `${i ? 'L' : 'M'} ${p.x} ${p.y}`).join(' '), fill: 'none', stroke: 'var(--muted, #888)', 'stroke-width': 1.5, 'stroke-dasharray': '6 5' }));
+  }
+  tPts.forEach(p => {
+    const dot = svgEl('circle', { cx: p.x, cy: p.y, r: 3, fill: 'none', stroke: 'var(--muted, #888)', 'stroke-width': 1.5 });
+    const t = svgEl('title', {}); t.textContent = `Week of ${p.k}: plan ${fmt(p.v)}`;
+    dot.appendChild(t); svg.appendChild(dot);
+  });
   pts.forEach(p => {
     const dot = svgEl('circle', { cx: p.x, cy: p.y, r: pts.length > 1 ? 4 : 5, fill: 'var(--series-1)' });
     const t = svgEl('title', {}); t.textContent = `Week of ${p.k}: ${fmt(p.v)} ${label}`;
@@ -4216,7 +4253,9 @@ function weeklyLineChart(chartId, tableId, weeks, { fmt, label, betterDown = tru
         badge = v === prev ? '<span class="badge baseline">same</span>'
           : `<span class="badge ${good ? 'progress' : 'plateau'}">${v < prev ? 'down' : 'up'} ${fmt(Math.abs(v - prev))}</span>`;
       }
-      return `<tr><td>${k}</td><td>${fmt(v)}</td><td>${badge}</td></tr>`;
+      const tv = tgt[i];
+      const plan = tv == null ? '' : ` <span class="badge ${v <= tv ? 'progress' : 'plateau'}">plan ${fmt(tv)}</span>`;
+      return `<tr><td>${k}</td><td>${fmt(v)}</td><td>${badge}${plan}</td></tr>`;
     });
     document.getElementById(tableId).innerHTML =
       `<table class="tv"><thead><tr><th>Week of</th><th>${label}</th><th>vs. prior week</th></tr></thead><tbody>${rows.reverse().join('')}</tbody></table>`;
@@ -4228,7 +4267,15 @@ function weeklyLineChart(chartId, tableId, weeks, { fmt, label, betterDown = tru
   // Results > Body fat & weight (2026-10-06): plain weekly trends, no target line — the user
   // hasn't settled on a body-fat target yet (FAT_TARGET_SCHEDULE is deliberately not drawn).
   weeklyLineChart('weeklyFatChart', 'weeklyFatTable', weeklyBodyLogAvg(BODYLOG, 'bodyFatPct'), { fmt: v => `${v.toFixed(1)}%`, label: 'avg body fat' });
-  weeklyLineChart('weeklyWeightChart', 'weeklyWeightTable', weeklyBodyLogAvg(BODYLOG, 'weightKg'), { fmt: v => `${v.toFixed(2)} kg`, label: 'avg weight' });
+  weeklyLineChart('weeklyWeightChart', 'weeklyWeightTable', weeklyBodyLogAvg(BODYLOG, 'weightKg'), { fmt: v => `${v.toFixed(2)} kg`, label: 'avg weight', target: wk => weightTargetFor(addDaysISO(wk, 6)) });
+  // Weight plan checkpoints (2026-11-01), listed under the chart.
+  {
+    const el = document.getElementById('weeklyWeightChart');
+    const p = document.createElement('p'); p.className = 'sub';
+    p.innerHTML = 'Plan (dashed, weekly average by Sunday): ' + WEIGHT_PLAN.slice(1).map(c =>
+      `<b>${new Date(c.d + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })}</b> ${c.kg.toFixed(1)} kg${c.note ? ` (${c.note})` : ''}`).join(' · ');
+    el.appendChild(p);
+  }
 
   // Results > Resting HR: weekly resting HR (Garmin), lower = better.
   const rhr = new Map([...weeklyRestingHR(HEARTRATE)].map(([k, v]) => [k, v.avg]));
@@ -4322,7 +4369,7 @@ function weeklyLineChart(chartId, tableId, weeks, { fmt, label, betterDown = tru
   const results = [
     row('Body fat <small>weekly avg</small>', cur.fatPct == null ? '—' : `${cur.fatPct.toFixed(1)}<small>%</small>`,
       spark(flow.map(w => w.fatPct)) + delta(cur.fatPct, base.fatPct, true, v => v.toFixed(1) + '%')),
-    row('Weight <small>weekly avg</small>', cur.weightKg == null ? '—' : `${cur.weightKg.toFixed(1)}<small> kg</small>`,
+    row('Weight <small>weekly avg</small>', cur.weightKg == null ? '—' : `${cur.weightKg.toFixed(1)}<small>${weightTargetFor(addDaysISO(wk, 6)) != null ? ` / plan ${weightTargetFor(addDaysISO(wk, 6)).toFixed(1)}` : ''} kg</small>`,
       spark(flow.map(w => w.weightKg)) + delta(cur.weightKg, base.weightKg, true, v => v.toFixed(1) + ' kg')),
     row('Lifts progressing <small>last 4 wks</small>', liftTotal ? `${Math.round(last4.up / liftTotal * 100)}<small>%</small>` : '—',
       spark(flow.map(w => { const t = w.lifts.up + w.lifts.down + w.lifts.flat; return t ? w.lifts.up / t * 100 : null; })) +
@@ -4356,8 +4403,11 @@ function weeklyLineChart(chartId, tableId, weeks, { fmt, label, betterDown = tru
     ['lg', '03 RESULTS', 'what moved (vs the week before)'],
     ['Body fat', 'lower is better', (w, i) => { if (w.fatPct == null) return cell('—', 'na'); const p = i ? flow[i - 1].fatPct : null;
       return cell(`${w.fatPct.toFixed(1)}%`, trend(w.fatPct, p), p == null ? '' : `${sgn(w.fatPct - p)} pts vs prior week`); }],
-    ['Weight', 'lower is better', (w, i) => { if (w.weightKg == null) return cell('—', 'na'); const p = i ? flow[i - 1].weightKg : null;
-      return cell(w.weightKg.toFixed(1), trend(w.weightKg, p), p == null ? '' : `${sgn(w.weightKg - p)} kg vs prior week`); }],
+    ['Weight', 'at or under plan', (w, i) => { if (w.weightKg == null) return cell('—', 'na'); const p = i ? flow[i - 1].weightKg : null;
+      const t = weightTargetFor(addDaysISO(w.week, 6));
+      const vsPrior = p == null ? '' : `${sgn(w.weightKg - p)} kg vs prior week`;
+      if (t == null) return cell(w.weightKg.toFixed(1), trend(w.weightKg, p), vsPrior);
+      return cell(w.weightKg.toFixed(1), passFail(w.weightKg <= t + 0.05, i), `plan ${t.toFixed(1)} kg · ${vsPrior}`); }],
     ['Lifts up / down', 'vs previous session', (w) => { const t = w.lifts.up + w.lifts.down; if (!t) return cell('—', 'na');
       return cell(`${w.lifts.up}▲ ${w.lifts.down}▼`, w.lifts.up > w.lifts.down ? 'good' : w.lifts.up < w.lifts.down ? 'warn' : '', `${w.lifts.up} exercises up, ${w.lifts.down} down, ${w.lifts.flat} same`); }],
   ];
