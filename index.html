@@ -3922,6 +3922,16 @@ function renderTrainingLogCard(tl) {
     title: tl.sessions.map(s => s.title).join(' + '),
     exercises: tl.sessions.flatMap(s => s.exercises),
   } : { title: 'Rest day', exercises: [] };
+  // Run days (2026-11-03): outdoor Garmin runs from runs.json are part of the weekly plan
+  // (4 lifts + 3 runs), so the slip shows the day's run(s) and a separate runs-this-week row.
+  // Avg HR cap of 145 only applies from 2026-11-01, when that target was set.
+  const RUN_HR_CAP = 145, RUN_HR_CAP_FROM = '2026-11-01';
+  const allRuns = runSessions(RUNS);
+  const dayRuns = allRuns.filter(r => r.date === tl.date);
+  const runWk = isoWeekStart(tl.date);
+  const weekRuns = new Set(allRuns.filter(r => r.date >= runWk && r.date <= tl.date).map(r => r.date)).size;
+  if (dayRuns.length) tlSession.title = tl.sessions.length ? tlSession.title + ' + Run' : 'Run';
+  const paceStr = p => `${Math.floor(p)}:${String(Math.round((p % 1) * 60)).padStart(2, '0')}`;
 
   // Training slip: ONE list of typed rows that both the on-screen slip and the Save-as-image
   // canvas render, so the two can't drift apart. Each 'lr' row is label · dotted leader ·
@@ -3949,13 +3959,28 @@ function renderTrainingLogCard(tl) {
     }
     slip.push({ k: 'rule' });
   }
+  if (dayRuns.length) {
+    slip.push({ k: 'head', l: 'RUN', r: 'PACE' });
+    for (const r of dayRuns) {
+      // faster than the previous run = ▲ (good), slower = ▼ (red)
+      const m = r.verdict === 'faster' ? '▲' : r.verdict === 'slower' ? '▼' : '';
+      slip.push({ k: 'lr', l: `${r.km.toFixed(2)} KM · ${Math.round(r.min)} MIN`, r: paceStr(r.paceMinPerKm) + ' /km', m, bad: r.verdict === 'slower' });
+      if (r.avgHR != null) {
+        const capped = r.date >= RUN_HR_CAP_FROM;
+        slip.push({ k: 'lr', l: 'AVG HR', r: `${r.avgHR}${capped ? ' / ≤' + RUN_HR_CAP : ''} bpm`,
+          ...(capped ? goalMark(r.avgHR <= RUN_HR_CAP ? 'hit' : 'miss') : {}) });
+      }
+    }
+    slip.push({ k: 'rule' });
+  }
   slip.push(
     { k: 'lr', l: 'WEIGHT (7D AVG)', r: tl.weightAvg != null ? tl.weightAvg.toFixed(2) + ' kg' : '—', ...(tl.weightAvg != null ? trendMark(tl.weightDelta) : {}) },
     { k: 'lr', l: 'BODY FAT (7D AVG)', r: tl.fatAvg != null ? tl.fatAvg.toFixed(2) + ' %' : '—', ...(tl.fatAvg != null ? trendMark(tl.fatDelta) : {}) },
     { k: 'lr', l: 'STEPS', r: tl.steps != null ? tl.steps.toLocaleString() + (tl.stepsGoal ? ' / ' + tl.stepsGoal.toLocaleString() : '') : '—', ...goalMark(tl.status.steps) },
     { k: 'lr', l: 'SLEEP', r: tl.sleepMin != null ? `${hm(tl.sleepMin)} / ${hm(tl.sleepGoalMin)}` : '—', ...goalMark(tl.status.sleep) },
     { k: 'rule' },
-    { k: 'lr', l: 'THIS WEEK', r: Array.from({ length: Math.max(tl.weekTarget, tl.weekSessions) }, (_, i) => i < tl.weekSessions ? '■' : '□').join(' ') },
+    { k: 'lr', l: 'LIFTS THIS WEEK', r: Array.from({ length: Math.max(tl.weekTarget, tl.weekSessions) }, (_, i) => i < tl.weekSessions ? '■' : '□').join(' ') },
+    { k: 'lr', l: 'RUNS THIS WEEK', r: Array.from({ length: Math.max(WEEKLY_RUN_DAYS_TARGET, weekRuns) }, (_, i) => i < weekRuns ? '■' : '□').join(' ') },
     { k: 'drule' },
   );
 
