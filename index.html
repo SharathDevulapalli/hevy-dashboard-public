@@ -375,6 +375,7 @@
   .sl-lr .r { flex: 0 0 auto; white-space: nowrap; font-weight: 700; }
   .sl-lr .mk.bad { color: var(--red); }
   .sl-sub { height: 17px; line-height: 17px; padding-left: 14px; font-size: 11.5px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sl-ing { height: 15px; line-height: 15px; padding-left: 28px; font-size: 10px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   /* PDF export (see pdfExportBtn below): each .pdf-page (a top-level tab, or a subtab within
      Training) printed on its own page, auto-scaled via JS-set zoom (not transform - zoom
@@ -384,7 +385,7 @@
   @page { size: A4 landscape; margin: 10mm; }
   @media print {
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    body.pdf-export-mode .tabs, body.pdf-export-mode .subtabs, body.pdf-export-mode #tlSaveImgBtn, body.pdf-export-mode .cal-nav button { display: none !important; }
+    body.pdf-export-mode .tabs, body.pdf-export-mode .subtabs, body.pdf-export-mode #tlSaveImgBtn, body.pdf-export-mode #fsSaveImgBtn,body.pdf-export-mode .cal-nav button { display: none !important; }
     body.pdf-export-mode .tabpanel, body.pdf-export-mode .subtabpanel { display: block !important; }
     body.pdf-export-mode .pdf-page { break-after: page; }
   }
@@ -470,6 +471,7 @@
     <div class="subtabs" role="tablist">
       <button class="subtab-btn active" data-subtab="calories" type="button">Nutrition</button>
       
+      
       <button class="subtab-btn" data-subtab="sleep" type="button">Sleep</button>
       
     </div>
@@ -492,6 +494,8 @@
         <div id="nutTable"></div>
       </section>
     </div>
+
+    
 
     
 
@@ -1072,7 +1076,7 @@ const EXMETA = {
 "EC3B69A3":{"name": "Triceps Kickback (Cable)", "primary": "triceps"}
 };
 const STEPS = [
-{"d": "2026-11-17", "steps": 4336, "goal": 10770},
+{"d": "2026-11-17", "steps": 11903, "goal": 10770},
 {"d": "2026-11-16", "steps": 13696, "goal": 10440},
 {"d": "2026-11-15", "steps": 8249, "goal": 10680},
 {"d": "2026-11-14", "steps": 11496, "goal": 10590},
@@ -1437,8 +1441,9 @@ const NUTRITION = [
 {"d": "2026-08-02", "calories": 663, "goal": 2094, "protein": 31, "proteinGoal": 183, "carbs": 89, "carbsGoal": 158, "fat": 18, "fatGoal": 82},
 {"d": "2026-08-01", "calories": 1727, "goal": 2099, "protein": 222, "proteinGoal": 183, "carbs": 355, "carbsGoal": 158, "fat": 61, "fatGoal": 82}
 ];
+const FOOD_LOG = [];
 const EXPENSES = [];
-const BODYLOG = [{"d":"2026-11-16","sleepMin":347,"weightKg":67.6,"bodyFatPct":19.6},{"d":"2026-11-15","sleepMin":400,"weightKg":68,"bodyFatPct":19.2},{"d":"2026-11-13","sleepMin":243,"weightKg":67.6,"bodyFatPct":20.1},{"d":"2026-11-12","sleepMin":411,"weightKg":67.3,"bodyFatPct":19.8},{"d":"2026-11-11","sleepMin":387,"weightKg":67.4,"bodyFatPct":19.8},{"d":"2026-11-10","sleepMin":384,"weightKg":67.5,"bodyFatPct":19.5},{"d":"2026-11-09","sleepMin":384,"weightKg":68.2,"bodyFatPct":19.7},{"d":"2026-11-08","weightKg":69},{"d":"2026-11-07","weightKg":68.2},{"d":"2026-11-06","sleepMin":471,"weightKg":68.2,"bodyFatPct":19.9},{"d":"2026-11-05","sleepMin":480,"weightKg":67.6,"bodyFatPct":19.9},{"d":"2026-11-04","sleepMin":356,"weightKg":67.7,"bodyFatPct":19.9},{"d":"2026-11-03","sleepMin":436,"weightKg":67.6,"bodyFatPct":19.9},{"d":"2026-11-02","sleepMin":410,"weightKg":67.7,"bodyFatPct":19.8},{"d":"2026-11-01","sleepMin":355,"weightKg":68.2,"bodyFatPct":18.5},{"d":"2026-10-31","sleepMin":421,"weightKg":68.9,"bodyFatPct":20.2},{"d":"2026-10-30","sleepMin":383,"weightKg":68.1,"bodyFatPct":20.1},{"d":"2026-10-29","sleepMin":444,"weightKg":68.2,"bodyFatPct":19.9},{"d":"2026-10-28","sleepMin":425,"weightKg":68.2,"bodyFatPct":19.7},{"d":"2026-10-27","sleepMin":423,"weightKg":68.2,"bodyFatPct":19.5},{"d":"2026-10-26","sleepMin":485,"weightKg":68.3,"bodyFatPct":20.4},{"d":"2026-10-25","sleepMin":424,"weightKg":69.2,"bodyFatPct":20.7},{"d":"2026-10-24","sleepMin":523},{"d":"2026-10-22","sleepMin":374,"weightKg":68,"bodyFatPct":20.3},{"d":"2026-10-21","sleepMin":242,"weightKg":68.2,"bodyFatPct":20.6},{"d":"2026-10-20","sleepMin":533,"weightKg":68.6,"bodyFatPct":20.5},{"d":"2026-10-19","sleepMin":411,"weightKg":69.3,"bodyFatPct":20.7},{"d":"2026-10-18","sleepMin":365,"weightKg":69,"bodyFatPct":20.5},{"d":"2026-10-17","sleepMin":372,"weightKg":68.7,"bodyFatPct":20.7},{"d":"2026-10-16","sleepMin":301,"weightKg":68.7,"bodyFatPct":20.5},{"d":"2026-10-15","sleepMin":335,"weightKg":69,"bodyFatPct":20.7},{"d":"2026-10-14","sleepMin":480,"weightKg":69,"bodyFatPct":20.8},{"d":"2026-10-13","sleepMin":360},{"d":"2026-10-12","sleepMin":373,"weightKg":68.3,"bodyFatPct":20.4},{"d":"2026-10-11","sleepMin":439,"weightKg":68.7,"bodyFatPct":20.6},{"d":"2026-10-10","weightKg":69.2},{"d":"2026-10-08","sleepMin":291,"weightKg":68.3,"bodyFatPct":20.4},{"d":"2026-10-07","sleepMin":332,"weightKg":68.8,"bodyFatPct":20.7},{"d":"2026-10-06","sleepMin":459,"weightKg":68.9,"bodyFatPct":20.7},{"d":"2026-10-05","sleepMin":390,"weightKg":69.3,"bodyFatPct":20.8},{"d":"2026-10-04","sleepMin":352,"weightKg":69.4,"bodyFatPct":20.4},{"d":"2026-10-03","sleepMin":454,"weightKg":68.5,"bodyFatPct":20.4},{"d":"2026-10-02","sleepMin":293,"weightKg":68.1,"bodyFatPct":20},{"d":"2026-10-01","sleepMin":259,"weightKg":68.6,"bodyFatPct":20.4},{"d":"2026-09-30","sleepMin":421,"weightKg":68.6,"bodyFatPct":20.6},{"d":"2026-09-29","sleepMin":339,"weightKg":68.5,"bodyFatPct":20.4},{"d":"2026-09-28","sleepMin":356,"weightKg":68.6,"bodyFatPct":20.4},{"d":"2026-09-27","sleepMin":467,"weightKg":69.2,"bodyFatPct":20.8},{"d":"2026-09-26","sleepMin":440,"weightKg":68.6,"bodyFatPct":20.5},{"d":"2026-09-25","sleepMin":352,"weightKg":68.8,"bodyFatPct":20.4},{"d":"2026-09-24","sleepMin":334,"weightKg":68.3,"bodyFatPct":19.2},{"d":"2026-09-23","sleepMin":432,"weightKg":67.8,"bodyFatPct":20.2},{"d":"2026-09-22","sleepMin":280,"weightKg":68.1,"bodyFatPct":19.5},{"d":"2026-09-21","sleepMin":317,"weightKg":68.1,"bodyFatPct":20.4},{"d":"2026-09-20","sleepMin":332,"weightKg":68.8,"bodyFatPct":20.5},{"d":"2026-09-19","sleepMin":439,"weightKg":69.4},{"d":"2026-09-18","sleepMin":449,"weightKg":68.9},{"d":"2026-09-17","sleepMin":279},{"d":"2026-09-16","sleepMin":453,"weightKg":69.3},{"d":"2026-09-15","sleepMin":342},{"d":"2026-09-14","sleepMin":466,"weightKg":69.9,"bodyFatPct":21.1},{"d":"2026-09-13","sleepMin":445,"weightKg":69.7,"bodyFatPct":20.9},{"d":"2026-09-12","sleepMin":328,"weightKg":69.8,"bodyFatPct":20.9},{"d":"2026-09-11","sleepMin":314,"weightKg":69.3,"bodyFatPct":20.5},{"d":"2026-09-10","sleepMin":442,"weightKg":69.4,"bodyFatPct":21},{"d":"2026-09-09","sleepMin":329,"weightKg":69.5,"bodyFatPct":21},{"d":"2026-09-08","sleepMin":406,"weightKg":69.7,"bodyFatPct":20.9},{"d":"2026-09-07","sleepMin":354,"weightKg":69.9,"bodyFatPct":21.3},{"d":"2026-09-06","sleepMin":368,"weightKg":70.4,"bodyFatPct":21.5},{"d":"2026-09-05","sleepMin":354,"weightKg":69.8,"bodyFatPct":21.1},{"d":"2026-09-04","sleepMin":428,"weightKg":70,"bodyFatPct":21.2},{"d":"2026-09-03","sleepMin":240,"weightKg":70,"bodyFatPct":21.3},{"d":"2026-09-02","sleepMin":471,"weightKg":70.5,"bodyFatPct":21.7},{"d":"2026-09-01","sleepMin":336,"weightKg":70.1,"bodyFatPct":21.5},{"d":"2026-08-31","sleepMin":261,"weightKg":70.1,"bodyFatPct":20.5},{"d":"2026-08-30","sleepMin":466,"weightKg":70.5,"bodyFatPct":21.4},{"d":"2026-08-29","sleepMin":415,"weightKg":70.3,"bodyFatPct":21.3},{"d":"2026-08-28","sleepMin":320,"weightKg":70.3,"bodyFatPct":21.4},{"d":"2026-08-27","sleepMin":432,"weightKg":70.4,"bodyFatPct":21.6},{"d":"2026-08-26","sleepMin":440,"weightKg":69.5,"bodyFatPct":21},{"d":"2026-08-25","sleepMin":368,"weightKg":69.6,"bodyFatPct":20.6},{"d":"2026-08-24","sleepMin":422,"weightKg":69.7,"bodyFatPct":21.2},{"d":"2026-08-23","sleepMin":457,"weightKg":70.1,"bodyFatPct":20.5},{"d":"2026-08-22","sleepMin":450,"weightKg":69.8,"bodyFatPct":21.2},{"d":"2026-08-21","sleepMin":319,"weightKg":69.8,"bodyFatPct":20.7},{"d":"2026-08-19","sleepMin":352,"weightKg":69.55,"bodyFatPct":21.1},{"d":"2026-08-18","weightKg":70.1,"bodyFatPct":19.8},{"d":"2026-08-17","weightKg":69.8,"bodyFatPct":19.3},{"d":"2026-08-16","weightKg":70.95,"bodyFatPct":21.5},{"d":"2026-08-15","weightKg":70.85,"bodyFatPct":21.4},{"d":"2026-08-14","weightKg":69.85,"bodyFatPct":21.5},{"d":"2026-08-13","weightKg":69.9,"bodyFatPct":21.3}];
+const BODYLOG = [{"d":"2026-11-17","sleepMin":362,"weightKg":67.2,"bodyFatPct":19.6},{"d":"2026-11-16","sleepMin":347,"weightKg":67.6,"bodyFatPct":19.6},{"d":"2026-11-15","sleepMin":400,"weightKg":68,"bodyFatPct":19.2},{"d":"2026-11-13","sleepMin":243,"weightKg":67.6,"bodyFatPct":20.1},{"d":"2026-11-12","sleepMin":411,"weightKg":67.3,"bodyFatPct":19.8},{"d":"2026-11-11","sleepMin":387,"weightKg":67.4,"bodyFatPct":19.8},{"d":"2026-11-10","sleepMin":384,"weightKg":67.5,"bodyFatPct":19.5},{"d":"2026-11-09","sleepMin":384,"weightKg":68.2,"bodyFatPct":19.7},{"d":"2026-11-08","weightKg":69},{"d":"2026-11-07","weightKg":68.2},{"d":"2026-11-06","sleepMin":471,"weightKg":68.2,"bodyFatPct":19.9},{"d":"2026-11-05","sleepMin":480,"weightKg":67.6,"bodyFatPct":19.9},{"d":"2026-11-04","sleepMin":356,"weightKg":67.7,"bodyFatPct":19.9},{"d":"2026-11-03","sleepMin":436,"weightKg":67.6,"bodyFatPct":19.9},{"d":"2026-11-02","sleepMin":410,"weightKg":67.7,"bodyFatPct":19.8},{"d":"2026-11-01","sleepMin":355,"weightKg":68.2,"bodyFatPct":18.5},{"d":"2026-10-31","sleepMin":421,"weightKg":68.9,"bodyFatPct":20.2},{"d":"2026-10-30","sleepMin":383,"weightKg":68.1,"bodyFatPct":20.1},{"d":"2026-10-29","sleepMin":444,"weightKg":68.2,"bodyFatPct":19.9},{"d":"2026-10-28","sleepMin":425,"weightKg":68.2,"bodyFatPct":19.7},{"d":"2026-10-27","sleepMin":423,"weightKg":68.2,"bodyFatPct":19.5},{"d":"2026-10-26","sleepMin":485,"weightKg":68.3,"bodyFatPct":20.4},{"d":"2026-10-25","sleepMin":424,"weightKg":69.2,"bodyFatPct":20.7},{"d":"2026-10-24","sleepMin":523},{"d":"2026-10-22","sleepMin":374,"weightKg":68,"bodyFatPct":20.3},{"d":"2026-10-21","sleepMin":242,"weightKg":68.2,"bodyFatPct":20.6},{"d":"2026-10-20","sleepMin":533,"weightKg":68.6,"bodyFatPct":20.5},{"d":"2026-10-19","sleepMin":411,"weightKg":69.3,"bodyFatPct":20.7},{"d":"2026-10-18","sleepMin":365,"weightKg":69,"bodyFatPct":20.5},{"d":"2026-10-17","sleepMin":372,"weightKg":68.7,"bodyFatPct":20.7},{"d":"2026-10-16","sleepMin":301,"weightKg":68.7,"bodyFatPct":20.5},{"d":"2026-10-15","sleepMin":335,"weightKg":69,"bodyFatPct":20.7},{"d":"2026-10-14","sleepMin":480,"weightKg":69,"bodyFatPct":20.8},{"d":"2026-10-13","sleepMin":360},{"d":"2026-10-12","sleepMin":373,"weightKg":68.3,"bodyFatPct":20.4},{"d":"2026-10-11","sleepMin":439,"weightKg":68.7,"bodyFatPct":20.6},{"d":"2026-10-10","weightKg":69.2},{"d":"2026-10-08","sleepMin":291,"weightKg":68.3,"bodyFatPct":20.4},{"d":"2026-10-07","sleepMin":332,"weightKg":68.8,"bodyFatPct":20.7},{"d":"2026-10-06","sleepMin":459,"weightKg":68.9,"bodyFatPct":20.7},{"d":"2026-10-05","sleepMin":390,"weightKg":69.3,"bodyFatPct":20.8},{"d":"2026-10-04","sleepMin":352,"weightKg":69.4,"bodyFatPct":20.4},{"d":"2026-10-03","sleepMin":454,"weightKg":68.5,"bodyFatPct":20.4},{"d":"2026-10-02","sleepMin":293,"weightKg":68.1,"bodyFatPct":20},{"d":"2026-10-01","sleepMin":259,"weightKg":68.6,"bodyFatPct":20.4},{"d":"2026-09-30","sleepMin":421,"weightKg":68.6,"bodyFatPct":20.6},{"d":"2026-09-29","sleepMin":339,"weightKg":68.5,"bodyFatPct":20.4},{"d":"2026-09-28","sleepMin":356,"weightKg":68.6,"bodyFatPct":20.4},{"d":"2026-09-27","sleepMin":467,"weightKg":69.2,"bodyFatPct":20.8},{"d":"2026-09-26","sleepMin":440,"weightKg":68.6,"bodyFatPct":20.5},{"d":"2026-09-25","sleepMin":352,"weightKg":68.8,"bodyFatPct":20.4},{"d":"2026-09-24","sleepMin":334,"weightKg":68.3,"bodyFatPct":19.2},{"d":"2026-09-23","sleepMin":432,"weightKg":67.8,"bodyFatPct":20.2},{"d":"2026-09-22","sleepMin":280,"weightKg":68.1,"bodyFatPct":19.5},{"d":"2026-09-21","sleepMin":317,"weightKg":68.1,"bodyFatPct":20.4},{"d":"2026-09-20","sleepMin":332,"weightKg":68.8,"bodyFatPct":20.5},{"d":"2026-09-19","sleepMin":439,"weightKg":69.4},{"d":"2026-09-18","sleepMin":449,"weightKg":68.9},{"d":"2026-09-17","sleepMin":279},{"d":"2026-09-16","sleepMin":453,"weightKg":69.3},{"d":"2026-09-15","sleepMin":342},{"d":"2026-09-14","sleepMin":466,"weightKg":69.9,"bodyFatPct":21.1},{"d":"2026-09-13","sleepMin":445,"weightKg":69.7,"bodyFatPct":20.9},{"d":"2026-09-12","sleepMin":328,"weightKg":69.8,"bodyFatPct":20.9},{"d":"2026-09-11","sleepMin":314,"weightKg":69.3,"bodyFatPct":20.5},{"d":"2026-09-10","sleepMin":442,"weightKg":69.4,"bodyFatPct":21},{"d":"2026-09-09","sleepMin":329,"weightKg":69.5,"bodyFatPct":21},{"d":"2026-09-08","sleepMin":406,"weightKg":69.7,"bodyFatPct":20.9},{"d":"2026-09-07","sleepMin":354,"weightKg":69.9,"bodyFatPct":21.3},{"d":"2026-09-06","sleepMin":368,"weightKg":70.4,"bodyFatPct":21.5},{"d":"2026-09-05","sleepMin":354,"weightKg":69.8,"bodyFatPct":21.1},{"d":"2026-09-04","sleepMin":428,"weightKg":70,"bodyFatPct":21.2},{"d":"2026-09-03","sleepMin":240,"weightKg":70,"bodyFatPct":21.3},{"d":"2026-09-02","sleepMin":471,"weightKg":70.5,"bodyFatPct":21.7},{"d":"2026-09-01","sleepMin":336,"weightKg":70.1,"bodyFatPct":21.5},{"d":"2026-08-31","sleepMin":261,"weightKg":70.1,"bodyFatPct":20.5},{"d":"2026-08-30","sleepMin":466,"weightKg":70.5,"bodyFatPct":21.4},{"d":"2026-08-29","sleepMin":415,"weightKg":70.3,"bodyFatPct":21.3},{"d":"2026-08-28","sleepMin":320,"weightKg":70.3,"bodyFatPct":21.4},{"d":"2026-08-27","sleepMin":432,"weightKg":70.4,"bodyFatPct":21.6},{"d":"2026-08-26","sleepMin":440,"weightKg":69.5,"bodyFatPct":21},{"d":"2026-08-25","sleepMin":368,"weightKg":69.6,"bodyFatPct":20.6},{"d":"2026-08-24","sleepMin":422,"weightKg":69.7,"bodyFatPct":21.2},{"d":"2026-08-23","sleepMin":457,"weightKg":70.1,"bodyFatPct":20.5},{"d":"2026-08-22","sleepMin":450,"weightKg":69.8,"bodyFatPct":21.2},{"d":"2026-08-21","sleepMin":319,"weightKg":69.8,"bodyFatPct":20.7},{"d":"2026-08-19","sleepMin":352,"weightKg":69.55,"bodyFatPct":21.1},{"d":"2026-08-18","weightKg":70.1,"bodyFatPct":19.8},{"d":"2026-08-17","weightKg":69.8,"bodyFatPct":19.3},{"d":"2026-08-16","weightKg":70.95,"bodyFatPct":21.5},{"d":"2026-08-15","weightKg":70.85,"bodyFatPct":21.4},{"d":"2026-08-14","weightKg":69.85,"bodyFatPct":21.5},{"d":"2026-08-13","weightKg":69.9,"bodyFatPct":21.3}];
 const SUPPLEMENTS = [];
 const SUPPLEMENT_META = [];
 const MEDICAL = {"reports":[],"params":[]};
@@ -3943,7 +3948,10 @@ if (document.getElementById('subtab-expenses')) {
       ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => `<div class="cal-dow">${d}</div>`).join('') + cal.cells.map(cellHtml).join('');
     const selCell = cal.cells.find(c => c.date === selected);
     document.getElementById('actDayDetail').innerHTML = selCell ? detailHtml(selCell) : '<p class="sub" style="margin:0;">Click a day to see everything logged.</p>';
-    if (selected !== renderedCardDate) { renderTrainingLogCard(cardFor(selected)); renderedCardDate = selected; }
+    if (selected !== renderedCardDate) {
+      renderTrainingLogCard(cardFor(selected));
+      renderedCardDate = selected;
+    }
   };
   document.getElementById('actCalGrid').addEventListener('click', ev => {
     const el = ev.target.closest('.cal-cell');
@@ -4035,8 +4043,21 @@ function renderTrainingLogCard(tl) {
     { k: 'drule' },
   );
 
+  el.innerHTML = slipToHtml(slip);
+  saveBtn.style.display = '';
+  saveBtn.onclick = () => saveSlipPNG(slip, `training-log-day${tl.dayNumber ?? tl.date}.png`);
+}
+
+// ---------- shared slip renderer (training slip + food slip) ----------
+// A slip is ONE list of typed rows; slipToHtml renders it on screen (.sl-* CSS) and
+// saveSlipPNG draws the same rows onto a 3x canvas, so the two can't drift apart.
+// Row kinds: title, center, session, rule, drule, head (l/r), sub (text), ing (text, smaller
+// ingredient line), lr (label · dotted leader · value + optional mark m / bad).
+const SLIP_W = 400;
+const SLIP_ROW_H = { title: 30, center: 18, session: 26, rule: 19, drule: 22, head: 20, lr: 21, sub: 17, ing: 15 };
+function slipToHtml(slip) {
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
-  const slipHtml = r =>
+  const row = r =>
     r.k === 'title' ? `<div class="sl-title">${esc(r.text)}</div>` :
     r.k === 'center' ? `<div class="sl-center">${esc(r.text)}</div>` :
     r.k === 'session' ? `<div class="sl-session">${esc(r.text)}</div>` :
@@ -4044,81 +4065,159 @@ function renderTrainingLogCard(tl) {
     r.k === 'drule' ? '<div class="sl-drule"></div>' :
     r.k === 'head' ? `<div class="sl-head"><span>${esc(r.l)}</span><span>${esc(r.r)}</span></div>` :
     r.k === 'sub' ? `<div class="sl-sub">${esc(r.text)}</div>` :
+    r.k === 'ing' ? `<div class="sl-ing">${esc(r.text)}</div>` :
     `<div class="sl-lr"><span class="l">${esc(r.l)}</span><span class="dots"></span><span class="r">${esc(r.r)}${r.m ? ` <span class="mk${r.bad ? ' bad' : ''}">${esc(r.m)}</span>` : ''}</span></div>`;
-  el.innerHTML = `<div class="tl-wrap"><div class="slip-sh"><div class="slip">${slip.map(slipHtml).join('')}</div></div></div>`;
+  return `<div class="tl-wrap"><div class="slip-sh"><div class="slip">${slip.map(row).join('')}</div></div></div>`;
+}
+// Canvas 2D render (no dependency-free way to rasterize DOM/CSS exists). Row heights, fonts
+// and colours mirror the .sl-* CSS. Long labels are truncated with an ellipsis.
+function saveSlipPNG(slip, filename) {
+  const PAD = 22, TOP = 26, BOTTOM = 24, ROW_H = SLIP_ROW_H;
+  const MONO = '"Courier Prime", "Courier New", monospace';
+  const slipH = TOP + slip.reduce((a, r) => a + ROW_H[r.k], 0) + BOTTOM;
+  function draw(ctx) {
+    const INK = '#1d1b17', INK2 = 'rgba(29,27,23,0.62)', RED = '#b3261e', innerW = SLIP_W - PAD * 2, right = PAD + innerW;
+    const ls = px => { try { ctx.letterSpacing = px + 'px'; } catch (e) {} };
+    const fit = (text, maxWidth) => {
+      if (ctx.measureText(text).width <= maxWidth) return text;
+      let lo = 0, hi = text.length;
+      while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (ctx.measureText(text.slice(0, mid) + '…').width <= maxWidth) lo = mid; else hi = mid - 1; }
+      return text.slice(0, lo) + '…';
+    };
+    let y = TOP;
+    for (const r of slip) {
+      const h = ROW_H[r.k], mid = y + h / 2, base = mid + 4;
+      ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left'; ctx.fillStyle = INK; ls(0);
+      if (r.k === 'title') {
+        ctx.font = `700 19px ${MONO}`; ls(4.5); ctx.textAlign = 'center'; ctx.fillText(r.text, SLIP_W / 2 + 2.25, base + 2);
+      } else if (r.k === 'center') {
+        ctx.font = `12px ${MONO}`; ls(0.7); ctx.fillStyle = INK2; ctx.textAlign = 'center'; ctx.fillText(r.text, SLIP_W / 2, base);
+      } else if (r.k === 'session') {
+        ctx.font = `700 15px ${MONO}`; ls(1.5); ctx.textAlign = 'center'; ctx.fillText(fit(r.text, innerW), SLIP_W / 2, base + 1);
+      } else if (r.k === 'rule') {
+        ctx.strokeStyle = INK2; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
+        ctx.beginPath(); ctx.moveTo(PAD, mid + 0.5); ctx.lineTo(right, mid + 0.5); ctx.stroke(); ctx.setLineDash([]);
+      } else if (r.k === 'drule') {
+        ctx.fillRect(PAD, mid - 2.5, innerW, 1); ctx.fillRect(PAD, mid + 1.5, innerW, 1);
+      } else if (r.k === 'head') {
+        ctx.font = `11px ${MONO}`; ls(1.3); ctx.fillStyle = INK2;
+        ctx.fillText(r.l, PAD, base); ctx.textAlign = 'right'; ctx.fillText(r.r, right, base);
+      } else if (r.k === 'sub') {
+        ctx.font = `11.5px ${MONO}`; ctx.fillStyle = INK2; ctx.fillText(fit(r.text, innerW - 14), PAD + 14, base - 1);
+      } else if (r.k === 'ing') {
+        ctx.font = `10px ${MONO}`; ctx.fillStyle = INK2; ctx.fillText(fit(r.text, innerW - 28), PAD + 28, base - 1);
+      } else {
+        ctx.font = `700 13px ${MONO}`; ctx.textAlign = 'right';
+        let rx = right;
+        if (r.m) { ctx.fillStyle = r.bad ? RED : INK; ctx.fillText(r.m, rx, base); rx -= ctx.measureText(' ' + r.m).width; }
+        ctx.fillStyle = INK; ctx.fillText(r.r, rx, base); rx -= ctx.measureText(r.r).width;
+        ctx.font = `13px ${MONO}`; ctx.textAlign = 'left';
+        const lt = fit(r.l, rx - PAD - 18); ctx.fillText(lt, PAD, base);
+        ctx.fillStyle = INK2;
+        for (let x = PAD + ctx.measureText(lt).width + 5; x < rx - 5; x += 3) ctx.fillRect(x, base - 1, 1, 1);
+      }
+      y += h;
+    }
+  }
+  const render = () => {
+    const SCALE = 3, canvas = document.createElement('canvas');
+    canvas.width = SLIP_W * SCALE; canvas.height = slipH * SCALE;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(SCALE, SCALE);
+    ctx.fillStyle = '#fbfaf5'; ctx.fillRect(0, 0, SLIP_W, slipH);
+    // perforated top/bottom edges, matching the CSS mask on .slip
+    ctx.globalCompositeOperation = 'destination-out';
+    for (let x = 7; x < SLIP_W; x += 14) for (const yy of [0, slipH]) { ctx.beginPath(); ctx.arc(x, yy, 5, 0, Math.PI * 2); ctx.fill(); }
+    ctx.globalCompositeOperation = 'source-over';
+    draw(ctx);
+    canvas.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }, 'image/png');
+  };
+  // canvas text silently falls back to Courier New unless the web font is loaded first
+  return Promise.all(['400', '700'].map(w => document.fonts.load(`${w} 13px "Courier Prime"`)))
+    .catch(() => {}).finally(render);
+}
 
-    // ---------- save-as-image: Canvas 2D render of the same `slip` rows (no dependency-free
-    // way to rasterize DOM/CSS exists). Row heights, fonts and colours mirror the .sl-* CSS.
-    const SLIP_W = 400, PAD = 22, TOP = 26, BOTTOM = 24;
-    const ROW_H = { title: 30, center: 18, session: 26, rule: 19, drule: 22, head: 20, lr: 21, sub: 17 };
-    const MONO = '"Courier Prime", "Courier New", monospace';
-    const slipH = TOP + slip.reduce((a, r) => a + ROW_H[r.k], 0) + BOTTOM;
-    function tlDrawSlip(ctx) {
-      const INK = '#1d1b17', INK2 = 'rgba(29,27,23,0.62)', RED = '#b3261e', innerW = SLIP_W - PAD * 2, right = PAD + innerW;
-      const ls = px => { try { ctx.letterSpacing = px + 'px'; } catch (e) {} };
-      const fit = (text, maxWidth) => {
-        if (ctx.measureText(text).width <= maxWidth) return text;
-        let lo = 0, hi = text.length;
-        while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (ctx.measureText(text.slice(0, mid) + '…').width <= maxWidth) lo = mid; else hi = mid - 1; }
-        return text.slice(0, lo) + '…';
-      };
-      let y = TOP;
-      for (const r of slip) {
-        const h = ROW_H[r.k], mid = y + h / 2, base = mid + 4;
-        ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left'; ctx.fillStyle = INK; ls(0);
-        if (r.k === 'title') {
-          ctx.font = `700 19px ${MONO}`; ls(4.5); ctx.textAlign = 'center'; ctx.fillText(r.text, SLIP_W / 2 + 2.25, base + 2);
-        } else if (r.k === 'center') {
-          ctx.font = `12px ${MONO}`; ls(0.7); ctx.fillStyle = INK2; ctx.textAlign = 'center'; ctx.fillText(r.text, SLIP_W / 2, base);
-        } else if (r.k === 'session') {
-          ctx.font = `700 15px ${MONO}`; ls(1.5); ctx.textAlign = 'center'; ctx.fillText(fit(r.text, innerW), SLIP_W / 2, base + 1);
-        } else if (r.k === 'rule') {
-          ctx.strokeStyle = INK2; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
-          ctx.beginPath(); ctx.moveTo(PAD, mid + 0.5); ctx.lineTo(right, mid + 0.5); ctx.stroke(); ctx.setLineDash([]);
-        } else if (r.k === 'drule') {
-          ctx.fillRect(PAD, mid - 2.5, innerW, 1); ctx.fillRect(PAD, mid + 1.5, innerW, 1);
-        } else if (r.k === 'head') {
-          ctx.font = `11px ${MONO}`; ls(1.3); ctx.fillStyle = INK2;
-          ctx.fillText(r.l, PAD, base); ctx.textAlign = 'right'; ctx.fillText(r.r, right, base);
-        } else if (r.k === 'sub') {
-          ctx.font = `11.5px ${MONO}`; ctx.fillStyle = INK2; ctx.fillText(fit(r.text, innerW - 14), PAD + 14, base - 1);
-        } else {
-          ctx.font = `700 13px ${MONO}`; ctx.textAlign = 'right';
-          let rx = right;
-          if (r.m) { ctx.fillStyle = r.bad ? RED : INK; ctx.fillText(r.m, rx, base); rx -= ctx.measureText(' ' + r.m).width; }
-          ctx.fillStyle = INK; ctx.fillText(r.r, rx, base); rx -= ctx.measureText(r.r).width;
-          ctx.font = `13px ${MONO}`; ctx.textAlign = 'left';
-          const lt = fit(r.l, rx - PAD - 18); ctx.fillText(lt, PAD, base);
-          ctx.fillStyle = INK2;
-          for (let x = PAD + ctx.measureText(lt).width + 5; x < rx - 5; x += 3) ctx.fillRect(x, base - 1, 1, 1);
-        }
-        y += h;
+// ---------- food slip (2026-11-17, user): the day's MFP diary as a slip to share with the
+// trainer — item, qty, kcal, macros; the user's own MFP recipes list their ingredients in a
+// smaller line under the item. FOOD_LOG comes from mfp_sync.py (private build only; '[]' in
+// the public build, where the card is PUBLIC:EXCLUDE'd). Supplements are already filtered out.
+function foodSlipRows(date, dayNumber) {
+  const day = FOOD_LOG.find(r => r.d === date);
+  if (!day || !day.items.length) return null;
+  const goals = NUTRITION.find(n => n.d === date) || {};
+  const dateLabel = new Date(date + 'T00:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+  const n0 = x => Math.round(x).toLocaleString('en-GB');
+  const slip = [
+    { k: 'title', text: 'FOOD SLIP' },
+    { k: 'center', text: `No. ${dayNumber != null ? String(dayNumber).padStart(4, '0') : '—'} · ${dateLabel.toUpperCase()}` },
+    { k: 'rule' },
+  ];
+  const meals = [];
+  for (const it of day.items) {
+    let m = meals.find(x => x.name === it.meal);
+    if (!m) meals.push(m = { name: it.meal, items: [] });
+    m.items.push(it);
+  }
+  const tot = { kcal: 0, p: 0, c: 0, f: 0 };
+  for (const m of meals) {
+    slip.push({ k: 'head', l: m.name.toUpperCase(), r: n0(m.items.reduce((a, i) => a + i.kcal, 0)) + ' KCAL' });
+    for (const it of m.items) {
+      for (const k in tot) tot[k] += it[k];
+      // value is bare kcal (the meal header carries the unit) so long MFP names fit the slip
+      slip.push({ k: 'lr', l: it.name, r: n0(it.kcal) });
+      slip.push({ k: 'sub', text: `${it.qty ? it.qty + ' · ' : ''}P ${it.p}g · C ${it.c}g · F ${it.f}g` });
+      for (const ing of it.ingredients || []) {
+        const [q, ...rest] = ing.split(', ');
+        slip.push({ k: 'ing', text: rest.length ? `– ${rest.join(', ')} (${q})` : `– ${ing}` });
       }
     }
-
-    function tlRenderPNG() {
-      const SCALE = 3, canvas = document.createElement('canvas');
-      canvas.width = SLIP_W * SCALE; canvas.height = slipH * SCALE;
-      const ctx = canvas.getContext('2d');
-      ctx.scale(SCALE, SCALE);
-      ctx.fillStyle = '#fbfaf5'; ctx.fillRect(0, 0, SLIP_W, slipH);
-      // perforated top/bottom edges, matching the CSS mask on .slip
-      ctx.globalCompositeOperation = 'destination-out';
-      for (let x = 7; x < SLIP_W; x += 14) for (const yy of [0, slipH]) { ctx.beginPath(); ctx.arc(x, yy, 5, 0, Math.PI * 2); ctx.fill(); }
-      ctx.globalCompositeOperation = 'source-over';
-      tlDrawSlip(ctx);
-      canvas.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = `training-log-day${tl.dayNumber ?? tl.date}.png`;
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 2000);
-      }, 'image/png');
-    }
-    saveBtn.style.display = '';
-    // canvas text silently falls back to Courier New unless the web font is loaded first
-    saveBtn.onclick = () => Promise.all(['400', '700'].map(w => document.fonts.load(`${w} 13px "Courier Prime"`)))
-      .catch(() => {}).finally(tlRenderPNG);
+    slip.push({ k: 'rule' });
+  }
+  // same food rule as the calendar pill: calories 85–105% of goal, protein ≥ 90%; carbs/fat are caps
+  const mk = ok => ok ? { m: '✓' } : { m: '✗', bad: true };
+  const line = (l, v, g, unit, ok) => ({ k: 'lr', l, r: `${n0(v)}${g ? ' / ' + n0(g) : ''} ${unit}`, ...(g ? mk(ok(v, g)) : {}) });
+  slip.push(
+    line('CALORIES', tot.kcal, goals.goal, 'kcal', (v, g) => v >= 0.85 * g && v <= 1.05 * g),
+    line('PROTEIN', tot.p, goals.proteinGoal, 'g', (v, g) => v >= 0.9 * g),
+    line('CARBS', tot.c, goals.carbsGoal, 'g', (v, g) => v <= g),
+    line('FAT', tot.f, goals.fatGoal, 'g', (v, g) => v <= g),
+    { k: 'drule' },
+  );
+  return slip;
+}
+function renderFoodSlip(date, dayNumber) {
+  const el = document.getElementById('foodSlipCard');
+  const btn = document.getElementById('fsSaveImgBtn');
+  if (!el) return;
+  const slip = foodSlipRows(date, dayNumber);
+  if (!slip) { el.innerHTML = '<p class="sub" style="margin:0;text-align:center;">No food logged in MyFitnessPal for this day.</p>'; btn.style.display = 'none'; return; }
+  el.innerHTML = slipToHtml(slip);
+  btn.style.display = '';
+  btn.onclick = () => saveSlipPNG(slip, `food-log-${date}.png`);
+}
+// Inputs > Food Slip subtab: steps through the days that have a food log, latest first.
+if (document.getElementById('subtab-foodslip')) {
+  const days = FOOD_LOG.map(r => r.d).sort();
+  let i = days.length - 1;
+  const prev = document.getElementById('fsPrev'), next = document.getElementById('fsNext');
+  const show = () => {
+    const d = days[i];
+    document.getElementById('fsDateLabel').textContent = d
+      ? new Date(d + 'T00:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+      : 'No food log yet';
+    prev.disabled = i <= 0; next.disabled = i >= days.length - 1;
+    if (d) renderFoodSlip(d, trainingLogDay(WORKOUTS, EXMETA, BODYLOG, STEPS, NUTRITION, d).dayNumber);
+    else { document.getElementById('foodSlipCard').innerHTML = ''; document.getElementById('fsSaveImgBtn').style.display = 'none'; }
+  };
+  prev.addEventListener('click', () => { if (i > 0) { i--; show(); } });
+  next.addEventListener('click', () => { if (i < days.length - 1) { i++; show(); } });
+  show();
 }
 
 // ---------- Medical > Measurements: Hevy tape measurements (private build only) ----------
