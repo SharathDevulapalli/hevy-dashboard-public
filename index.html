@@ -678,6 +678,7 @@
 
 <script>
 const WORKOUTS = [
+{"d": "2026-11-18", "t": "Back", "ex": [{"i": "914F3A96", "s": [[30, 15], [35, 15], [40, 10]]}, {"i": "D2387AB1", "s": [[25, 15], [30, 15], [35, 15]]}, {"i": "6A6C31A5", "s": [[25, 10], [35, 10], [30, 10]]}, {"i": "046E25A2", "s": [[25, 10], [30, 10], [30, 10]]}, {"i": "AA1EB7D8", "s": [[35, 10], [30, 10], [35, 15]]}]},
 {"d": "2026-11-17", "t": "Bodyweight Routine", "ex": [{"i": "DCF3B31B", "s": [[0, 25], [0, 25], [0, 25], [0, 25]]}]},
 {"d": "2026-11-17", "t": "Quads & Triceps", "ex": [{"i": "B537D09F", "s": [[30, 20], [40, 20], [50, 20]]}, {"i": "CC35A01F", "s": [[120, 10], [160, 10], [200, 10]]}, {"i": "C7973E0E", "s": [[150, 10], [200, 10], [250, 10]]}, {"i": "75A4F6C4", "s": [[30, 10], [40, 10], [50, 10]]}, {"i": "94B7239B", "s": [[15, 10], [20, 10], [25, 10]]}, {"i": "B5EFBF9C", "s": [[15, 10], [20, 10], [25, 10]]}, {"i": "CDC472B1", "s": [[15, 10], [20, 10], [25, 10]]}, {"i": "8347DFD1", "s": [[10, 10], [10, 10], [10, 10]]}, {"i": "4B4BF8C2", "s": [[45, 10], [50, 10], [55, 10]]}]},
 {"d": "2026-11-16", "t": "Chest & Shoulders", "ex": [{"i": "79D0BB3A", "s": [[20, 15], [20, 15], [25, 10], [30, 8]]}, {"i": "50DFDFAB", "s": [[10, 10], [10, 10], [15, 10], [20, 10]]}, {"i": "651F844C", "s": [[15, 20], [18, 20], [24, 20]]}, {"i": "67280085", "s": [[45, 15], [50, 15], [60, 10]]}, {"i": "E5988A0A", "s": [[10, 10], [10, 12], [10, 15]]}, {"i": "422B08F1", "s": [[10, 10], [10, 12], [10, 15]]}, {"i": "BD86EFD5", "s": [[10, 10], [10, 10], [10, 12]]}, {"i": "059E835D", "s": [[10, 15], [20, 10], [20, 10]], "n": "Excluding machine"}, {"i": "19A38071", "s": [[20, 20], [30, 20], [40, 20]]}]},
@@ -1073,9 +1074,11 @@ const EXMETA = {
 "8B5BED30":{"name": "Reverse Grip Triceps Pushdown", "primary": "triceps"},
 "091737FA":{"name": "Back Extension (Weighted Hyperextension)", "primary": "lower_back"},
 "3303376C":{"name": "Elliptical Trainer", "primary": "cardio"},
-"EC3B69A3":{"name": "Triceps Kickback (Cable)", "primary": "triceps"}
+"EC3B69A3":{"name": "Triceps Kickback (Cable)", "primary": "triceps"},
+"046E25A2":{"name": "Reverse Grip Lat Pulldown (Cable)", "primary": "lats"}
 };
 const STEPS = [
+{"d": "2026-11-18", "steps": 5862, "goal": 11000},
 {"d": "2026-11-17", "steps": 11903, "goal": 10770},
 {"d": "2026-11-16", "steps": 13696, "goal": 10440},
 {"d": "2026-11-15", "steps": 8249, "goal": 10680},
@@ -1207,6 +1210,7 @@ const STEPS = [
 {"d": "2026-07-11", "steps": 10238, "goal": 5590}
 ];
 const HEARTRATE = [
+{"d": "2026-11-18", "resting": 52, "min": 49, "max": 106},
 {"d": "2026-11-17", "resting": 56, "min": 48, "max": 115},
 {"d": "2026-11-16", "resting": 52, "min": 46, "max": 121},
 {"d": "2026-11-15", "resting": 55, "min": 49, "max": 98},
@@ -1347,6 +1351,7 @@ const RUNS = [
 {"d": "2026-10-02", "km": 5.04, "min": 38.7, "avgHR": 146, "maxHR": 163, "cadence": 160, "elev": 8}
 ];
 const NUTRITION = [
+{"d": "2026-11-18", "calories": 712, "goal": 1700, "protein": 65, "proteinGoal": 149, "carbs": 91, "carbsGoal": 170, "fat": 8, "fatGoal": 47},
 {"d": "2026-11-17", "calories": 1641, "goal": 1700, "protein": 205, "proteinGoal": 149, "carbs": 147, "carbsGoal": 170, "fat": 21, "fatGoal": 47},
 {"d": "2026-11-16", "calories": 1195, "goal": 1700, "protein": 81, "proteinGoal": 149, "carbs": 155, "carbsGoal": 170, "fat": 26, "fatGoal": 47},
 {"d": "2026-11-14", "calories": 911, "goal": 1700, "protein": 20, "proteinGoal": 149, "carbs": 158, "carbsGoal": 170, "fat": 22, "fatGoal": 47},
